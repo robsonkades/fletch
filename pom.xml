@@ -156,10 +156,6 @@
 
   <profiles>
     <profile>
-      <!-- Builds an executable JMH uber-jar at target/benchmarks.jar.
-           Usage:
-             mvn -Pbenchmarks -DskipTests package
-             java -jar target/benchmarks.jar UUIDv7Benchmark -->
       <id>benchmarks</id>
       <properties>
         <maven.javadoc.skip>true</maven.javadoc.skip>

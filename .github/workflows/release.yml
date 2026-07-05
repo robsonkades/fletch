@@ -87,8 +87,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "v$VERSION" \
-            "target/uuidv7-$VERSION.jar" \
-            "target/uuidv7-$VERSION-sources.jar" \
-            "target/uuidv7-$VERSION-javadoc.jar" \
+            "target/fletch-$VERSION.jar" \
+            "target/fletch-$VERSION-sources.jar" \
+            "target/fletch-$VERSION-javadoc.jar" \
             --title "v$VERSION" \
             --generate-notes

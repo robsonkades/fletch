@@ -34,7 +34,3 @@ jobs:
       # gpg.skip: artifact signing only happens in the release workflow
       - name: Build and test
         run: mvn -B -ntp verify -Dgpg.skip=true
-
-      - name: Compile benchmarks jar
-        if: matrix.java == 17
-        run: mvn -B -ntp -Pbenchmarks -DskipTests package

@@ -217,13 +217,6 @@ Fletch is designed for high-throughput extraction of small-to-medium documents
 - prefer the `byte[]` overload when the document is already in memory — it bootstraps
   Woodstox directly on the array with no stream indirection.
 
-JMH benchmarks live in the `benchmarks` profile:
-
-```bash
-mvn -Pbenchmarks -DskipTests package
-java -jar target/benchmarks.jar
-```
-
 ## Contributing
 
 Bug reports, feature requests and pull requests are welcome — see
