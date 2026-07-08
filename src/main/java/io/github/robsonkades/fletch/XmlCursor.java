@@ -18,7 +18,7 @@ package io.github.robsonkades.fletch;
 import java.util.List;
 
 /**
- * Declarative, forward-only XML cursor for streaming extraction.
+ * Declarative, order-tolerant XML cursor for streaming extraction.
  *
  * <p><b>Contract</b>: when an {@link XmlExtractor} is invoked, the cursor
  * is positioned at the {@code START_ELEMENT} of the element to extract.
@@ -32,26 +32,22 @@ import java.util.List;
  * (e.g. {@code cursor.child("soap:Body", ...)}).
  *
  * <h2>Ordering</h2>
- * <p>Requests must be issued in the same order that the corresponding
- * elements appear in the source XML. This is a forward-only streaming
- * parser — elements cannot be re-read. Asking for an element the cursor has
- * already passed reports absence ({@code null} / empty list).
+ * <p>Requests may address the direct children of an element in any order,
+ * regardless of the order they appear in the source XML. It stays a single
+ * forward pass and buffers only what it must: a read that follows document
+ * order is served straight from the stream, while a read targeting a child
+ * that appears later causes the children scanned past to be buffered, so a
+ * later request for one of them is still answered. Each element is served at
+ * most once — requesting the same name again returns the next occurrence, or
+ * {@code null} when there is none.
  *
- * <p>In <em>debug mode</em> that silent absence becomes an
- * {@link XmlException} naming the out-of-order element, so misordered
- * extractors fail fast during development instead of producing partial data.
- * Debug mode is on when assertions are enabled ({@code -ea} — the Surefire
- * default, so tests get it automatically) or with
- * {@code -Dfletch.xml.debug=true}; it costs nothing in production.
- *
- * <h2>Scope exhaustion</h2>
- * <p>A scan that reaches the end of the enclosing element without a match
- * necessarily consumes that element's {@code END_ELEMENT}; the same happens
- * after {@link #children} (which sweeps the whole scope) and {@link #skip}.
- * From that point on, every request in the current extractor reports absence
- * — the cursor never leaks into the parent scope. Optional trailing elements
- * therefore behave as expected: a miss on one simply yields {@code null} for
- * it and for anything requested after it.
+ * <h2>Misses and scope</h2>
+ * <p>An absent element yields {@code null} (or an empty list for
+ * {@link #children}) in any position. A request that finds no match has
+ * scanned to the end of the enclosing element, buffering any non-matching
+ * children it passed, so later requests for those still succeed.
+ * {@link #skip} discards the rest of the current element's content: after it,
+ * every request reports absence. The cursor never leaks into the parent scope.
  *
  * <h2>Thread safety</h2>
  * <p>A cursor instance is bound to one parse call and must not be shared
@@ -63,21 +59,17 @@ public interface XmlCursor {
      * Navigates to the first direct child element with the given name and
      * extracts its content using the supplied extractor.
      *
-     * <p>Returns {@code null} when the element is not found before the end
-     * of the enclosing container. Non-matching siblings are skipped
-     * efficiently without allocating intermediate objects.
-     *
-     * <p>After a miss the enclosing scope has been fully consumed; subsequent
-     * requests in the same extractor also report absence (see
-     * <em>Scope exhaustion</em> in the class docs).
+     * <p>Returns {@code null} when no such child exists in the enclosing
+     * container. Non-matching siblings are skipped without allocating
+     * intermediate objects; a sibling scanned past to reach a later request is
+     * buffered so it can still be read afterwards.
      *
      * @param <T>       the result type produced by the extractor
      * @param name      tag name of the direct child element to navigate to
      * @param extractor extraction logic invoked with the cursor positioned at
      *                  the child's {@code START_ELEMENT}
      * @return the extractor's result, or {@code null} when the element is absent
-     * @throws XmlException on stream errors, or in debug mode when the element
-     *                      was already consumed by an earlier request
+     * @throws XmlException on stream errors
      */
     <T> T child(String name, XmlExtractor<T> extractor);
 
@@ -86,18 +78,15 @@ public interface XmlCursor {
      * extractor to each. Non-matching siblings are skipped.
      *
      * <p>Returns an empty (mutable) list when no matching children exist.
-     *
-     * <p>Collecting requires sweeping the entire enclosing scope, so this is
-     * naturally the <em>last</em> read of a scope: anything requested after
-     * it reports absence.
+     * Matches are returned in document order. Non-matching siblings are skipped
+     * (and buffered), so a later request for one of them still succeeds.
      *
      * @param <T>       the element type produced by the extractor
      * @param name      tag name of the direct child elements to collect
      * @param extractor extraction logic invoked once per matching child
      * @return a mutable list with one entry per match, in document order;
      *         empty when there are none
-     * @throws XmlException on stream errors, or in debug mode when the elements
-     *                      were already consumed by an earlier request
+     * @throws XmlException on stream errors
      */
     <T> List<T> children(String name, XmlExtractor<T> extractor);
 
@@ -120,8 +109,7 @@ public interface XmlCursor {
      * @param type the class to convert the text to
      * @return the converted value, or {@code null} when the element is absent
      *         or empty
-     * @throws XmlException on stream errors, for unsupported target types, or
-     *                      in debug mode when the element was already consumed
+     * @throws XmlException on stream errors or for unsupported target types
      */
     <T> T value(String name, Class<T> type);
 
@@ -140,26 +128,21 @@ public interface XmlCursor {
      * @param names tag names accepted as alternatives
      * @return the converted value of the first alternative found, or
      *         {@code null} when none is present
-     * @throws XmlException on stream errors, for unsupported target types, or
-     *                      in debug mode when an alternative was already consumed
+     * @throws XmlException on stream errors or for unsupported target types
      */
     <T> T firstOf(Class<T> type, String... names);
 
     /**
-     * Reads an attribute of the current element without advancing the reader.
-     *
-     * <p>Must be called <em>before</em> any child navigation — attributes
-     * belong to the {@code START_ELEMENT} the cursor is positioned at, and
-     * child scans move past it. Returns {@code null} when the attribute is
-     * absent or empty.
+     * Reads an attribute of the current element, converting it to the requested
+     * type. Attributes are snapshotted when the cursor enters the element, so
+     * this may be called before or after navigating to children. Returns
+     * {@code null} when the attribute is absent or empty.
      *
      * @param <T>  the target type (same conversions as {@link #value})
      * @param name the attribute name
      * @param type the class to convert the attribute text to
      * @return the converted value, or {@code null} when the attribute is
      *         absent or empty
-     * @throws XmlException when called after child navigation has moved the
-     *                      cursor off the element's {@code START_ELEMENT}
      */
     <T> T attribute(String name, Class<T> type);
 

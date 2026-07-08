@@ -22,7 +22,7 @@
  *       parse a {@code String}, {@code byte[]} or {@code InputStream};</li>
  *   <li>{@link io.github.robsonkades.fletch.XmlExtractor} — a lambda that maps
  *       one XML element to a typed value;</li>
- *   <li>{@link io.github.robsonkades.fletch.XmlCursor} — the forward-only
+ *   <li>{@link io.github.robsonkades.fletch.XmlCursor} — the order-tolerant
  *       navigation surface handed to extractors;</li>
  *   <li>{@link io.github.robsonkades.fletch.XmlException} — the single
  *       unchecked exception type for every failure mode.</li>
@@ -45,10 +45,11 @@
  * Order order = Xml.extract(inputStream, doc -> doc.child("order", ORDER));
  * }</pre>
  *
- * <p>Design constraints worth knowing before use: extraction is
- * <em>forward-only</em> (requests must follow document order), parsing is not
- * namespace-aware (elements match by raw tag name), and DTDs / external
- * entities are disabled (no XXE surface). See {@link
- * io.github.robsonkades.fletch.XmlCursor} for the detailed contract.
+ * <p>Design constraints worth knowing before use: extraction is a
+ * <em>single streaming pass</em> (reads tolerate children in any order,
+ * buffering only what must be revisited), parsing is not namespace-aware
+ * (elements match by raw tag name), and DTDs / external entities are disabled
+ * (no XXE surface). See {@link io.github.robsonkades.fletch.XmlCursor} for the
+ * detailed contract.
  */
 package io.github.robsonkades.fletch;

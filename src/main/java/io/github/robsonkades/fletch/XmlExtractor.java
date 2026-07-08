@@ -21,10 +21,10 @@ package io.github.robsonkades.fletch;
  * <p>An extractor receives an {@link XmlCursor} positioned at the
  * {@code START_ELEMENT} of the element to read. It may call {@code child},
  * {@code children}, {@code value}, {@code firstOf} and {@code attribute} on
- * the cursor in any combination — as long as requests follow document order.
- * The framework guarantees the cursor is drained back to the element boundary
- * after the extractor returns, so callers never manage depth bookkeeping and
- * an extractor may read any subset of an element's content.
+ * the cursor in any combination and in any order. The framework guarantees the
+ * cursor is drained back to the element boundary after the extractor returns,
+ * so callers never manage depth bookkeeping and an extractor may read any
+ * subset of an element's content.
  *
  * <p>Extractors are stateless lambdas — define them as {@code static final}
  * constants and reuse them freely across threads. They compose naturally:
