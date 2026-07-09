@@ -31,14 +31,14 @@ First off, **thank you** for considering a contribution to Fletch! Your support 
 
 - Target Java 17 (`maven.compiler.release` in `pom.xml`).
 - Document every public type and method with Javadoc, including `{@link ...}` tags and code examples when appropriate.
-- Keep behavioral contracts explicit: absence is `null` / empty list, all failures are `XmlException`, and reads follow document order.
+- Keep behavioral contracts explicit: absence is `null` / empty list, all failures are `XmlException`, and reads tolerate children in any order.
 - If you modify `pom.xml`, ensure file structure and indentation remain consistent.
 
 ## Pull Request Checklist
 
 - [ ] Your code compiles and tests pass (`mvn clean verify`).
 - [ ] New or updated methods include proper Javadoc (`mvn javadoc:javadoc` should produce no errors).
-- [ ] New behavior is covered by unit tests, including the debug-mode (`-ea`) semantics when relevant.
+- [ ] New behavior is covered by unit tests.
 - [ ] Performance-sensitive changes include JMH results.
 - [ ] The PR description explains both "what" and "why" (not just "how") you made the change.
 

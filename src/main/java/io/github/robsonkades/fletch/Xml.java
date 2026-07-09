@@ -48,7 +48,7 @@ import java.io.StringReader;
  * cursor is positioned <em>before</em> the document's root element, so the
  * first navigation call addresses the root itself ({@code doc.child("book",
  * ...)} in the example above). See {@link XmlCursor} for the full navigation
- * contract, including the document-order requirement.
+ * contract, including its order-tolerant reads.
  *
  * <h2>Factory configuration</h2>
  * <p>All extractions share a single pre-configured, thread-safe Woodstox
@@ -83,13 +83,6 @@ import java.io.StringReader;
  * {@link WstxLazyException}; both it and the checked
  * {@link XMLStreamException} are translated here so callers see a single
  * exception type.
- *
- * <h2>Debug mode</h2>
- * <p>Running with assertions enabled ({@code -ea}) or with
- * {@code -Dfletch.xml.debug=true} turns on out-of-order read detection in
- * the cursor: an extractor that requests elements against document order
- * fails fast with a descriptive {@link XmlException} instead of silently
- * producing {@code null}s. Zero overhead when off — see {@link XmlCursor}.
  */
 public final class Xml {
 

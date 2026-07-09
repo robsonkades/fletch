@@ -20,16 +20,17 @@ Book book = Xml.extract(xml, doc -> doc.child("book", b -> new Book(
 
 ## Why Fletch?
 
-- **One pass, zero tree.** The document is never materialized. Memory usage is flat
-  regardless of document size — only the values you extract are allocated.
+- **One pass, minimal buffering.** The document is never materialized into a tree. Reads
+  that follow document order allocate only the values you extract; a read that revisits an
+  earlier sibling buffers just the current element's skipped children.
 - **Declarative, composable extractors.** An `XmlExtractor<T>` is a lambda that maps one
   element to one value. Extractors nest and compose like ordinary functions, and they are
   stateless constants you can share across threads.
 - **Typed out of the box.** `String`, `Integer`, `Long`, `BigDecimal`, `Double`,
   `Boolean`, `Instant` and enums — converted directly from element text or attributes.
-- **Fails fast in development.** In debug mode (`-ea`), reading elements against document
-  order throws a descriptive exception instead of silently returning `null`. The check
-  compiles away to nothing in production.
+- **Order-tolerant.** Read an element's fields in whatever order suits your record — the
+  cursor serves them regardless of the order they appear in the XML, buffering only what
+  it must revisit.
 - **Secure by default.** DTDs and external entities are disabled — there is no XXE
   attack surface.
 - **One exception type.** Every failure mode surfaces as the unchecked `XmlException`,
@@ -147,38 +148,24 @@ The cursor offers six operations:
 Absent elements, empty text and empty attributes uniformly convert to `null` — including
 for `String`.
 
-## The rules of the road
+## How reads work
 
-Fletch is a *forward-only* streaming reader. That buys its speed and flat memory profile,
-and it imposes three rules:
+Fletch is a single streaming pass with a lazy per-scope buffer, so extractor calls are
+**order-independent**:
 
-1. **Read in document order.** Elements cannot be re-read. Requesting an element the
-   cursor already passed reports absence (`null` / empty list) — or, in debug mode,
-   throws an `XmlException` naming the misordered element.
-2. **Read attributes before children.** Attributes belong to the element's start tag;
-   any child navigation moves past it.
-3. **A miss ends the scope.** Scanning for an element that isn't there consumes the rest
-   of the enclosing element, so every later request in the same extractor also reports
-   absence. Optional *trailing* elements therefore behave naturally; optional elements
-   *in the middle* of a scope cost you everything after them on a miss — order your
-   reads accordingly. `children(...)` and `skip()` also consume the scope.
+1. **Read fields in any order.** A read that matches the next child in the stream is
+   served directly; a read that targets a child appearing later buffers the siblings
+   scanned past, so a later request for one of them is still answered. Reads that follow
+   document order buffer nothing — that is the fast, flat-memory path.
+2. **Attributes any time.** Attributes are snapshotted when the cursor enters an element,
+   so `attribute(...)` works before or after navigating to children.
+3. **Misses are cheap and local.** Requesting an element that isn't there yields `null`
+   (or an empty list) in any position; it never poisons later reads. `skip()` discards
+   the rest of the current element — after it, every request reports absence.
 
-The cursor never leaks into the parent scope: after an extractor returns, Fletch drains
-whatever it left unread and continues cleanly at the next sibling.
-
-### Debug mode: catch misordered extractors early
-
-Run with assertions (`-ea`) — the Surefire default, so your tests get it automatically —
-or with `-Dfletch.xml.debug=true`:
-
-```
-XmlException: Out-of-order read: element 'title' exists in this scope, but the cursor
-already consumed it while serving an earlier request. Reorder the extractor calls to
-follow document order.
-```
-
-The flag is read once at class load into a `static final`, so HotSpot eliminates every
-debug branch in production — the check is literally free when off.
+`children(...)` returns its matches in document order. The cursor never leaks into the
+parent scope: after an extractor returns, Fletch drains whatever it left unread and
+continues cleanly at the next sibling.
 
 ## Namespaces
 

@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE r [<!ENTITY xxe SYSTEM "file:///nonexistent-secret.txt">]>
+<r>
+    <a>&xxe;</a>
+</r>

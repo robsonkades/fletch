@@ -1,0 +1,20 @@
+<invoice number="1042" urgent="true">
+    <items>
+        <item>
+            <qty>2</qty>
+            <sku>A-100</sku>
+        </item>
+        <item>
+            <qty>1</qty>
+            <sku>B-200</sku>
+        </item>
+    </items>
+    <customer>
+        <name>Ana Souza</name>
+        <address>
+            <zip>80000-000</zip>
+            <city>Curitiba</city>
+        </address>
+    </customer>
+    <total>150.00</total>
+</invoice>

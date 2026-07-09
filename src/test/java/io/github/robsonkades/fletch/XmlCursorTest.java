@@ -25,16 +25,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for {@link XmlCursor} navigation semantics: typed values, nesting,
- * collections, scope exhaustion, skipping and the debug-mode ordering checks.
- *
- * <p>Surefire runs with assertions enabled ({@code -ea}), so the cursor's
- * <em>debug mode</em> is active here: out-of-order reads throw
- * {@link XmlException} instead of returning {@code null}.
+ * collections, scope exhaustion, skipping and order-tolerant reads.
  */
 class XmlCursorTest {
 
@@ -284,13 +279,15 @@ class XmlCursorTest {
         }
 
         @Test
-        void attributeAfterChildNavigationThrows() {
+        void attributeReadableAfterChildNavigation() {
             String xml = "<order id=\"7\"><item>x</item></order>";
 
-            assertThrows(XmlException.class, () -> Xml.extract(xml, doc -> doc.child("order", o -> {
-                o.value("item", String.class); // moves the cursor off START_ELEMENT
-                return o.attribute("id", Integer.class);
-            })));
+            Integer id = Xml.extract(xml, doc -> doc.child("order", o -> {
+                o.value("item", String.class); // navigates past the start tag
+                return o.attribute("id", Integer.class); // attributes are snapshotted on entry
+            }));
+
+            assertEquals(7, id);
         }
     }
 
@@ -355,22 +352,62 @@ class XmlCursorTest {
     }
 
     @Nested
-    @DisplayName("Out-of-order detection (debug mode, -ea)")
-    class OutOfOrderDetection {
+    @DisplayName("Arbitrary order")
+    class ArbitraryOrder {
+
+        record Address(String city, String zip) {}
+
+        static final XmlExtractor<Address> ADDRESS = a -> new Address(
+                a.value("city", String.class),
+                a.value("zip", String.class));
 
         @Test
-        void requestingAnAlreadyConsumedElementThrows() {
-            XmlException e = assertThrows(XmlException.class,
-                    () -> Xml.extract("<r><a>1</a><b>2</b></r>", doc -> doc.child("r", r -> {
-                        assertEquals(2, r.value("b", Integer.class)); // scan consumes <a>
-                        return r.value("a", Integer.class);           // against document order
-                    })));
+        void leafValuesReadRegardlessOfDocumentOrder() {
+            String reordered = "<address><zip>80000-000</zip><city>Curitiba</city></address>";
+            String natural = "<address><city>Curitiba</city><zip>80000-000</zip></address>";
 
-            assertTrue(e.getMessage().contains("'a'"), "message should name the misordered element");
+            Address expected = new Address("Curitiba", "80000-000");
+            assertEquals(expected, Xml.extract(reordered, doc -> doc.child("address", ADDRESS)));
+            assertEquals(expected, Xml.extract(natural, doc -> doc.child("address", ADDRESS)));
         }
 
         @Test
-        void correctlyOrderedReadsDoNotTriggerDetection() {
+        void readsAnElementRequestedAgainstDocumentOrder() {
+            Integer a = Xml.extract("<r><a>1</a><b>2</b></r>", doc -> doc.child("r", r -> {
+                assertEquals(2, r.value("b", Integer.class)); // scan buffers <a>
+                return r.value("a", Integer.class);           // served from the buffer
+            }));
+
+            assertEquals(1, a);
+        }
+
+        @Test
+        void readsANestedChildBeforeAnEarlierSibling() {
+            String xml = "<r><first>1</first><second><x>9</x></second></r>";
+
+            Integer first = Xml.extract(xml, doc -> doc.child("r", r -> {
+                Integer x = r.child("second", s -> s.value("x", Integer.class));
+                assertEquals(9, x);
+                return r.value("first", Integer.class); // earlier sibling, from buffer
+            }));
+
+            assertEquals(1, first);
+        }
+
+        @Test
+        void firstOfMatchesAnAlternativeRequestedAfterALaterSibling() {
+            String xml = "<dest><CPF>123</CPF><name>ACME</name></dest>";
+
+            String cpf = Xml.extract(xml, doc -> doc.child("dest", d -> {
+                assertEquals("ACME", d.value("name", String.class)); // buffers <CPF>
+                return d.firstOf(String.class, "CPF", "CNPJ");        // from buffer
+            }));
+
+            assertEquals("123", cpf);
+        }
+
+        @Test
+        void readsElementsInDocumentOrderWithoutBuffering() {
             Xml.extract("<r><a>1</a><b>2</b></r>", doc -> doc.child("r", r -> {
                 assertEquals(1, r.value("a", Integer.class));
                 assertEquals(2, r.value("b", Integer.class));

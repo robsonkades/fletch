@@ -1,0 +1,4 @@
+<ns:order xmlns:ns="urn:example:orders">
+    <ns:id>7</ns:id>
+    <ns:total>99.90</ns:total>
+</ns:order>

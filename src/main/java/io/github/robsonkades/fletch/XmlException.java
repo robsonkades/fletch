@@ -21,11 +21,9 @@ import java.io.Serial;
 /**
  * The single exception type thrown by the Fletch API.
  *
- * <p>Wraps every failure mode — malformed documents, stream I/O errors,
- * unsupported type conversions, misuse of the cursor (e.g. reading an
- * attribute after child navigation), and out-of-order reads detected in
- * debug mode — so callers handle one unchecked exception instead of the
- * checked {@code XMLStreamException} zoo underneath.
+ * <p>Wraps every failure mode — malformed documents, stream I/O errors and
+ * unsupported type conversions — so callers handle one unchecked exception
+ * instead of the checked {@code XMLStreamException} zoo underneath.
  *
  * <p>When the failure originates in the underlying StAX parser, the original
  * exception is preserved as the {@linkplain #getCause() cause}.

@@ -9,7 +9,7 @@
 
   <name>Fletch</name>
   <inceptionYear>2026</inceptionYear>
-  <description>Fast, declarative XML extraction for Java — a zero-reflection, forward-only streaming reader built on Woodstox/StAX</description>
+  <description>Fast, declarative XML extraction for Java — a zero-reflection, order-tolerant streaming reader built on Woodstox/StAX</description>
   <url>https://github.com/robsonkades/fletch</url>
 
   <properties>
