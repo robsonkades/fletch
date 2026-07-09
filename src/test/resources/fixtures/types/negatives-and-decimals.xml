@@ -1,0 +1,7 @@
+<numbers>
+    <negInt>-42</negInt>
+    <negLong>-9999999999</negLong>
+    <negDouble>-1.5</negDouble>
+    <bigDecimal>-12345.6789</bigDecimal>
+    <zero>0</zero>
+</numbers>
