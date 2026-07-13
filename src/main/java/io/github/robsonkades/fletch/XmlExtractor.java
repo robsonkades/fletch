@@ -19,7 +19,7 @@ package io.github.robsonkades.fletch;
  * Declarative, composable extractor for a scoped XML element.
  *
  * <p>An extractor receives an {@link XmlCursor} positioned at the
- * {@code START_ELEMENT} of the element to read. It may call {@code child},
+ * start tag of the element to read. It may call {@code child},
  * {@code children}, {@code value}, {@code firstOf} and {@code attribute} on
  * the cursor in any combination and in any order. The framework guarantees the
  * cursor is drained back to the element boundary after the extractor returns,
@@ -50,7 +50,7 @@ public interface XmlExtractor<T> {
     /**
      * Extracts a value from the element the cursor is positioned at.
      *
-     * @param cursor cursor positioned at the element's {@code START_ELEMENT}
+     * @param cursor cursor positioned at the element's start tag
      * @return the extracted value; {@code null} is a legal result
      */
     T extract(XmlCursor cursor);

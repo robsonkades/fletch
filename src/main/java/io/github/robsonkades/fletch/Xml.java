@@ -15,24 +15,16 @@
  */
 package io.github.robsonkades.fletch;
 
-
-import com.ctc.wstx.api.WstxInputProperties;
-import com.ctc.wstx.exc.WstxLazyException;
-import com.ctc.wstx.stax.WstxInputFactory;
-import org.codehaus.stax2.XMLInputFactory2;
-import org.codehaus.stax2.io.Stax2ByteArraySource;
-
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 import java.io.InputStream;
-import java.io.StringReader;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * Entry point for the declarative XML streaming extraction API.
  *
- * <p>Fletch reads XML in a single forward pass over a StAX (Woodstox) stream
- * and materialises exactly the values the caller asks for — no DOM tree, no
- * reflection, no binding annotations:
+ * <p>Fletch reads XML in a single forward pass of its own byte-level
+ * scanning engine and materialises exactly the values the caller asks for —
+ * no DOM tree, no reflection, no binding annotations:
  *
  * <pre>{@code
  * record Book(String title, Integer year) {}
@@ -50,59 +42,49 @@ import java.io.StringReader;
  * ...)} in the example above). See {@link XmlCursor} for the full navigation
  * contract, including its order-tolerant reads.
  *
- * <h2>Factory configuration</h2>
- * <p>All extractions share a single pre-configured, thread-safe Woodstox
- * factory tuned for throughput:
+ * <h2>The engine</h2>
+ * <p>Extraction runs on a fused byte-level scan: tokenizer, name matching
+ * and value decoding execute in one loop over the document bytes, with no
+ * per-event objects. Subtrees the extractor never asks about are crossed by
+ * a balance-counting skip at SWAR scan speed, and a sibling scanned past on
+ * the way to a later request is remembered as a byte span — four
+ * {@code int}s — and re-scanned only if the extractor asks for it. When the
+ * root extractor returns, reading stops: trailing content is never scanned.
  * <ul>
- *   <li>{@code IS_NAMESPACE_AWARE = false} — elements are matched by their raw
- *       tag name, so namespace resolution (15-25 % of per-element work) is
- *       skipped entirely. Documents using a default namespace — a common
- *       profile for fiscal documents such as the Brazilian NF-e — match by
- *       plain local name; for prefixed elements the prefix is part of the
- *       name (e.g. {@code "soap:Body"}).</li>
- *   <li>{@code SUPPORT_DTD = false} and {@code IS_SUPPORTING_EXTERNAL_ENTITIES = false}
- *       — eliminates the XXE attack surface.</li>
- *   <li>{@code IS_COALESCING = false} — lets Woodstox split large text nodes into
- *       chunks; {@link XmlCursorImpl} handles multi-chunk assembly with a single
- *       {@code StringBuilder} allocation.</li>
- *   <li>{@code P_PRESERVE_LOCATION = false} — skips per-event line/column
- *       bookkeeping; extraction never reports locations, so this is pure win.</li>
- *   <li>{@code P_REPORT_PROLOG_WHITESPACE = false} — suppresses whitespace
- *       events outside the root element instead of dispatching them.</li>
- *   <li>Buffer size 16 KB — a cache-friendly I/O granularity for the
- *       small-to-medium documents (tens to hundreds of KB) this API targets.</li>
- *   <li>The singleton factory is thread-safe; its shared symbol table interns
- *       element names after warm-up, making subsequent parses of same-shaped
- *       documents faster.</li>
+ *   <li><b>Name matching.</b> Parsing is not namespace-aware: elements are
+ *       matched by their raw tag name. Documents using a default namespace —
+ *       a common profile for fiscal documents such as the Brazilian NF-e —
+ *       match by plain local name; for prefixed elements the prefix is part
+ *       of the name (e.g. {@code "soap:Body"}).</li>
+ *   <li><b>Security.</b> {@code <!DOCTYPE} is rejected at its first byte —
+ *       there is no DTD processing and no XXE surface. Only the five
+ *       predefined entities and numeric character references are decoded.</li>
+ *   <li><b>Encodings.</b> UTF-8 and US-ASCII are scanned in place. ISO-8859-1
+ *       (declared in the XML declaration) and UTF-16 (detected from the
+ *       byte-order mark or a {@code 3C 00}/{@code 00 3C} prefix) are
+ *       transcoded once; other encodings are rejected.</li>
+ *   <li><b>Limits.</b> A single text value is capped at 16&nbsp;MiB.</li>
+ *   <li><b>Well-formedness.</b> Elements the extractor traverses get their
+ *       end tags verified and attribute syntax enforced; skipped subtrees
+ *       are checked for tag balance only.</li>
  * </ul>
  *
  * <h2>Error contract</h2>
- * <p>All parse failures surface as {@link XmlException}. Because
- * {@code P_LAZY_PARSING} is enabled, Woodstox reports errors detected while
- * finishing a deferred token as the <em>unchecked</em>
- * {@link WstxLazyException}; both it and the checked
- * {@link XMLStreamException} are translated here so callers see a single
- * exception type.
+ * <p>All parse failures surface as {@link XmlException} carrying the byte
+ * offset of the failure in the source. I/O failures while reading an
+ * {@link InputStream} preserve the underlying {@code IOException} as the
+ * cause. Value conversion failures propagate from the conversion itself
+ * (e.g. {@link NumberFormatException}), exactly as documented on
+ * {@link XmlCursor#value}.
  */
 public final class Xml {
 
-    private static final WstxInputFactory FACTORY;
-
-    static {
-        FACTORY = new WstxInputFactory();
-        FACTORY.setProperty(XMLInputFactory2.P_LAZY_PARSING, true);
-        FACTORY.setProperty(XMLInputFactory2.SUPPORT_DTD, false);
-        FACTORY.setProperty(XMLInputFactory2.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
-        FACTORY.setProperty(XMLInputFactory2.IS_COALESCING, false);
-        FACTORY.setProperty(XMLInputFactory2.IS_NAMESPACE_AWARE, false);
-        FACTORY.setProperty(XMLInputFactory2.P_PRESERVE_LOCATION, false);
-        FACTORY.setProperty(XMLInputFactory2.P_REPORT_PROLOG_WHITESPACE, false);
-
-        FACTORY.setProperty(WstxInputProperties.P_INPUT_BUFFER_LENGTH, 16_384);
-        FACTORY.setProperty(WstxInputProperties.P_MIN_TEXT_SEGMENT, 64);
-        FACTORY.setProperty(WstxInputProperties.P_MAX_TEXT_LENGTH, 1_000_000);
-        FACTORY.setProperty(WstxInputProperties.P_MAX_ELEMENT_DEPTH, 200);
-    }
+    /**
+     * Reusable engines, striped by thread id. An engine holds only scratch
+     * buffers, so a stale slot costs one fresh allocation, never corruption;
+     * nested/reentrant extractions simply take a fresh engine.
+     */
+    private static final AtomicReferenceArray<XmlCursorEngine> POOL = new AtomicReferenceArray<>(8);
 
     private Xml() {}
 
@@ -110,9 +92,10 @@ public final class Xml {
      * Extracts a typed result from an XML {@link InputStream} in a single
      * forward pass.
      *
-     * <p>The stream is <em>not</em> closed by this method — lifecycle stays
-     * with the caller. Character encoding is auto-detected from the
-     * byte-order mark or the XML declaration.
+     * <p>The stream is read fully into the engine's reusable buffer and is
+     * <em>not</em> closed — lifecycle stays with the caller. Character
+     * encoding is auto-detected from the byte-order mark or the XML
+     * declaration.
      *
      * @param <T>       the result type produced by the extractor
      * @param input     the stream to read; consumed but not closed
@@ -123,7 +106,13 @@ public final class Xml {
      *                      occurs while reading
      */
     public static <T> T extract(final InputStream input, final XmlExtractor<T> extractor) {
-        return extract(() -> FACTORY.createXMLStreamReader(input), extractor, "Error processing XML stream");
+        Objects.requireNonNull(extractor, "extractor");
+        final XmlCursorEngine engine = take();
+        try {
+            return engine.extract(input, extractor);
+        } finally {
+            release(engine);
+        }
     }
 
     /**
@@ -142,18 +131,21 @@ public final class Xml {
      * @throws XmlException if the document is not well-formed
      */
     public static <T> T extract(final String xml, final XmlExtractor<T> extractor) {
-        return extract(() -> FACTORY.createXMLStreamReader(new StringReader(xml)), extractor, "Error processing XML string");
+        Objects.requireNonNull(extractor, "extractor");
+        final XmlCursorEngine engine = take();
+        try {
+            return engine.extract(xml, extractor);
+        } finally {
+            release(engine);
+        }
     }
 
     /**
      * Extracts a typed result from a raw XML byte array in a single forward
-     * pass. Woodstox auto-detects the encoding from the byte-order mark or
-     * the XML declaration.
-     *
-     * <p>Uses {@link Stax2ByteArraySource} so Woodstox bootstraps directly on
-     * the array — no {@code ByteArrayInputStream} indirection and no
-     * stream-read loop. This is the fastest overload when the document is
-     * already in memory.
+     * pass. Encoding is auto-detected from the byte-order mark or the XML
+     * declaration; UTF-8 documents are scanned in place with zero copying,
+     * making this the fastest overload when the document is already in
+     * memory.
      *
      * @param <T>       the result type produced by the extractor
      * @param bytes     the encoded XML document
@@ -163,40 +155,23 @@ public final class Xml {
      * @throws XmlException if the document is not well-formed
      */
     public static <T> T extract(final byte[] bytes, final XmlExtractor<T> extractor) {
-        return extract(() -> FACTORY.createXMLStreamReader(new Stax2ByteArraySource(bytes, 0, bytes.length)), extractor, "Error processing XML bytes");
-    }
-
-    // -------------------------------------------------------------------------
-    // Shared extraction pipeline
-    // -------------------------------------------------------------------------
-
-    /** Creates a reader for one extraction pass; may fail with a stream error. */
-    @FunctionalInterface
-    private interface ReaderSupplier {
-        XMLStreamReader create() throws XMLStreamException;
-    }
-
-    private static <T> T extract(final ReaderSupplier source, final XmlExtractor<T> extractor, final String errorMessage) {
-        XMLStreamReader reader = null;
+        Objects.requireNonNull(extractor, "extractor");
+        final XmlCursorEngine engine = take();
         try {
-            reader = source.create();
-            return extractor.extract(new XmlCursorImpl(reader));
-        } catch (XMLStreamException e) {
-            throw new XmlException(errorMessage, e);
-        } catch (WstxLazyException e) {
-            // Lazy parsing defers well-formedness errors to getText()/getTextCharacters(),
-            // where Woodstox wraps them in this unchecked exception.
-            throw new XmlException(errorMessage, e.getCause() != null ? e.getCause() : e);
+            return engine.extract(bytes, extractor);
         } finally {
-            closeQuietly(reader);
+            release(engine);
         }
     }
 
-    private static void closeQuietly(final XMLStreamReader reader) {
-        if (reader != null) {
-            try {
-                reader.close();
-            } catch (XMLStreamException ignored) {}
-        }
+    private static XmlCursorEngine take() {
+        final int slot = (int) Thread.currentThread().getId() & 7;
+        final XmlCursorEngine engine = POOL.getAndSet(slot, null);
+        return engine != null ? engine : new XmlCursorEngine();
+    }
+
+    private static void release(final XmlCursorEngine engine) {
+        engine.trimForReuse();
+        POOL.set((int) Thread.currentThread().getId() & 7, engine);
     }
 }

@@ -15,106 +15,98 @@
  */
 package io.github.robsonkades.fletch;
 
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.List;
-import java.util.function.Predicate;
 
 /**
- * Order-tolerant {@link XmlCursor} backed by a Woodstox {@link XMLStreamReader}.
+ * Order-tolerant {@link XmlCursor} implemented directly over the byte-level
+ * scanning engine ({@link XmlCursorEngine}).
  *
- * <h2>Order tolerance with a streaming fast path</h2>
- * <p>Extractor calls may request the direct children of an element in any order,
- * regardless of the order they appear in the document. The cursor stays a single
- * forward pass over the stream and only buffers what it must:
- * <ul>
- *   <li>When a request matches the next child in the stream (the common case
- *       when reads follow document order), it is served straight from the reader
- *       — no buffering, flat memory, as fast as a plain forward-only scan.</li>
- *   <li>When a request targets a child that appears later than the current
- *       position, the direct children scanned past on the way are captured into
- *       a small per-scope {@link #pending} buffer as raw event subtrees, so a
- *       later request for one of them is served from the buffer instead of the
- *       (unrewindable) stream.</li>
- * </ul>
- * In the worst case (reading a whole scope in reverse) the current scope is fully
- * buffered; the document as a whole is never materialised up front.
+ * <h2>Order tolerance by span capture</h2>
+ * <p>The document is fully buffered, so a sibling scanned past on the way to
+ * a later request does not need to be materialised: it is crossed at skip
+ * speed (tag balance only) and remembered as four {@code int}s — name span
+ * and subtree span — in the scope's {@link #pending} array. A later request
+ * for it is served by <em>re-scanning</em> those bytes through a replay
+ * cursor. Reads that follow document order record nothing and never re-scan;
+ * that is the flat, allocation-free fast path.
  *
  * <h2>Scope model</h2>
- * <p>An instance reads the content of one element (its <em>scope</em>). The
- * element's {@code START_ELEMENT} has already been consumed when the instance is
- * created, so {@link EventSource#depth() depth} equals the element's depth and
- * its direct children live at {@code depth + 1}. The scope ends at the element's
- * {@code END_ELEMENT}. Attributes of the element are snapshotted at construction,
- * so {@link #attribute} works before or after any child navigation.
+ * <p>A cursor reads the content of one element (its <em>scope</em>). Live
+ * cursors share the engine's single forward position through a {@link Ctx};
+ * a replayed child gets its own {@code Ctx} over the buffered span, so replay
+ * never disturbs the live scan. The start tag's spans are kept for
+ * {@link #attribute} (parsed lazily on first request) and {@link #name}.
  *
- * <p>Nested extraction reuses the same machinery: a fast-path {@link #child}
- * shares the reader with a sub-cursor and drains whatever the sub-extractor left
- * unread; a buffered child replays its captured subtree through a
- * {@link BufferedEventSource}. Either way the parent scope is always left at the
- * correct position for the next sibling scan.
+ * <p>After a live child extractor returns, the parent drains whatever the
+ * extractor left unread — at skip speed — so the parent always resumes at
+ * the next sibling. The scope's end tag is verified against the element name
+ * (hash compare); content skipped inside unread subtrees is balance-checked
+ * only.
  */
 final class XmlCursorImpl implements XmlCursor {
 
-    private static final String[] NO_ATTRS = new String[0];
-
-    /**
-     * Sentinel returned by {@link #takeChild} when the match is live in the stream.
-     */
-    private static final Captured STREAM_HIT = new Captured(null, null);
-
-    private final EventSource src;
-
-    /**
-     * Depth (in {@link #src}) of the element whose content this cursor reads.
-     */
-    private final int scopeDepth;
-
-    private final String currentName;
-    private final String[] attrNames;
-    private final String[] attrValues;
-
-    /**
-     * Direct children read from {@link #src} but not yet consumed by the
-     * extractor, in document order. Lazily allocated: stays {@code null} while
-     * reads follow document order, so the fast path allocates nothing.
-     */
-    private List<Captured> pending;
-
-    /**
-     * True once the scope's own {@code END_ELEMENT} has been consumed from {@link #src}.
-     */
-    private boolean scopeClosed;
-
-    XmlCursorImpl(final XMLStreamReader reader) {
-        this(new StreamEventSource(reader));
+    /** One forward scan position, shared by the chain of live cursors over it. */
+    static final class Ctx {
+        int pos;
+        XmlCursorImpl owner;
     }
 
-    private XmlCursorImpl(final EventSource src) {
-        this.src = src;
-        this.scopeDepth = src.depth();
-        if (src.eventType() == XMLStreamConstants.START_ELEMENT) {
-            this.currentName = src.localName();
-            final int n = src.attributeCount();
-            if (n == 0) {
-                this.attrNames = NO_ATTRS;
-                this.attrValues = NO_ATTRS;
-            } else {
-                this.attrNames = new String[n];
-                this.attrValues = new String[n];
-                for (int i = 0; i < n; i++) {
-                    this.attrNames[i] = src.attributeLocalName(i);
-                    this.attrValues[i] = src.attributeValue(i);
-                }
-            }
-        } else {
-            // Root cursor: positioned before the document element, no name/attributes.
-            this.currentName = null;
-            this.attrNames = NO_ATTRS;
-            this.attrValues = NO_ATTRS;
+    private static final int MISS = -2;
+    private static final int LIVE = -1;
+
+    private final XmlCursorEngine eng;
+    private final Ctx ctx;
+
+    // Start-tag identity: name span (nameS < 0 marks the synthetic root
+    // cursor), attribute region, and the name hash end tags are verified with.
+    private final int nameS;
+    private final int nameE;
+    private final long nameHash;
+    private final int attrS;
+    private final int attrE;
+
+    /** Skipped-sibling spans, quads of (nameS, nameE, subtreeS, subtreeE). */
+    private int[] pending;
+    private int pendingN;
+
+    /** Logical exhaustion: misses and {@link #skip} stop serving requests. */
+    private boolean closed;
+
+    /** True once this element's own end tag was consumed from its context. */
+    private boolean endConsumed;
+
+    /** Root cursor only: a second top-level element is a hard error. */
+    private boolean rootElementSeen;
+
+    private String tag;
+
+    /** Root cursor, positioned before the document element. */
+    XmlCursorImpl(final XmlCursorEngine eng, final Ctx ctx) {
+        this.eng = eng;
+        this.ctx = ctx;
+        this.nameS = -1;
+        this.nameE = -1;
+        this.nameHash = 0;
+        this.attrS = 0;
+        this.attrE = 0;
+    }
+
+    /** Element cursor, positioned just after the element's start tag. */
+    private XmlCursorImpl(final XmlCursorEngine eng, final Ctx ctx, final int nameS, final int nameE,
+                          final int attrS, final int attrE, final boolean selfClosed) {
+        this.eng = eng;
+        this.ctx = ctx;
+        this.nameS = nameS;
+        this.nameE = nameE;
+        this.nameHash = Swar.hash(eng.b, nameS, nameE - nameS);
+        this.attrS = attrS;
+        this.attrE = attrE;
+        if (selfClosed) {
+            this.closed = true;
+            this.endConsumed = true;
         }
     }
 
@@ -122,429 +114,338 @@ final class XmlCursorImpl implements XmlCursor {
     // XmlCursor interface
     // -------------------------------------------------------------------------
 
-    private static Event startEventFrom(final EventSource s) {
-        final int n = s.attributeCount();
-        if (n == 0) {
-            return new Event(XMLStreamConstants.START_ELEMENT, s.localName(), NO_ATTRS, NO_ATTRS, null, false);
-        }
-        final String[] an = new String[n];
-        final String[] av = new String[n];
-        for (int i = 0; i < n; i++) {
-            an[i] = s.attributeLocalName(i);
-            av[i] = s.attributeValue(i);
-        }
-        return new Event(XMLStreamConstants.START_ELEMENT, s.localName(), an, av, null, false);
-    }
-
-    private static XmlCursorImpl cursorOver(final Captured c) {
-        final BufferedEventSource bes = new BufferedEventSource(c.subtree());
-        bes.next(); // position at the captured START_ELEMENT
-        return new XmlCursorImpl(bes);
-    }
-
-    private static String bufferedText(final Captured c) throws XMLStreamException {
-        final BufferedEventSource bes = new BufferedEventSource(c.subtree());
-        bes.next();
-        return readText(bes);
-    }
-
-    /**
-     * Reads the full text content of the element {@code s} is positioned at
-     * (including CDATA and text nested in child elements) until its matching
-     * {@code END_ELEMENT}. The single-chunk case — the vast majority of leaf
-     * elements — returns the chunk directly without a {@code StringBuilder}.
-     */
-    private static String readText(final EventSource s) throws XMLStreamException {
-        final int entryDepth = s.depth();
-        String first = null;
-        StringBuilder sb = null;
-
-        while (s.hasNext()) {
-            final int event = s.next();
-            if (event == XMLStreamConstants.CHARACTERS || event == XMLStreamConstants.CDATA) {
-                if (!s.isWhiteSpace()) {
-                    final String chunk = s.text();
-                    if (sb != null) {
-                        sb.append(chunk);
-                    } else if (first == null) {
-                        first = chunk;
-                    } else {
-                        sb = new StringBuilder(first.length() + chunk.length() + 16);
-                        sb.append(first).append(chunk);
-                        first = null;
-                    }
-                }
-            } else if (event == XMLStreamConstants.END_ELEMENT && s.depth() == entryDepth - 1) {
-                break;
-            }
-        }
-
-        if (sb != null) return sb.toString().strip();
-        return first == null ? "" : fastTrim(first);
-    }
-
-    /**
-     * Trims without allocating when no trimming is needed — returns the same
-     * {@code String} instance when the content has no leading/trailing whitespace.
-     */
-    private static String fastTrim(final String s) {
-        final int len = s.length();
-        if (len == 0) return s;
-        int start = 0, end = len;
-        while (start < end && s.charAt(start) <= ' ') start++;
-        while (end > start && s.charAt(end - 1) <= ' ') end--;
-        if (start == 0 && end == len) return s;
-        return start == end ? "" : s.substring(start, end);
-    }
-
-    /**
-     * Linear scan over a small varargs array — JIT-inlineable for 2-3 names.
-     */
-    private static boolean matchesAny(final String localName, final String[] names) {
-        for (final String name : names) {
-            if (name.equals(localName)) return true;
-        }
-        return false;
-    }
-
     @Override
     public <T> T child(final String name, final XmlExtractor<T> extractor) {
-        try {
-            final Captured hit = takeChild(n -> n.equals(name));
-            if (hit == null) return null;
-            if (hit == STREAM_HIT) {
-                final T result = extractor.extract(new XmlCursorImpl(src));
-                drainToDepth(scopeDepth); // consume the child's remaining content and its END
-                return result;
-            }
-            return extractor.extract(cursorOver(hit));
-        } catch (XMLStreamException e) {
-            throw new XmlException("Error navigating to child element: " + name, e);
+        final int q = locate(name, null);
+        if (q == MISS) return null;
+        if (q == LIVE) {
+            final XmlCursorImpl child = new XmlCursorImpl(eng, ctx,
+                    eng.hitS, eng.hitE, eng.hitE, eng.hitGt, eng.hitSelfClose);
+            ctx.owner = child;
+            final T result = extractor.extract(child);
+            drain(child);
+            return result;
         }
+        return extractor.extract(replayCursor(q));
     }
-
-    // -------------------------------------------------------------------------
-    // Child location: buffer first, then stream (capturing non-matches)
-    // -------------------------------------------------------------------------
 
     @Override
     public <T> List<T> children(final String name, final XmlExtractor<T> extractor) {
-        try {
-            final List<T> results = new ArrayList<>();
-            if (pending != null) {
-                for (final Iterator<Captured> it = pending.iterator(); it.hasNext(); ) {
-                    final Captured c = it.next();
-                    if (name.equals(c.name())) {
-                        it.remove();
-                        results.add(extractor.extract(cursorOver(c)));
-                    }
-                }
+        final List<T> results = new ArrayList<>();
+        for (int q = 0; q < pendingN; ) {
+            if (pendingMatches(q, name, null)) {
+                results.add(extractor.extract(replayCursor(q)));
+            } else {
+                q++;
             }
-            while (!scopeClosed && src.hasNext()) {
-                final int event = src.next();
-                if (event == XMLStreamConstants.START_ELEMENT && src.depth() == scopeDepth + 1) {
-                    if (name.equals(src.localName())) {
-                        final T result = extractor.extract(new XmlCursorImpl(src));
-                        drainToDepth(scopeDepth);
-                        results.add(result);
-                    } else {
-                        addPending(captureSubtree());
-                    }
-                } else if (event == XMLStreamConstants.END_ELEMENT && src.depth() < scopeDepth) {
-                    scopeClosed = true;
-                }
-            }
-            return results;
-        } catch (XMLStreamException e) {
-            throw new XmlException("Error collecting child elements: " + name, e);
         }
+        while (true) {
+            final int q = liveLocate(name, null);
+            if (q == MISS) break;
+            final XmlCursorImpl child = new XmlCursorImpl(eng, ctx,
+                    eng.hitS, eng.hitE, eng.hitE, eng.hitGt, eng.hitSelfClose);
+            ctx.owner = child;
+            results.add(extractor.extract(child));
+            drain(child);
+        }
+        return results;
     }
 
     @Override
     public <T> T value(final String name, final Class<T> type) {
-        try {
-            final Captured hit = takeChild(n -> n.equals(name));
-            if (hit == null) return null;
-            final String text = hit == STREAM_HIT ? readText(src) : bufferedText(hit);
-            return TypeConverter.convert(text, type);
-        } catch (XMLStreamException e) {
-            throw new XmlException("Error reading value: " + name, e);
-        }
+        return readValue(locate(name, null), type);
     }
 
     @Override
     public <T> T firstOf(final Class<T> type, final String... names) {
-        try {
-            final Captured hit = takeChild(n -> matchesAny(n, names));
-            if (hit == null) return null;
-            final String text = hit == STREAM_HIT ? readText(src) : bufferedText(hit);
-            return TypeConverter.convert(text, type);
-        } catch (XMLStreamException e) {
-            throw new XmlException("Error scanning firstOf alternatives", e);
-        }
+        return readValue(locate(null, names), type);
     }
 
     @Override
     public <T> T attribute(final String name, final Class<T> type) {
-        for (int i = 0; i < attrNames.length; i++) {
-            if (attrNames[i].equals(name)) {
-                return TypeConverter.convert(attrValues[i], type);
+        if (nameS < 0) return null;
+        final byte[] b = eng.b;
+        int j = attrS;
+        while (true) {
+            while (j < attrE && (b[j] & 0xFF) <= ' ') j++;
+            if (j >= attrE || b[j] == '/') return null;
+            final int as = j;
+            while (j < attrE) {
+                final int c = b[j] & 0xFF;
+                if (c == '=' || c <= ' ') break;
+                j++;
+            }
+            final int ae = j;
+            if (ae == as) throw eng.fail("Malformed attribute", as);
+            while (j < attrE && (b[j] & 0xFF) <= ' ') j++;
+            if (j >= attrE || b[j] != '=') throw eng.fail("Malformed attribute", as);
+            j++;
+            while (j < attrE && (b[j] & 0xFF) <= ' ') j++;
+            if (j >= attrE) throw eng.fail("Malformed attribute", as);
+            final int q = b[j] & 0xFF;
+            if (q != '"' && q != '\'') throw eng.fail("Unquoted attribute value", j);
+            final int vs = ++j;
+            final int ve = Swar.memchr(b, j, attrE, q);
+            if (ve < 0) throw eng.fail("Unterminated attribute value", vs);
+            j = ve + 1;
+            if (nameEq(name, as, ae)) {
+                if (vs >= ve) return null;
+                final String text;
+                if (eng.attrDirty(vs, ve)) {
+                    eng.cookAttrValue(vs, ve);
+                    text = new String(eng.cook, 0, eng.cookLen, StandardCharsets.UTF_8);
+                } else {
+                    text = new String(b, vs, ve - vs, StandardCharsets.UTF_8);
+                }
+                return TypeConverter.convert(text, type);
             }
         }
-        return null;
     }
 
     @Override
     public String name() {
-        return currentName;
+        if (nameS < 0) return null;
+        if (tag == null) {
+            tag = new String(eng.b, nameS, nameE - nameS, StandardCharsets.UTF_8);
+        }
+        return tag;
     }
 
     @Override
     public void skip() {
-        if (pending != null) pending.clear();
-        scopeClosed = true;
-    }
-
-    /**
-     * Locates the next direct child whose name satisfies {@code matcher}.
-     * Returns {@link #STREAM_HIT} when the match is live in the stream (cursor
-     * left at its {@code START_ELEMENT}), a {@link Captured} subtree when the
-     * match was previously buffered, or {@code null} on a miss.
-     */
-    private Captured takeChild(final Predicate<String> matcher) throws XMLStreamException {
-        if (pending != null) {
-            for (final Iterator<Captured> it = pending.iterator(); it.hasNext(); ) {
-                final Captured c = it.next();
-                if (matcher.test(c.name())) {
-                    it.remove();
-                    return c;
-                }
-            }
-        }
-        while (!scopeClosed && src.hasNext()) {
-            final int event = src.next();
-            if (event == XMLStreamConstants.START_ELEMENT && src.depth() == scopeDepth + 1) {
-                if (matcher.test(src.localName())) return STREAM_HIT;
-                addPending(captureSubtree());
-            } else if (event == XMLStreamConstants.END_ELEMENT && src.depth() < scopeDepth) {
-                scopeClosed = true;
-            }
-        }
-        return null;
+        pending = null;
+        pendingN = 0;
+        closed = true;
     }
 
     // -------------------------------------------------------------------------
-    // Text assembly
+    // Child location: buffered spans first, then the live scan
     // -------------------------------------------------------------------------
 
-    private void addPending(final Captured c) {
-        if (pending == null) pending = new ArrayList<>(4);
-        pending.add(c);
+    /**
+     * Finds the next direct child matching {@code one} (or any of
+     * {@code any}). Returns a pending-quad index, {@link #LIVE} with the hit
+     * stashed on the engine, or {@link #MISS}.
+     */
+    private int locate(final String one, final String[] any) {
+        for (int q = 0; q < pendingN; q++) {
+            if (pendingMatches(q, one, any)) return q;
+        }
+        return liveLocate(one, any);
     }
 
     /**
-     * Captures the subtree of the direct child the cursor is positioned at
-     * ({@code START_ELEMENT} already read) as a replayable event array, leaving
-     * {@link #src} just past the child's {@code END_ELEMENT}.
+     * Scans forward in this scope for the next matching direct child,
+     * recording every non-matching sibling crossed as a pending span. Ends
+     * the scope — and consumes its end tag — on a miss.
      */
-    private Captured captureSubtree() throws XMLStreamException {
-        final int startDepth = src.depth();
-        final String name = src.localName();
-        final List<Event> events = new ArrayList<>();
-        events.add(startEventFrom(src));
+    private int liveLocate(final String one, final String[] any) {
+        if (closed) return MISS;
+        if (ctx.owner != this) {
+            throw new XmlException("Cursor used out of scope: a nested extraction is still active");
+        }
+        final byte[] b = eng.b;
+        int i = ctx.pos;
         while (true) {
-            final int event = src.next();
-            switch (event) {
-                case XMLStreamConstants.START_ELEMENT -> events.add(startEventFrom(src));
-                case XMLStreamConstants.CHARACTERS, XMLStreamConstants.CDATA ->
-                        events.add(new Event(event, null, null, null, src.text(), src.isWhiteSpace()));
-                case XMLStreamConstants.END_ELEMENT -> {
-                    events.add(Event.END);
-                    if (src.depth() == startDepth - 1) {
-                        return new Captured(name, events.toArray(new Event[0]));
-                    }
-                }
-                default -> { /* comments, PIs and the like carry no extractable content */ }
+            final int lt = Swar.memchr(b, i, eng.n, '<');
+            if (lt < 0) {
+                if (nameS >= 0) throw eng.fail("Unexpected end of document", eng.n);
+                if (!rootElementSeen) throw eng.fail("No root element found", 0);
+                ctx.pos = eng.n;
+                closed = true;
+                endConsumed = true;
+                return MISS;
+            }
+            if (lt + 2 > eng.n) throw eng.fail("Unexpected end of document", lt);
+            final int c = b[lt + 1] & 0xFF;
+            if (c == '/') {
+                if (nameS < 0) throw eng.fail("Unexpected end tag", lt);
+                final int s = lt + 2;
+                final int e = eng.nameEnd(s);
+                final int nx = eng.closeAngleOr(e);
+                if (nx < 0) throw eng.fail("Malformed end tag", lt);
+                if (Swar.hash(b, s, e - s) != nameHash) throw eng.fail("Mismatched end tag", lt);
+                ctx.pos = nx;
+                closed = true;
+                endConsumed = true;
+                return MISS;
+            }
+            if (c == '?') {
+                i = eng.skipPi(lt);
+                continue;
+            }
+            if (c == '!') {
+                i = eng.bang(lt);
+                continue;
+            }
+            final int s = lt + 1;
+            final int e = eng.nameEnd(s);
+            if (e == s) throw eng.fail("Invalid markup", lt);
+            final int gt = eng.tagEndOr(e);
+            if (gt < 0) throw eng.fail("Unterminated start tag", lt);
+            final boolean selfClose = b[gt - 1] == '/';
+            if (nameS < 0) {
+                if (rootElementSeen) throw eng.fail("Multiple root elements", lt);
+                rootElementSeen = true;
+            }
+            if (matches(one, any, s, e)) {
+                eng.hitS = s;
+                eng.hitE = e;
+                eng.hitGt = gt;
+                eng.hitSelfClose = selfClose;
+                ctx.pos = gt + 1;
+                return LIVE;
+            }
+            final int subEnd = selfClose ? gt + 1 : eng.skipSubtree(gt + 1);
+            addPending(s, e, subEnd);
+            ctx.pos = subEnd;
+            i = subEnd;
+        }
+    }
+
+    /**
+     * Consumes whatever a live child's extractor left unread — at skip speed
+     * — so this cursor resumes at the child's next sibling.
+     */
+    private void drain(final XmlCursorImpl child) {
+        ctx.owner = this;
+        if (child.endConsumed) return;
+        child.closed = true;
+        final byte[] b = eng.b;
+        int i = ctx.pos;
+        while (true) {
+            final int lt = Swar.memchr(b, i, eng.n, '<');
+            if (lt < 0 || lt + 2 > eng.n) throw eng.fail("Unexpected end of document", eng.n);
+            final int c = b[lt + 1] & 0xFF;
+            if (c == '/') {
+                final int s = lt + 2;
+                final int e = eng.nameEnd(s);
+                final int nx = eng.closeAngleOr(e);
+                if (nx < 0) throw eng.fail("Malformed end tag", lt);
+                if (Swar.hash(b, s, e - s) != child.nameHash) throw eng.fail("Mismatched end tag", lt);
+                child.endConsumed = true;
+                ctx.pos = nx;
+                return;
+            }
+            if (c == '?') {
+                i = eng.skipPi(lt);
+            } else if (c == '!') {
+                i = eng.bang(lt);
+            } else {
+                final int e = eng.nameEnd(lt + 1);
+                if (e == lt + 1) throw eng.fail("Invalid markup", lt);
+                final int gt = eng.tagEndOr(e);
+                if (gt < 0) throw eng.fail("Unterminated start tag", lt);
+                i = b[gt - 1] == '/' ? gt + 1 : eng.skipSubtree(gt + 1);
             }
         }
     }
 
-    private void drainToDepth(final int targetDepth) throws XMLStreamException {
-        while (src.depth() > targetDepth && src.hasNext()) {
-            src.next();
-        }
+    /** Builds a cursor replaying a buffered sibling, on its own context. */
+    private XmlCursorImpl replayCursor(final int q) {
+        final int subS = pending[(q << 2) + 2];
+        removePending(q);
+        final int s = subS + 1;
+        final int e = eng.nameEnd(s);
+        final int gt = eng.tagEndOr(e);
+        final boolean selfClose = eng.b[gt - 1] == '/';
+        final Ctx replay = new Ctx();
+        replay.pos = gt + 1;
+        final XmlCursorImpl cur = new XmlCursorImpl(eng, replay, s, e, e, gt, selfClose);
+        replay.owner = cur;
+        return cur;
     }
 
     // -------------------------------------------------------------------------
-    // Event source abstraction: live stream vs. replay of a captured subtree
+    // Values
     // -------------------------------------------------------------------------
 
-    /**
-     * Minimal forward event source used by the cursor; depth-aware.
-     */
-    private interface EventSource {
-        int next() throws XMLStreamException;
+    private <T> T readValue(final int q, final Class<T> type) {
+        if (q == MISS) return null;
+        if (q == LIVE) {
+            if (eng.hitSelfClose) return null;
+            ctx.pos = eng.readLeafText(Swar.hash(eng.b, eng.hitS, eng.hitE - eng.hitS), ctx.pos);
+            return convert(type);
+        }
+        final int ns = pending[q << 2];
+        final int ne = pending[(q << 2) + 1];
+        removePending(q);
+        final int gt = eng.tagEndOr(ne);
+        if (eng.b[gt - 1] == '/') return null;
+        eng.readLeafText(Swar.hash(eng.b, ns, ne - ns), gt + 1);
+        return convert(type);
+    }
 
-        boolean hasNext() throws XMLStreamException;
+    private <T> T convert(final Class<T> type) {
+        if (eng.valS >= eng.valE) return null;
+        final String text = new String(eng.valA, eng.valS, eng.valE - eng.valS, StandardCharsets.UTF_8);
+        return TypeConverter.convert(text, type);
+    }
 
-        int depth();
+    // -------------------------------------------------------------------------
+    // Pending spans and name matching
+    // -------------------------------------------------------------------------
 
-        int eventType();
+    private void addPending(final int nameStart, final int nameEnd, final int subtreeEnd) {
+        if (pending == null) {
+            pending = new int[16];
+        } else if (pendingN << 2 == pending.length) {
+            pending = Arrays.copyOf(pending, pending.length << 1);
+        }
+        final int at = pendingN << 2;
+        pending[at] = nameStart;
+        pending[at + 1] = nameEnd;
+        pending[at + 2] = nameStart - 1;   // the '<' of the start tag
+        pending[at + 3] = subtreeEnd;
+        pendingN++;
+    }
 
-        String localName();
+    private void removePending(final int q) {
+        System.arraycopy(pending, (q + 1) << 2, pending, q << 2, (pendingN - q - 1) << 2);
+        pendingN--;
+    }
 
-        boolean isWhiteSpace();
+    private boolean pendingMatches(final int q, final String one, final String[] any) {
+        return matches(one, any, pending[q << 2], pending[(q << 2) + 1]);
+    }
 
-        String text();
-
-        int attributeCount();
-
-        String attributeLocalName(int i);
-
-        String attributeValue(int i);
+    private boolean matches(final String one, final String[] any, final int s, final int e) {
+        if (one != null) return nameEq(one, s, e);
+        for (final String name : any) {
+            if (nameEq(name, s, e)) return true;
+        }
+        return false;
     }
 
     /**
-     * {@link EventSource} over a live Woodstox reader — zero copy.
+     * Compares a requested name against raw tag bytes without allocating:
+     * ASCII names — the overwhelming case — compare char-to-byte; anything
+     * else falls back to a UTF-8 encode of the requested name.
      */
-    private static final class StreamEventSource implements EventSource {
-        private final XMLStreamReader reader;
-        private int depth;
-
-        StreamEventSource(final XMLStreamReader reader) {
-            this.reader = reader;
+    private boolean nameEq(final String want, final int s, final int e) {
+        final byte[] b = eng.b;
+        final int len = e - s;
+        final int chars = want.length();
+        if (chars == len) {
+            int j = 0;
+            while (j < len) {
+                final char c = want.charAt(j);
+                if (c >= 0x80) break;
+                if (c != (b[s + j] & 0xFF)) return false;
+                j++;
+            }
+            if (j == len) return true;
+        } else {
+            boolean ascii = true;
+            for (int j = 0; j < chars; j++) {
+                if (want.charAt(j) >= 0x80) {
+                    ascii = false;
+                    break;
+                }
+            }
+            if (ascii) return false;
         }
-
-        @Override
-        public int next() throws XMLStreamException {
-            final int event = reader.next();
-            if (event == XMLStreamConstants.START_ELEMENT) depth++;
-            else if (event == XMLStreamConstants.END_ELEMENT) depth--;
-            return event;
-        }
-
-        @Override
-        public boolean hasNext() throws XMLStreamException {
-            return reader.hasNext();
-        }
-
-        @Override
-        public int depth() {
-            return depth;
-        }
-
-        @Override
-        public int eventType() {
-            return reader.getEventType();
-        }
-
-        @Override
-        public String localName() {
-            return reader.getLocalName();
-        }
-
-        @Override
-        public boolean isWhiteSpace() {
-            return reader.isWhiteSpace();
-        }
-
-        @Override
-        public String text() {
-            return reader.getText();
-        }
-
-        @Override
-        public int attributeCount() {
-            return reader.getAttributeCount();
-        }
-
-        @Override
-        public String attributeLocalName(final int i) {
-            return reader.getAttributeLocalName(i);
-        }
-
-        @Override
-        public String attributeValue(final int i) {
-            return reader.getAttributeValue(i);
-        }
+        final byte[] w = want.getBytes(StandardCharsets.UTF_8);
+        return w.length == len && Arrays.equals(w, 0, len, b, s, e);
     }
-
-    /**
-     * {@link EventSource} replaying a captured subtree.
-     */
-    private static final class BufferedEventSource implements EventSource {
-
-        private final Event[] events;
-        private int index = -1;
-        private int depth;
-
-        BufferedEventSource(final Event[] events) {
-            this.events = events;
-        }
-
-        @Override
-        public int next() {
-            final Event e = events[++index];
-            if (e.type() == XMLStreamConstants.START_ELEMENT) depth++;
-            else if (e.type() == XMLStreamConstants.END_ELEMENT) depth--;
-            return e.type();
-        }
-
-        @Override
-        public boolean hasNext() {
-            return index + 1 < events.length;
-        }
-
-        @Override
-        public int depth() {
-            return depth;
-        }
-
-        @Override
-        public int eventType() {
-            return index < 0 ? XMLStreamConstants.START_DOCUMENT : events[index].type();
-        }
-
-        @Override
-        public String localName() {
-            return events[index].name();
-        }
-
-        @Override
-        public boolean isWhiteSpace() {
-            return events[index].whitespace();
-        }
-
-        @Override
-        public String text() {
-            return events[index].text();
-        }
-
-        @Override
-        public int attributeCount() {
-            return events[index].attrNames().length;
-        }
-
-        @Override
-        public String attributeLocalName(final int i) {
-            return events[index].attrNames()[i];
-        }
-
-        @Override
-        public String attributeValue(final int i) {
-            return events[index].attrValues()[i];
-        }
-    }
-
-    /**
-     * A captured parser event. {@code START} carries name/attributes; text events carry {@code text}.
-     */
-    private record Event(int type, String name, String[] attrNames, String[] attrValues, String text, boolean whitespace) {
-        static final Event END = new Event(XMLStreamConstants.END_ELEMENT, null, null, null, null, false);
-    }
-
-    /**
-     * A direct child captured as a replayable subtree, keyed by its tag name.
-     */
-    private record Captured(String name, Event[] subtree) {}
 }
