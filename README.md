@@ -6,9 +6,8 @@
 [![Java 17+](https://img.shields.io/badge/Java-17%2B-orange)](pom.xml)
 
 **Fast, declarative XML extraction for Java.** Fletch reads a document in a single forward
-pass over a streaming [Woodstox](https://github.com/FasterXML/woodstox)/StAX parser and
-materializes exactly the values you ask for — no DOM tree, no reflection, no annotations,
-no code generation.
+pass of its own byte-level scanning engine and materializes exactly the values you ask
+for — no DOM tree, no reflection, no annotations, no code generation, no dependencies.
 
 ```java
 record Book(String title, Integer year) {}
@@ -34,7 +33,7 @@ Book book = Xml.extract(xml, doc -> doc.child("book", b -> new Book(
 - **Secure by default.** DTDs and external entities are disabled — there is no XXE
   attack surface.
 - **One exception type.** Every failure mode surfaces as the unchecked `XmlException`,
-  with the underlying StAX error preserved as the cause.
+  carrying the byte offset of the problem in the source document.
 
 ## Installation
 
@@ -44,17 +43,17 @@ Book book = Xml.extract(xml, doc -> doc.child("book", b -> new Book(
 <dependency>
     <groupId>io.github.robsonkades</groupId>
     <artifactId>fletch</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
 **Gradle**
 
 ```kotlin
-implementation("io.github.robsonkades:fletch:1.0.0")
+implementation("io.github.robsonkades:fletch:1.1.0")
 ```
 
-Requires Java 17 or later. The only runtime dependency is `woodstox-core`.
+Requires Java 17 or later. Fletch has **zero runtime dependencies**.
 
 ## Quick start
 
@@ -124,7 +123,7 @@ Everything happens through four public types:
 | `XmlCursor` | The navigation surface handed to extractors |
 | `XmlException` | The single unchecked exception for all failures |
 
-The cursor offers six operations:
+The cursor offers seven operations:
 
 | Method | Purpose |
 |---|---|
@@ -133,6 +132,7 @@ The cursor offers six operations:
 | `value(name, type)` | Read a child's text converted to `type`; `null` if absent or empty |
 | `firstOf(type, names...)` | Read whichever of several alternative elements is present (`xsd:choice`) |
 | `attribute(name, type)` | Read an attribute of the current element; `null` if absent or empty |
+| `name()` | The tag name of the current element |
 | `skip()` | Discard the current element and its whole subtree |
 
 ### Supported value types
@@ -179,30 +179,31 @@ per-element work). Elements are matched by their raw tag name:
 
 ## Security
 
-The shared parser factory is hardened by default:
+The engine is hardened by default:
 
-- `SUPPORT_DTD = false` — DOCTYPE declarations are rejected;
-- `IS_SUPPORTING_EXTERNAL_ENTITIES = false` — no external entity resolution (no XXE);
-- bounded text length (1 MB) and element depth (200) guard against pathological inputs.
+- `<!DOCTYPE` is rejected at its first byte — no DTD processing, no XXE surface;
+- only the five predefined entities and numeric character references are decoded;
+- a single text value is capped at 16 MiB to guard against pathological inputs.
 
 ## Thread safety
 
 `XmlExtractor` constants are stateless and safe to share across threads. Each
-`Xml.extract(...)` call creates its own cursor; the underlying Woodstox factory is a
-thread-safe singleton whose shared symbol table makes repeated parses of same-shaped
-documents faster after warm-up.
+`Xml.extract(...)` call runs on its own engine drawn from a small internal pool, so
+concurrent extractions never share mutable state and steady-state calls reuse the
+scanning buffers instead of reallocating them.
 
 ## Performance notes
 
 Fletch is designed for high-throughput extraction of small-to-medium documents
 (tens to hundreds of KB):
 
-- single forward pass, no DOM, no reflection;
-- lazy parsing with location tracking disabled;
-- single-chunk fast path for element text (no `StringBuilder` unless text is split);
-- monomorphic cursor call sites that HotSpot inlines after warm-up;
-- prefer the `byte[]` overload when the document is already in memory — it bootstraps
-  Woodstox directly on the array with no stream indirection.
+- single forward pass, no DOM, no reflection, no per-event objects;
+- unqueried subtrees crossed at SWAR scan speed, tag names never materialized;
+- extraction stops as soon as your root extractor returns;
+- single-span fast path for element text (entities and CDATA take a cooked path only
+  when present);
+- prefer the `byte[]` overload when the document is already in memory — it is scanned
+  in place with zero copying.
 
 ## Contributing
 

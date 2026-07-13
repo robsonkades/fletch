@@ -21,9 +21,9 @@ import java.util.List;
  * Declarative, order-tolerant XML cursor for streaming extraction.
  *
  * <p><b>Contract</b>: when an {@link XmlExtractor} is invoked, the cursor
- * is positioned at the {@code START_ELEMENT} of the element to extract.
- * All navigation methods advance the underlying reader and return typed
- * results — no raw event loop is ever exposed to the caller.
+ * is positioned at the start tag of the element to extract. All navigation
+ * methods advance the byte-level scan and return typed results — no raw
+ * event loop is ever exposed to the caller.
  *
  * <h2>Name matching</h2>
  * <p>Parsing is not namespace-aware: elements are matched by their raw tag
@@ -67,7 +67,7 @@ public interface XmlCursor {
      * @param <T>       the result type produced by the extractor
      * @param name      tag name of the direct child element to navigate to
      * @param extractor extraction logic invoked with the cursor positioned at
-     *                  the child's {@code START_ELEMENT}
+     *                  the child's start tag
      * @return the extractor's result, or {@code null} when the element is absent
      * @throws XmlException on stream errors
      */
@@ -101,8 +101,8 @@ public interface XmlCursor {
      * {@code Instant} (ISO-8601), and any {@code Enum} (matched by constant
      * name).
      *
-     * <p>Surrounding whitespace is trimmed; CDATA sections and text split
-     * across multiple parser chunks are assembled transparently.
+     * <p>Surrounding whitespace is trimmed; CDATA sections, entity references
+     * and text interleaved with child elements are assembled transparently.
      *
      * @param <T>  the target type
      * @param name tag name of the direct child element to read
@@ -155,7 +155,7 @@ public interface XmlCursor {
 
     /**
      * Skips the current element and all its descendants, positioning the
-     * reader after the matching {@code END_ELEMENT}. The element's scope is
+     * scan after the matching end tag. The element's scope is
      * consumed: subsequent requests report absence.
      *
      * @throws XmlException on stream errors

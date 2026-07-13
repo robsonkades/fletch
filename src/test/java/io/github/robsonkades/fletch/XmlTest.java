@@ -26,9 +26,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for the {@link Xml} entry points: input sources, encoding detection,
@@ -145,11 +145,12 @@ class XmlTest {
         }
 
         @Test
-        void parseErrorsCarryTheUnderlyingCause() {
+        void parseErrorsReportTheByteOffset() {
             XmlException e = assertThrows(XmlException.class,
                     () -> Xml.extract("<book>", doc -> doc.child("book", BOOK)));
 
-            assertNotNull(e.getCause(), "the StAX-level failure must be preserved as cause");
+            assertTrue(e.getMessage().contains("byte offset"),
+                    "parse failures must carry the source position");
         }
     }
 
