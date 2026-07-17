@@ -18,6 +18,7 @@ package io.github.robsonkades.fletch;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.function.Supplier;
 
 /**
  * Entry point for the declarative XML streaming extraction API.
@@ -41,6 +42,12 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
  * first navigation call addresses the root itself ({@code doc.child("book",
  * ...)} in the example above). See {@link XmlCursor} for the full navigation
  * contract, including its order-tolerant reads.
+ *
+ * <p>The same engine also drives a declarative, push-style alternative: build
+ * an {@link XmlMapping} with {@link #mapping} — declaring wanted values up front as
+ * paths — and run it with {@link #extract(byte[], XmlMapping)}. Both styles are
+ * order-independent single passes; the cursor reads by navigating, the mapping by
+ * binding declared paths into a draft.
  *
  * <h2>The engine</h2>
  * <p>Extraction runs on a fused byte-level scan: tokenizer, name matching
@@ -162,6 +169,74 @@ public final class Xml {
         } finally {
             release(engine);
         }
+    }
+
+    /**
+     * Starts a declarative extraction {@link XmlMapping mapping} — the push-style
+     * counterpart to the cursor. A mapping declares every wanted value up front
+     * as a path and fills a mutable draft in a single order-independent pass;
+     * compile it once as a {@code static final} constant and run it with
+     * {@link #extract(byte[], XmlMapping)}.
+     *
+     * @param <D>           the draft type accumulated while reading a document
+     * @param draftSupplier creates one fresh draft per extracted document
+     * @return a builder to declare paths on
+     */
+    public static <D> XmlMapping.Builder<D> mapping(final Supplier<D> draftSupplier) {
+        return XmlMapping.builder(draftSupplier);
+    }
+
+    /**
+     * Runs a compiled {@link XmlMapping} against a raw XML byte array. Encoding is
+     * auto-detected from the byte-order mark or the XML declaration; UTF-8
+     * documents are scanned in place with zero copying.
+     *
+     * @param <T>   the result type produced by the mapping's finisher
+     * @param bytes the encoded XML document
+     * @param mapping  the compiled extraction mapping
+     * @return the finisher's result
+     * @throws XmlException if the document is not well-formed
+     */
+    public static <T> T extract(final byte[] bytes, final XmlMapping<T> mapping) {
+        Objects.requireNonNull(mapping, "mapping");
+        return mapping.extract(bytes);
+    }
+
+    /**
+     * Runs a compiled {@link XmlMapping} against an XML {@code String}. Prefer the
+     * {@code byte[]} or {@link InputStream} overloads when reading from files
+     * or the network to avoid an intermediate {@code String} allocation.
+     *
+     * @param <T>  the result type produced by the mapping's finisher
+     * @param xml  the XML document text
+     * @param mapping the compiled extraction mapping
+     * @return the finisher's result
+     * @throws XmlException if the document is not well-formed
+     */
+    public static <T> T extract(final String xml, final XmlMapping<T> mapping) {
+        Objects.requireNonNull(mapping, "mapping");
+        return mapping.extract(xml);
+    }
+
+    /**
+     * Runs a compiled {@link XmlMapping} against an XML {@link InputStream}.
+     * A UTF-8 or US-ASCII stream is processed through the mapping's sliding
+     * window, so memory stays bounded by the largest single token rather than
+     * the document size — this is the only entry point in the library that
+     * does not hold the whole document. ISO-8859-1 and UTF-16 streams are read
+     * fully and transcoded first, as their scan is not incremental. The stream
+     * is <em>not</em> closed — lifecycle stays with the caller.
+     *
+     * @param <T>   the result type produced by the mapping's finisher
+     * @param input the stream to read; consumed but not closed
+     * @param mapping  the compiled extraction mapping
+     * @return the finisher's result
+     * @throws XmlException if the document is not well-formed or an I/O error
+     *                      occurs while reading
+     */
+    public static <T> T extract(final InputStream input, final XmlMapping<T> mapping) {
+        Objects.requireNonNull(mapping, "mapping");
+        return mapping.extract(input);
     }
 
     private static XmlCursorEngine take() {

@@ -6,15 +6,17 @@
   <artifactId>fletch</artifactId>
   <version>1.1.0</version>
   <packaging>jar</packaging>
-
-  <name>Fletch</name>
+<name>Fletch</name>
   <inceptionYear>2026</inceptionYear>
-  <description>Fast, declarative XML extraction for Java — a zero-dependency, order-tolerant byte-level extraction engine</description>
+  <description>Fast, declarative XML extraction for Java. Fletch reads a document in a single forward
+pass of its own byte-level scanning engine and materializes exactly the values you ask
+for — no DOM tree, no reflection, no annotations, no code generation, no dependencies.</description>
   <url>https://github.com/robsonkades/fletch</url>
 
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <jmh.version>1.37</jmh.version>
   </properties>
 
   <licenses>
@@ -40,10 +42,35 @@
   </scm>
 
   <dependencies>
+    <!-- Test-only: differential-fuzzing oracle and benchmark baseline. -->
+    <dependency>
+      <groupId>com.fasterxml.woodstox</groupId>
+      <artifactId>woodstox-core</artifactId>
+      <version>7.1.1</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.xml.stream</groupId>
+          <artifactId>stax-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>5.12.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+      <version>${jmh.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-generator-annprocess</artifactId>
+      <version>${jmh.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -56,6 +83,13 @@
         <version>3.14.0</version>
         <configuration>
           <release>${maven.compiler.release}</release>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.openjdk.jmh</groupId>
+              <artifactId>jmh-generator-annprocess</artifactId>
+              <version>${jmh.version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
       <plugin>
@@ -122,4 +156,46 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>benchmarks</id>
+      <properties>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <maven.source.skip>true</maven.source.skip>
+        <gpg.skip>true</gpg.skip>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>3.7.1</version>
+            <executions>
+              <execution>
+                <id>benchmarks-jar</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <configuration>
+                  <finalName>benchmarks</finalName>
+                  <appendAssemblyId>false</appendAssemblyId>
+                  <attach>false</attach>
+                  <descriptors>
+                    <descriptor>src/assembly/benchmarks.xml</descriptor>
+                  </descriptors>
+                  <archive>
+                    <manifest>
+                      <mainClass>org.openjdk.jmh.Main</mainClass>
+                    </manifest>
+                  </archive>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

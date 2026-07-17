@@ -16,7 +16,8 @@
 /**
  * Fletch — fast, declarative XML extraction over a single streaming pass.
  *
- * <p>The API has four public pieces:
+ * <p>The {@link io.github.robsonkades.fletch.Xml} facade offers two extraction
+ * styles over the same engine — a pull-style cursor and a push-style mapping:
  * <ul>
  *   <li>{@link io.github.robsonkades.fletch.Xml} — static entry points that
  *       parse a {@code String}, {@code byte[]} or {@code InputStream};</li>
@@ -24,6 +25,12 @@
  *       one XML element to a typed value;</li>
  *   <li>{@link io.github.robsonkades.fletch.XmlCursor} — the order-tolerant
  *       navigation surface handed to extractors;</li>
+ *   <li>{@link io.github.robsonkades.fletch.XmlMapping} — a compiled, declarative
+ *       mapping that binds wanted paths into a draft (build via
+ *       {@link io.github.robsonkades.fletch.Xml#mapping});</li>
+ *   <li>{@link io.github.robsonkades.fletch.XmlBinding} and
+ *       {@link io.github.robsonkades.fletch.XmlValue} — the per-path binding
+ *       and the lazily-decoded value it receives;</li>
  *   <li>{@link io.github.robsonkades.fletch.XmlException} — the single
  *       unchecked exception type for every failure mode.</li>
  * </ul>
