@@ -21,17 +21,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
- * Byte-level scanning core behind {@link XmlCursorEngine}, which serves the
- * pull-based {@link XmlCursor} API: buffering/windowing, encoding detection,
+ * Shared byte-level scanning core: buffering/windowing, encoding detection,
  * structural scanning (tags, comments, CDATA, PIs, subtree skipping) and text
- * decoding (entities, CR normalization, attribute-value normalization). All
- * state here is scratch owned by the concrete engine instance and reused
- * across documents; none of it is thread-safe.
+ * decoding (entities, CR normalization, attribute-value normalization).
+ *
+ * <p>Two engines run on top of it: {@link XmlMappingEngine} drives a compiled
+ * {@link XmlMapping} in one fused push loop, and {@link XmlCursorEngine} serves
+ * the pull-based {@link XmlCursor} API. All state here is scratch owned by
+ * the concrete engine instance and reused across documents; none of it is
+ * thread-safe.
  *
  * <p>The document view {@code b[0, n)} is either the caller's own bytes
  * (scanned in place), a transcode buffer, or the sliding stream window.
- * {@link #more} is the single refill point: an engine that buffered the whole
- * document never triggers it ({@code src} stays {@code null}), so every scan
+ * {@link #more} is the single refill point: engines that buffered the whole
+ * document never trigger it ({@code src} stays {@code null}), so every scan
  * primitive works identically in windowed and fully-buffered modes.
  */
 abstract class ByteScanner {
@@ -40,6 +43,10 @@ abstract class ByteScanner {
     static final int DEFAULT_WINDOW = 64 * 1024;
 
     final int window;
+
+    // Verify end tags inside skipped subtrees instead of only counting them.
+    boolean strictSkip;
+    private long[] skipStack = new long[16];
 
     // Document view being scanned (caller bytes, the window, or a transcode buffer).
     byte[] b;
@@ -366,13 +373,27 @@ abstract class ByteScanner {
      * path.
      */
     final int readLeafText(final long endTag, int start) {
+        // One fused scan finds the '<' and detects dirtiness ('&' entity or
+        // '\r' normalization) on the way, so clean values — the dominant
+        // case — are touched once. The scan resumes where it left off after
+        // a refill instead of restarting from the value's first byte.
+        boolean dirty = false;
+        int scan = start;
         int lt;
         while (true) {
-            lt = Swar.memchr(b, start, n, '<');
+            lt = dirty ? Swar.memchr(b, scan, n, '<')
+                       : Swar.memchr3(b, scan, n, '<', '&', '\r');
+            if (lt >= 0 && b[lt] != '<') {
+                dirty = true;
+                scan = lt + 1;
+                continue;
+            }
             if (lt >= 0 && lt + 2 <= n) break;
-            final int sh = more(start);
+            final int resume = lt >= 0 ? lt : n;
+            final int sh = more(start);           // keep the value span alive
             if (sh < 0) throw fail("Unexpected end of document", n);
             start -= sh;
+            scan = resume - sh;
         }
         if (b[lt + 1] == '/') {
             int s, e, ret;
@@ -391,18 +412,18 @@ abstract class ByteScanner {
             if (Swar.hash(b, s, e - s) != endTag) throw fail("Mismatched end tag", lt);
             final int vs = lstrip(b, start, lt);
             final int ve = rstrip(b, vs, lt);
-            if (vs < ve && Swar.memchr2(b, vs, ve, '&', '\r') < 0) {
-                valA = b;
-                valS = vs;
-                valE = ve;
-            } else if (vs < ve) {
-                cookLen = 0;
-                decodeText(vs, ve);
-                setCookedTrimmed();
-            } else {
+            if (vs >= ve) {
                 valA = b;
                 valS = 0;
                 valE = 0;
+            } else if (!dirty) {
+                valA = b;
+                valS = vs;
+                valE = ve;
+            } else {
+                cookLen = 0;
+                decodeText(vs, ve);
+                setCookedTrimmed();
             }
             return ret;
         }
@@ -715,9 +736,19 @@ abstract class ByteScanner {
      * scanned is discarded from the window as it refills — this is the
      * memchr-speed path that makes selective extraction cheap even on
      * streams far larger than memory.
+     *
+     * <p>By default tags are only counted, not read: a mismatched end tag
+     * inside the skipped region goes unnoticed. Under {@link #strictSkip}
+     * every end tag is instead verified against the name hash of the start
+     * tag it closes, {@code outerTag} standing in for the enclosing element
+     * whose start tag the caller already consumed. {@code outerTag} is
+     * ignored when strict skipping is off.
      */
-    final int skipSubtree(int i) {
+    final int skipSubtree(int i, final long outerTag) {
         int d = 1;
+        if (strictSkip) {
+            skipStack[0] = outerTag;
+        }
         while (d > 0) {
             int lt;
             while ((lt = Swar.memchr(b, i, n, '<')) < 0) {
@@ -733,15 +764,32 @@ abstract class ByteScanner {
             }
             final int c = b[i + 1] & 0xFF;
             if (c == '/') {
-                int j = i + 2;
-                int gt;
-                while ((gt = Swar.memchr(b, j, n, '>')) < 0) {
-                    final int sh = more(n);       // balance mode: the name is irrelevant
-                    if (sh < 0) throw fail("Unexpected end of document", j);
-                    j = 0;
+                if (strictSkip) {
+                    int s, e, nx;
+                    while (true) {
+                        s = i + 2;
+                        e = nameEnd(s);
+                        if (e < n) {
+                            nx = closeAngleOr(e);
+                            if (nx >= 0) break;
+                        }
+                        final int sh = more(i);
+                        if (sh < 0) throw fail("Malformed end tag", i);
+                        i -= sh;
+                    }
+                    if (Swar.hash(b, s, e - s) != skipStack[--d]) throw fail("Mismatched end tag", i);
+                    i = nx;
+                } else {
+                    int j = i + 2;
+                    int gt;
+                    while ((gt = Swar.memchr(b, j, n, '>')) < 0) {
+                        final int sh = more(n);       // balance mode: the name is irrelevant
+                        if (sh < 0) throw fail("Unexpected end of document", j);
+                        j = 0;
+                    }
+                    d--;
+                    i = gt + 1;
                 }
-                d--;
-                i = gt + 1;
             } else if (c == '!') {
                 i = bang(i);
             } else if (c == '?') {
@@ -753,7 +801,15 @@ abstract class ByteScanner {
                     if (sh < 0) throw fail("Unterminated start tag", i);
                     i -= sh;
                 }
-                if (b[gt - 1] != '/') d++;
+                if (b[gt - 1] != '/') {
+                    if (strictSkip) {
+                        final int s = i + 1;
+                        final int e = nameEnd(s);
+                        if (d == skipStack.length) skipStack = Arrays.copyOf(skipStack, d << 1);
+                        skipStack[d] = Swar.hash(b, s, e - s);
+                    }
+                    d++;
+                }
                 i = gt + 1;
             }
         }
@@ -877,6 +933,9 @@ abstract class ByteScanner {
      * Quote-aware scan for the {@code >} closing a start tag ({@code >} is
      * legal inside attribute values). Returns {@code -1} when the tag
      * extends past the window — the caller anchors the tag and refills.
+     * Deliberately a byte loop: real attribute regions are shorter than the
+     * word-scan break-even (measured -4..7% end-to-end when this ran on
+     * {@code memchr3}), and the attribute-less tag exits on the first byte.
      */
     final int tagEndOr(int j) {
         while (true) {

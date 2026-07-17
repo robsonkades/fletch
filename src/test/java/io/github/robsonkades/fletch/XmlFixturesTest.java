@@ -52,6 +52,14 @@ class XmlFixturesTest {
     record Item(String sku, Integer qty) {}
     record Invoice(Long number, boolean urgent, Customer customer, List<Item> items, BigDecimal total) {}
 
+    // Brazilian NF-e (nfeProc) — a real fiscal document using a default namespace.
+    record NfeIde(Long number, Instant issuedAt) {}
+    record NfeParty(String taxId, String name, String uf) {}
+    record NfeItem(Integer number, String code, String description, BigDecimal amount) {}
+    record NfeProtocol(String accessKey, Integer status, String reason) {}
+    record Nfe(String id, NfeIde ide, NfeParty emit, NfeParty dest,
+               List<NfeItem> items, BigDecimal totalAmount, NfeProtocol protocol) {}
+
     // Extractors deliberately request fields in a fixed order; fixtures vary the
     // document order to prove the result is independent of it.
     static final XmlExtractor<Address> ADDRESS = a -> new Address(
@@ -69,6 +77,32 @@ class XmlFixturesTest {
     static final XmlExtractor<Customer> CUSTOMER = c -> new Customer(
             c.value("name", String.class),
             c.child("address", ADDRESS));
+
+    static final XmlExtractor<NfeIde> NFE_IDE = i -> new NfeIde(
+            i.value("nNF", Long.class),
+            i.value("dhEmi", Instant.class));
+
+    static final XmlExtractor<NfeParty> NFE_EMIT = e -> new NfeParty(
+            e.value("CNPJ", String.class),
+            e.value("xNome", String.class),
+            e.child("enderEmit", a -> a.value("UF", String.class)));
+
+    static final XmlExtractor<NfeParty> NFE_DEST = d -> new NfeParty(
+            d.firstOf(String.class, "CPF", "CNPJ", "idEstrangeiro"),
+            d.value("xNome", String.class),
+            d.child("enderDest", a -> a.value("UF", String.class)));
+
+    // <nItem> is an attribute of <det>; the leaf fields live in its <prod> child.
+    static final XmlExtractor<NfeItem> NFE_ITEM = det -> det.child("prod", p -> new NfeItem(
+            det.attribute("nItem", Integer.class),
+            p.value("cProd", String.class),
+            p.value("xProd", String.class),
+            p.value("vProd", BigDecimal.class)));
+
+    static final XmlExtractor<NfeProtocol> NFE_PROTOCOL = ip -> new NfeProtocol(
+            ip.value("chNFe", String.class),
+            ip.value("cStat", Integer.class),
+            ip.value("xMotivo", String.class));
 
     private static <T> T extract(final String fixture, final XmlExtractor<T> extractor) {
         try (InputStream in = XmlFixturesTest.class.getResourceAsStream(fixture)) {
@@ -382,6 +416,35 @@ class XmlFixturesTest {
                     List.of(new Item("A-100", 2), new Item("B-200", 1)),
                     new BigDecimal("150.00"));
             assertEquals(expected, invoice);
+        }
+
+        @Test
+        void nfeProcExtractsAuthorizedInvoice() {
+            Nfe nfe = extract("/fixtures/invoice/35240612345678000195550010000274361328488326-procNFe.xml",
+                    doc -> doc.child("nfeProc", np -> {
+                        // <protNFe> follows <NFe>; reading it first buffers the whole
+                        // <NFe> subtree, which is then read back from the buffer below.
+                        NfeProtocol protocol = np.child("protNFe", pr -> pr.child("infProt", NFE_PROTOCOL));
+                        return np.child("NFe", n -> n.child("infNFe", inf -> new Nfe(
+                                inf.attribute("Id", String.class),
+                                inf.child("ide", NFE_IDE),
+                                inf.child("emit", NFE_EMIT),
+                                inf.child("dest", NFE_DEST),
+                                inf.children("det", NFE_ITEM),
+                                inf.child("total", t -> t.child("ICMSTot", ic -> ic.value("vNF", BigDecimal.class))),
+                                protocol)));
+                    }));
+
+            Nfe expected = new Nfe(
+                    "NFe35240612345678000195550010000274361328488326",
+                    new NfeIde(27436L, Instant.parse("2024-06-20T14:27:22Z")),
+                    new NfeParty("12345678000195", "EXEMPLO EDUCACAO LTDA", "SP"),
+                    new NfeParty("12345678909", "JOSE DA SILVA", "SC"),
+                    List.of(new NfeItem(1, "PRD00003",
+                            "Material Didatico - Curso de Arquitetura de Software", new BigDecimal("263.89"))),
+                    new BigDecimal("263.89"),
+                    new NfeProtocol("35240612345678000195550010000274361328488326", 100, "Autorizado o uso da NF-e"));
+            assertEquals(expected, nfe);
         }
     }
 }

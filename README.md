@@ -112,18 +112,59 @@ class OrderExtractors {
 Order order = Xml.extract(inputStream, doc -> doc.child("order", OrderExtractors.ORDER));
 ```
 
+## The engine underneath
+
+Fletch 2 replaced the StAX parser with a goal-directed byte-level engine: tokenizer,
+name matching and value decoding run in one fused loop over the document bytes, with
+no per-event objects. Subtrees your extractor never asks about are crossed by a
+balance-counting skip at SWAR scan speed, and — because the document is buffered —
+a sibling scanned past on the way to a later request is remembered as a **byte span**
+(four `int`s) and re-scanned only if you ask for it. Reading fields in document order
+buffers nothing; reading them in any other order costs a cheap re-scan instead of the
+event materialization it cost in 1.x. When your root extractor returns, reading stops:
+trailing content is never scanned.
+
+Measured on the bundled 7 KB NF-e fixture (i7-13700K, JDK 25), extraction runs
+2.6–3.4× faster than Fletch 1.x with 4–8× less allocation, and about 2× faster than a
+bare Woodstox event loop over the same document — while keeping the exact same API.
+Reproduce with `mvn -P benchmarks package -DskipTests -Dgpg.skip=true` and
+`java -jar target/benchmarks.jar ExtractionBenchmark`.
+
+Scope notes: the engine reads UTF-8 and US-ASCII natively (ISO-8859-1 and UTF-16 are
+transcoded once; other encodings are rejected), a single text value is capped at
+16 MiB, and subtrees you never read are checked for tag balance only (mappings can opt
+into full checks with `strictSkip()`). The design rationale lives in
+[docs/extraction-engine-proposal.md](docs/extraction-engine-proposal.md).
+
+Memory: exactly one path avoids holding the whole document — **a mapping over a UTF-8
+(or US-ASCII) `InputStream`**, which slides a 64 KB window and holds the largest single
+token instead (the window grows for tokens bigger than itself, up to the 16 MiB cap).
+Everything else keeps the document in memory:
+
+- the **cursor** drains an `InputStream` fully — order tolerance is what buys it, since
+  a span the cursor may revisit has to still be there;
+- **ISO-8859-1 and UTF-16** streams are read fully and transcoded before scanning, in
+  both styles, because that scan is not incremental;
+- `byte[]` and `String` are in memory by definition — Fletch just does not copy the
+  `byte[]` (a `String` is encoded to UTF-8 once).
+
+So for documents that dwarf memory: use a mapping, and feed it UTF-8.
+
 ## API at a glance
 
-Everything happens through four public types:
+The `Xml` facade offers two extraction styles over the same engine — a pull-style
+cursor and a push-style mapping:
 
 | Type | Role |
 |---|---|
-| `Xml` | Entry points: `extract(String \| byte[] \| InputStream, extractor)` |
-| `XmlExtractor<T>` | A lambda mapping one element to a typed value |
+| `Xml` | Entry points: `extract(String \| byte[] \| InputStream, extractor \| mapping)`, `mapping(...)` |
+| `XmlExtractor<T>` | A lambda mapping one element to a typed value (cursor style) |
 | `XmlCursor` | The navigation surface handed to extractors |
+| `XmlMapping<T>` | A compiled, declarative mapping binding paths into a draft (mapping style) |
+| `XmlBinding<D>` / `XmlValue` | A per-path binding and the lazily-decoded value it receives |
 | `XmlException` | The single unchecked exception for all failures |
 
-The cursor offers seven operations:
+The cursor offers six operations:
 
 | Method | Purpose |
 |---|---|
@@ -132,7 +173,6 @@ The cursor offers seven operations:
 | `value(name, type)` | Read a child's text converted to `type`; `null` if absent or empty |
 | `firstOf(type, names...)` | Read whichever of several alternative elements is present (`xsd:choice`) |
 | `attribute(name, type)` | Read an attribute of the current element; `null` if absent or empty |
-| `name()` | The tag name of the current element |
 | `skip()` | Discard the current element and its whole subtree |
 
 ### Supported value types
@@ -147,6 +187,55 @@ The cursor offers seven operations:
 
 Absent elements, empty text and empty attributes uniformly convert to `null` — including
 for `String`.
+
+### Declarative mappings
+
+For the same result without writing navigation, declare the wanted values up front as
+paths and let the engine fill a mutable draft in one order-independent pass. Compile the
+mapping once and reuse it — it is immutable and thread-safe. The order document from the
+quick start, in mapping style:
+
+```java
+import io.github.robsonkades.fletch.Xml;
+import io.github.robsonkades.fletch.XmlMapping;
+
+class OrderMapping {
+
+    // records are immutable, so the mapping accumulates into mutable drafts
+    static final class ItemDraft { String sku; Integer qty; BigDecimal price; }
+    static final class Draft {
+        Long id; boolean urgent;
+        String name, city, zip;
+        final List<Item> items = new ArrayList<>();
+        BigDecimal total;
+    }
+
+    static final XmlMapping<Order> ORDER = Xml.mapping(Draft::new)
+            .attr("/order@id",     (d, v) -> d.id     = v.asLong())
+            .attr("/order@urgent", (d, v) -> d.urgent = v.asBoolean())
+            .text("/order/customer/name",         (d, v) -> d.name = v.asString())
+            .text("/order/customer/address/city", (d, v) -> d.city = v.asString())
+            .text("/order/customer/address/zip",  (d, v) -> d.zip  = v.asString())
+            .group("/order/item", ItemDraft::new,
+                   (d, i) -> d.items.add(new Item(i.sku, i.qty, i.price)))
+                .text("sku",   (i, v) -> i.sku   = v.asString())   // group-relative paths
+                .text("qty",   (i, v) -> i.qty   = v.asInt())
+                .text("price", (i, v) -> i.price = v.asDecimal())
+                .endGroup()
+            .text("/order/total", (d, v) -> d.total = v.asDecimal())
+            .build(d -> new Order(d.id, d.urgent,
+                    new Customer(d.name, new Address(d.city, d.zip)),
+                    d.items, d.total));
+}
+
+Order order = Xml.extract(inputStream, OrderMapping.ORDER); // also String / byte[]
+```
+
+Paths are chains of raw tag names (`/order/customer/name`); attributes use `@`
+(`/order@id`). `group(...)` declares repeating elements, `firstOf(...)` binds an
+`xsd:choice`, and `required(...)` stops the scan once every required value is bound.
+`strictSkip()` trades throughput to also verify end tags inside the subtrees no
+declared path selects, which are otherwise only counted.
 
 ## How reads work
 
@@ -200,15 +289,16 @@ Fletch is designed for high-throughput extraction of small-to-medium documents
 - single forward pass, no DOM, no reflection, no per-event objects;
 - unqueried subtrees crossed at SWAR scan speed, tag names never materialized;
 - extraction stops as soon as your root extractor returns;
-- single-span fast path for element text (entities and CDATA take a cooked path only
-  when present);
-- prefer the `byte[]` overload when the document is already in memory — it is scanned
-  in place with zero copying.
+- single-span fast path for element text (entities and CDATA take a cooked path
+  only when present);
+- prefer the `byte[]` overload when the document is already in memory — it is
+  scanned in place with zero copying.
 
 ## Contributing
 
 Bug reports, feature requests and pull requests are welcome — see
-[CONTRIBUTING.md](CONTRIBUTING.md). Run `mvn verify` before submitting.
+[CONTRIBUTING.md](CONTRIBUTING.md). Run `mvn verify -Dgpg.skip=true` before
+submitting (artifact signing runs only in the release workflow).
 
 ## License
 

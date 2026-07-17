@@ -97,6 +97,54 @@ class XmlTest {
 
             assertEquals("São Paulo", name);
         }
+
+        @Test
+        void skipsAUtf8ByteOrderMark() {
+            byte[] bom = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+            byte[] doc = BOOK_XML.getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = new byte[bom.length + doc.length];
+            System.arraycopy(bom, 0, bytes, 0, bom.length);
+            System.arraycopy(doc, 0, bytes, bom.length, doc.length);
+
+            Book book = Xml.extract(bytes, doc2 -> doc2.child("book", BOOK));
+
+            assertEquals(new Book("Dune", 1965), book);
+        }
+
+        @Test
+        void transcodesUtf16DocumentsWithByteOrderMark() {
+            byte[] utf16 = "<r><name>Ação ✓</name></r>".getBytes(StandardCharsets.UTF_16);
+
+            String name = Xml.extract(utf16, doc -> doc.child("r", r -> r.value("name", String.class)));
+
+            assertEquals("Ação ✓", name);
+        }
+    }
+
+    @Nested
+    @DisplayName("Prolog and epilog")
+    class PrologAndEpilog {
+
+        @Test
+        void commentsAndProcessingInstructionsBeforeTheRootAreIgnored() {
+            String xml = "<?xml version=\"1.0\"?>\n"
+                    + "<!-- generated -->\n"
+                    + "<?stylesheet href=\"x.css\"?>\n"
+                    + BOOK_XML;
+
+            Book book = Xml.extract(xml, doc -> doc.child("book", BOOK));
+
+            assertEquals(new Book("Dune", 1965), book);
+        }
+
+        @Test
+        void contentAfterTheRootElementIsNeverScanned() {
+            String xml = BOOK_XML + "\n<!-- trailing --><?pi data?>";
+
+            Book book = Xml.extract(xml, doc -> doc.child("book", BOOK));
+
+            assertEquals(new Book("Dune", 1965), book);
+        }
     }
 
     @Nested

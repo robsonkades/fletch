@@ -190,14 +190,11 @@ final class XmlCursorImpl implements XmlCursor {
             j = ve + 1;
             if (nameEq(name, as, ae)) {
                 if (vs >= ve) return null;
-                final String text;
                 if (eng.attrDirty(vs, ve)) {
                     eng.cookAttrValue(vs, ve);
-                    text = new String(eng.cook, 0, eng.cookLen, StandardCharsets.UTF_8);
-                } else {
-                    text = new String(b, vs, ve - vs, StandardCharsets.UTF_8);
+                    return TypeConverter.convert(eng.cook, 0, eng.cookLen, type);
                 }
-                return TypeConverter.convert(text, type);
+                return TypeConverter.convert(b, vs, ve, type);
             }
         }
     }
@@ -296,7 +293,7 @@ final class XmlCursorImpl implements XmlCursor {
                 ctx.pos = gt + 1;
                 return LIVE;
             }
-            final int subEnd = selfClose ? gt + 1 : eng.skipSubtree(gt + 1);
+            final int subEnd = selfClose ? gt + 1 : eng.skipSubtree(gt + 1, 0);
             addPending(s, e, subEnd);
             ctx.pos = subEnd;
             i = subEnd;
@@ -336,7 +333,7 @@ final class XmlCursorImpl implements XmlCursor {
                 if (e == lt + 1) throw eng.fail("Invalid markup", lt);
                 final int gt = eng.tagEndOr(e);
                 if (gt < 0) throw eng.fail("Unterminated start tag", lt);
-                i = b[gt - 1] == '/' ? gt + 1 : eng.skipSubtree(gt + 1);
+                i = b[gt - 1] == '/' ? gt + 1 : eng.skipSubtree(gt + 1, 0);
             }
         }
     }
@@ -377,9 +374,7 @@ final class XmlCursorImpl implements XmlCursor {
     }
 
     private <T> T convert(final Class<T> type) {
-        if (eng.valS >= eng.valE) return null;
-        final String text = new String(eng.valA, eng.valS, eng.valE - eng.valS, StandardCharsets.UTF_8);
-        return TypeConverter.convert(text, type);
+        return TypeConverter.convert(eng.valA, eng.valS, eng.valE, type);
     }
 
     // -------------------------------------------------------------------------

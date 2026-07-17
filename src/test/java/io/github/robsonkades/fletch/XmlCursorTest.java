@@ -25,6 +25,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -117,6 +118,24 @@ class XmlCursorTest {
         void mixedContentConcatenatesNestedText() {
             assertEquals("hello world!", Xml.extract("<a>hello <b>world</b>!</a>",
                     doc -> doc.value("a", String.class)));
+        }
+
+        @Test
+        void commentsAndProcessingInstructionsBetweenSiblingsAreInvisible() {
+            String xml = "<r><!-- noise --><a>1</a><?pi data?><b>2</b><!-- more --></r>";
+
+            Xml.extract(xml, doc -> doc.child("r", r -> {
+                assertEquals(1, r.value("a", Integer.class));
+                assertEquals(2, r.value("b", Integer.class));
+                return null;
+            }));
+        }
+
+        @Test
+        void malformedNumericTextPropagatesNumberFormatException() {
+            assertThrows(NumberFormatException.class,
+                    () -> Xml.extract("<r><a>not-a-number</a></r>",
+                            doc -> doc.child("r", r -> r.value("a", Integer.class))));
         }
     }
 
@@ -276,6 +295,30 @@ class XmlCursorTest {
         void emptyAttributeYieldsNull() {
             assertNull(Xml.extract("<order id=\"\"/>",
                     doc -> doc.child("order", o -> o.attribute("id", String.class))));
+        }
+
+        @Test
+        void singleQuotedAttributeValuesParse() {
+            assertEquals("He said \"hi\"", Xml.extract("<r a='He said \"hi\"'/>",
+                    doc -> doc.child("r", r -> r.attribute("a", String.class))));
+        }
+
+        @Test
+        void closingAngleInsideAnAttributeValueDoesNotEndTheTag() {
+            String xml = "<order note=\"a>b\" id=\"7\"><item>x</item></order>";
+
+            Xml.extract(xml, doc -> doc.child("order", o -> {
+                assertEquals("a>b", o.attribute("note", String.class));
+                assertEquals(7, o.attribute("id", Integer.class));
+                assertEquals("x", o.value("item", String.class));
+                return null;
+            }));
+        }
+
+        @Test
+        void entitiesInAttributeValuesAreDecoded() {
+            assertEquals("a&b!", Xml.extract("<r a=\"a&amp;b&#33;\"/>",
+                    doc -> doc.child("r", r -> r.attribute("a", String.class))));
         }
 
         @Test
