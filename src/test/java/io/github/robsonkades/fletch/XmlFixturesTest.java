@@ -420,7 +420,7 @@ class XmlFixturesTest {
 
         @Test
         void nfeProcExtractsAuthorizedInvoice() {
-            Nfe nfe = extract("/fixtures/invoice/35240638167943000186550010000274361328488329-procNFe.xml",
+            Nfe nfe = extract("/fixtures/invoice/35240612345678000195550010000274361328488326-procNFe.xml",
                     doc -> doc.child("nfeProc", np -> {
                         // <protNFe> follows <NFe>; reading it first buffers the whole
                         // <NFe> subtree, which is then read back from the buffer below.
@@ -436,14 +436,14 @@ class XmlFixturesTest {
                     }));
 
             Nfe expected = new Nfe(
-                    "NFe35240638167943000186550010000274361328488329",
+                    "NFe35240612345678000195550010000274361328488326",
                     new NfeIde(27436L, Instant.parse("2024-06-20T14:27:22Z")),
-                    new NfeParty("38167943000186", "FULL CYCLE LTDA", "SP"),
-                    new NfeParty("08145454913", "ROBSON KADES", "SC"),
+                    new NfeParty("12345678000195", "EXEMPLO EDUCACAO LTDA", "SP"),
+                    new NfeParty("12345678909", "JOSE DA SILVA", "SC"),
                     List.of(new NfeItem(1, "PRD00003",
-                            "Material Didatico - MBA Arquitetura Full Cycle", new BigDecimal("263.89"))),
+                            "Material Didatico - Curso de Arquitetura de Software", new BigDecimal("263.89"))),
                     new BigDecimal("263.89"),
-                    new NfeProtocol("35240638167943000186550010000274361328488329", 100, "Autorizado o uso da NF-e"));
+                    new NfeProtocol("35240612345678000195550010000274361328488326", 100, "Autorizado o uso da NF-e"));
             assertEquals(expected, nfe);
         }
     }

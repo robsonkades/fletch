@@ -43,14 +43,14 @@ Book book = Xml.extract(xml, doc -> doc.child("book", b -> new Book(
 <dependency>
     <groupId>io.github.robsonkades</groupId>
     <artifactId>fletch</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
 **Gradle**
 
 ```kotlin
-implementation("io.github.robsonkades:fletch:1.0.0")
+implementation("io.github.robsonkades:fletch:1.1.0")
 ```
 
 Requires Java 17 or later. Fletch has **zero runtime dependencies**.

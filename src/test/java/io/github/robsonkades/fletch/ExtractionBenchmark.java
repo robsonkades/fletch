@@ -217,7 +217,7 @@ public class ExtractionBenchmark {
     public void setup() throws IOException {
         final byte[] base;
         try (InputStream in = ExtractionBenchmark.class.getResourceAsStream(
-                "/fixtures/invoice/35240638167943000186550010000274361328488329-procNFe.xml")) {
+                "/fixtures/invoice/35240612345678000195550010000274361328488326-procNFe.xml")) {
             if (in == null) throw new IllegalStateException("fixture not on classpath");
             base = in.readAllBytes();
         } catch (IOException e) {

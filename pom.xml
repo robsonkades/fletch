@@ -6,11 +6,10 @@
   <artifactId>fletch</artifactId>
   <version>1.1.0</version>
   <packaging>jar</packaging>
-<name>Fletch</name>
+
+  <name>Fletch</name>
   <inceptionYear>2026</inceptionYear>
-  <description>Fast, declarative XML extraction for Java. Fletch reads a document in a single forward
-pass of its own byte-level scanning engine and materializes exactly the values you ask
-for — no DOM tree, no reflection, no annotations, no code generation, no dependencies.</description>
+  <description>Fast, declarative XML extraction for Java. Fletch reads a document in a single forward pass of its own byte-level scanning engine and materializes exactly the values you ask for — no DOM tree, no reflection, no annotations, no code generation, no dependencies.</description>
   <url>https://github.com/robsonkades/fletch</url>
 
   <properties>
