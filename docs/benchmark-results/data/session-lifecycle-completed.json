@@ -1,0 +1,962 @@
+[
+  {
+    "round": 0,
+    "caseIndex": 3,
+    "shape": "COLLISION32",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:47:03.7814439Z",
+    "endedUtc": "2026-09-18T18:47:19.5855313Z",
+    "resultFile": "round-0-case-3-batch.json",
+    "microsecondsPerBatch": 15.094224690590739,
+    "bytesPerBatch": 43736.103536050054,
+    "iterations": [
+      14.909727895154418,
+      16.500384558497263,
+      15.00024627618539,
+      14.369222261609359,
+      14.691542461507265
+    ]
+  },
+  {
+    "round": 0,
+    "caseIndex": 3,
+    "shape": "COLLISION32",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:47:19.5886518Z",
+    "endedUtc": "2026-09-18T18:47:35.3608175Z",
+    "resultFile": "round-0-case-3-fresh.json",
+    "microsecondsPerBatch": 14.390922003011275,
+    "bytesPerBatch": 162816.09920535822,
+    "iterations": [
+      14.045153442852149,
+      14.556024105070426,
+      14.346436052765668,
+      14.185271099203272,
+      14.821725315164862
+    ]
+  },
+  {
+    "round": 0,
+    "caseIndex": 4,
+    "shape": "NFE1",
+    "documents": 64,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:47:35.3621541Z",
+    "endedUtc": "2026-09-18T18:47:51.1512876Z",
+    "resultFile": "round-0-case-4-fresh.json",
+    "microsecondsPerBatch": 278.01687969361495,
+    "bytesPerBatch": 157697.91352088918,
+    "iterations": [
+      280.12573244886676,
+      280.99969478357383,
+      279.83803169307754,
+      277.0468956043956,
+      272.0740439381611
+    ]
+  },
+  {
+    "round": 0,
+    "caseIndex": 4,
+    "shape": "NFE1",
+    "documents": 64,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:47:51.1526842Z",
+    "endedUtc": "2026-09-18T18:48:06.9449376Z",
+    "resultFile": "round-0-case-4-batch.json",
+    "microsecondsPerBatch": 268.1353377921585,
+    "bytesPerBatch": 71513.84047319964,
+    "iterations": [
+      255.15912408759124,
+      259.95406797116374,
+      272.2269759913677,
+      288.4963848562482,
+      264.84013605442175
+    ]
+  },
+  {
+    "round": 0,
+    "caseIndex": 2,
+    "shape": "HIGH4096",
+    "documents": 4096,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:48:06.9458835Z",
+    "endedUtc": "2026-09-18T18:48:22.7048638Z",
+    "resultFile": "round-0-case-2-fresh.json",
+    "microsecondsPerBatch": 461.13606202125794,
+    "bytesPerBatch": 5210115.1673660185,
+    "iterations": [
+      461.2366087751371,
+      459.19768602540836,
+      466.18229885057474,
+      463.9850800915332,
+      455.07863636363635
+    ]
+  },
+  {
+    "round": 0,
+    "caseIndex": 2,
+    "shape": "HIGH4096",
+    "documents": 4096,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:48:22.7061476Z",
+    "endedUtc": "2026-09-18T18:48:38.5160349Z",
+    "resultFile": "round-0-case-2-batch.json",
+    "microsecondsPerBatch": 278.41505815672554,
+    "bytesPerBatch": 435097.90945486433,
+    "iterations": [
+      266.1398685939553,
+      305.6637104072398,
+      262.91632970451013,
+      267.5326023778071,
+      289.82277970011535
+    ]
+  },
+  {
+    "round": 0,
+    "caseIndex": 1,
+    "shape": "UF27",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:48:38.5170996Z",
+    "endedUtc": "2026-09-18T18:48:54.2599318Z",
+    "resultFile": "round-0-case-1-batch.json",
+    "microsecondsPerBatch": 6.893121779784977,
+    "bytesPerBatch": 7792.047372521187,
+    "iterations": [
+      6.907017159297188,
+      7.235379504585831,
+      6.797047822964238,
+      6.737084322448084,
+      6.7890800896295405
+    ]
+  },
+  {
+    "round": 0,
+    "caseIndex": 1,
+    "shape": "UF27",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:48:54.2608424Z",
+    "endedUtc": "2026-09-18T18:49:10.0074815Z",
+    "resultFile": "round-0-case-1-fresh.json",
+    "microsecondsPerBatch": 13.686587657819729,
+    "bytesPerBatch": 158720.0940786723,
+    "iterations": [
+      13.900110271820036,
+      13.925349911484842,
+      13.22843265434197,
+      13.076024115211334,
+      14.30302133624046
+    ]
+  },
+  {
+    "round": 0,
+    "caseIndex": 5,
+    "shape": "NFE50",
+    "documents": 64,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:49:10.0085424Z",
+    "endedUtc": "2026-09-18T18:49:25.8441726Z",
+    "resultFile": "round-0-case-5-batch.json",
+    "microsecondsPerBatch": 2431.5198239609845,
+    "bytesPerBatch": 904552.7436771977,
+    "iterations": [
+      2657.4968169761273,
+      2432.7130434782607,
+      2385.0435294117647,
+      2331.4896551724137,
+      2350.856074766355
+    ]
+  },
+  {
+    "round": 0,
+    "caseIndex": 5,
+    "shape": "NFE50",
+    "documents": 64,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:49:25.8454649Z",
+    "endedUtc": "2026-09-18T18:49:41.6877425Z",
+    "resultFile": "round-0-case-5-fresh.json",
+    "microsecondsPerBatch": 2408.9254031314194,
+    "bytesPerBatch": 990736.5659644852,
+    "iterations": [
+      2410.1290476190475,
+      2384.6323877068558,
+      2458.5917675544792,
+      2396.9862232779096,
+      2394.2875894988065
+    ]
+  },
+  {
+    "round": 0,
+    "caseIndex": 0,
+    "shape": "UF2",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:49:41.6890573Z",
+    "endedUtc": "2026-09-18T18:49:57.4336290Z",
+    "resultFile": "round-0-case-0-fresh.json",
+    "microsecondsPerBatch": 13.698781087304576,
+    "bytesPerBatch": 158720.09414341356,
+    "iterations": [
+      13.087797934836056,
+      13.047292581480098,
+      13.156809389037468,
+      13.969229374939,
+      15.232776156230253
+    ]
+  },
+  {
+    "round": 0,
+    "caseIndex": 0,
+    "shape": "UF2",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:49:57.4348092Z",
+    "endedUtc": "2026-09-18T18:50:13.1959884Z",
+    "resultFile": "round-0-case-0-batch.json",
+    "microsecondsPerBatch": 6.582586657396208,
+    "bytesPerBatch": 4360.045122825021,
+    "iterations": [
+      6.269289883208147,
+      6.300844967164328,
+      7.135107631258934,
+      6.617254945528928,
+      6.590435859820701
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 4,
+    "shape": "NFE1",
+    "documents": 64,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:50:13.1969131Z",
+    "endedUtc": "2026-09-18T18:50:29.0229158Z",
+    "resultFile": "round-1-case-4-batch.json",
+    "microsecondsPerBatch": 272.5005244696201,
+    "bytesPerBatch": 71513.8752142246,
+    "iterations": [
+      265.80146827477716,
+      288.7139040505602,
+      266.3075416776925,
+      271.96954877060256,
+      269.7101595744681
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 4,
+    "shape": "NFE1",
+    "documents": 64,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:50:29.0242638Z",
+    "endedUtc": "2026-09-18T18:50:44.8068308Z",
+    "resultFile": "round-1-case-4-fresh.json",
+    "microsecondsPerBatch": 294.8963048983825,
+    "bytesPerBatch": 157698.03427248495,
+    "iterations": [
+      282.26251409244645,
+      313.7054341036852,
+      288.4501296456353,
+      296.6251611013474,
+      293.43828554879815
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 5,
+    "shape": "NFE50",
+    "documents": 64,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:50:44.8077710Z",
+    "endedUtc": "2026-09-18T18:51:00.6384437Z",
+    "resultFile": "round-1-case-5-fresh.json",
+    "microsecondsPerBatch": 2301.9182971239507,
+    "bytesPerBatch": 990735.8314857672,
+    "iterations": [
+      2348.172727272727,
+      2242.6464444444446,
+      2293.2575963718823,
+      2276.4556053811657,
+      2349.0591121495327
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 5,
+    "shape": "NFE50",
+    "documents": 64,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:51:00.6395024Z",
+    "endedUtc": "2026-09-18T18:51:16.4434698Z",
+    "resultFile": "round-1-case-5-batch.json",
+    "microsecondsPerBatch": 2371.970624414481,
+    "bytesPerBatch": 904552.308677163,
+    "iterations": [
+      2316.0322654462243,
+      2275.872972972973,
+      2281.977652370203,
+      2416.96690647482,
+      2569.003324808184
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 2,
+    "shape": "HIGH4096",
+    "documents": 4096,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:51:16.4445192Z",
+    "endedUtc": "2026-09-18T18:51:32.2006314Z",
+    "resultFile": "round-1-case-2-batch.json",
+    "microsecondsPerBatch": 296.929328761479,
+    "bytesPerBatch": 435098.04492293176,
+    "iterations": [
+      302.0460895522388,
+      303.5595216469876,
+      298.44897290860376,
+      296.55658937481655,
+      284.035470324748
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 2,
+    "shape": "HIGH4096",
+    "documents": 4096,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:51:32.2021644Z",
+    "endedUtc": "2026-09-18T18:51:47.9252998Z",
+    "resultFile": "round-1-case-2-fresh.json",
+    "microsecondsPerBatch": 424.3625135306767,
+    "bytesPerBatch": 5210114.920595241,
+    "iterations": [
+      410.9773799837266,
+      413.3852506162695,
+      449.97427937915745,
+      425.42561597281224,
+      422.05004170141785
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 0,
+    "shape": "UF2",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:51:47.9263477Z",
+    "endedUtc": "2026-09-18T18:52:03.6227560Z",
+    "resultFile": "round-1-case-0-batch.json",
+    "microsecondsPerBatch": 6.150325257086168,
+    "bytesPerBatch": 4360.042161879026,
+    "iterations": [
+      6.1900872814098635,
+      6.312127960873118,
+      6.17637865045473,
+      5.972678097390711,
+      6.100354295302418
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 0,
+    "shape": "UF2",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:52:03.6236873Z",
+    "endedUtc": "2026-09-18T18:52:19.3181514Z",
+    "resultFile": "round-1-case-0-fresh.json",
+    "microsecondsPerBatch": 12.560116221009604,
+    "bytesPerBatch": 158720.08652136143,
+    "iterations": [
+      12.207158621194202,
+      13.61456729412713,
+      12.408437803126112,
+      12.206612710049722,
+      12.36380467655086
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 3,
+    "shape": "COLLISION32",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:52:19.3193449Z",
+    "endedUtc": "2026-09-18T18:52:35.0311397Z",
+    "resultFile": "round-1-case-3-fresh.json",
+    "microsecondsPerBatch": 14.140088536259139,
+    "bytesPerBatch": 162816.09733844313,
+    "iterations": [
+      14.0458542590546,
+      14.042686319285863,
+      13.916199458683163,
+      13.73973568160899,
+      14.955966962663082
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 3,
+    "shape": "COLLISION32",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:52:35.0320968Z",
+    "endedUtc": "2026-09-18T18:52:50.7601757Z",
+    "resultFile": "round-1-case-3-batch.json",
+    "microsecondsPerBatch": 14.934676659786746,
+    "bytesPerBatch": 43736.10278108059,
+    "iterations": [
+      15.212914246154773,
+      14.571954706786798,
+      14.383837658514167,
+      15.248247060781674,
+      15.256429626696315
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 1,
+    "shape": "UF27",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:52:50.7611461Z",
+    "endedUtc": "2026-09-18T18:53:06.5329374Z",
+    "resultFile": "round-1-case-1-fresh.json",
+    "microsecondsPerBatch": 13.69487327058076,
+    "bytesPerBatch": 158720.09392554857,
+    "iterations": [
+      14.538098443295574,
+      12.937115615653996,
+      13.084549378408415,
+      14.344268045043382,
+      13.57033487050244
+    ]
+  },
+  {
+    "round": 1,
+    "caseIndex": 1,
+    "shape": "UF27",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:53:06.5340870Z",
+    "endedUtc": "2026-09-18T18:53:22.2700549Z",
+    "resultFile": "round-1-case-1-batch.json",
+    "microsecondsPerBatch": 7.868288327187889,
+    "bytesPerBatch": 7792.054077724335,
+    "iterations": [
+      8.61137062552614,
+      7.935957153163326,
+      7.797282942876468,
+      7.715286219514062,
+      7.281544694859458
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 3,
+    "shape": "COLLISION32",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:53:22.2713197Z",
+    "endedUtc": "2026-09-18T18:53:37.9862830Z",
+    "resultFile": "round-2-case-3-batch.json",
+    "microsecondsPerBatch": 15.073322809716842,
+    "bytesPerBatch": 43736.10344186474,
+    "iterations": [
+      14.203320425262268,
+      15.213540252767473,
+      14.70005536614506,
+      16.144702941129637,
+      15.104995063279777
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 3,
+    "shape": "COLLISION32",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:53:37.9876225Z",
+    "endedUtc": "2026-09-18T18:53:53.7242685Z",
+    "resultFile": "round-2-case-3-fresh.json",
+    "microsecondsPerBatch": 13.546667257414594,
+    "bytesPerBatch": 162816.09322656333,
+    "iterations": [
+      13.12217953377291,
+      13.16194024980749,
+      13.413068264679756,
+      14.665385122755588,
+      13.370763116057233
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 5,
+    "shape": "NFE50",
+    "documents": 64,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:53:53.7255443Z",
+    "endedUtc": "2026-09-18T18:54:09.6047799Z",
+    "resultFile": "round-2-case-5-batch.json",
+    "microsecondsPerBatch": 2442.66139477655,
+    "bytesPerBatch": 904552.7628570311,
+    "iterations": [
+      2564.7984771573606,
+      2389.0767220902612,
+      2367.0198135198134,
+      2416.8773269689736,
+      2475.5346341463414
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 5,
+    "shape": "NFE50",
+    "documents": 64,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:54:09.6062797Z",
+    "endedUtc": "2026-09-18T18:54:25.7076767Z",
+    "resultFile": "round-2-case-5-fresh.json",
+    "microsecondsPerBatch": 2276.877799968569,
+    "bytesPerBatch": 990735.6713442022,
+    "iterations": [
+      2235.678539823009,
+      2330.7096997690533,
+      2280.481776765376,
+      2268.526174496644,
+      2268.992808988764
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 1,
+    "shape": "UF27",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:54:25.7085454Z",
+    "endedUtc": "2026-09-18T18:54:41.3937408Z",
+    "resultFile": "round-2-case-1-batch.json",
+    "microsecondsPerBatch": 7.604752599404729,
+    "bytesPerBatch": 7792.052307443414,
+    "iterations": [
+      7.49827171019175,
+      7.379177051839835,
+      8.018698594317048,
+      7.907781142173087,
+      7.2198344985019265
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 1,
+    "shape": "UF27",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:54:41.3948086Z",
+    "endedUtc": "2026-09-18T18:54:57.1252790Z",
+    "resultFile": "round-2-case-1-fresh.json",
+    "microsecondsPerBatch": 13.575295411786708,
+    "bytesPerBatch": 158720.0934561196,
+    "iterations": [
+      13.775021282438555,
+      13.599268219832735,
+      13.739076280155219,
+      13.376699324771614,
+      13.386411951735424
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 2,
+    "shape": "HIGH4096",
+    "documents": 4096,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:54:57.1266771Z",
+    "endedUtc": "2026-09-18T18:55:12.8845855Z",
+    "resultFile": "round-2-case-2-fresh.json",
+    "microsecondsPerBatch": 448.79431459629916,
+    "bytesPerBatch": 5210115.091022911,
+    "iterations": [
+      467.5945294390357,
+      471.06475524475525,
+      436.9477960242005,
+      427.71938214134576,
+      440.6451101321586
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 2,
+    "shape": "HIGH4096",
+    "documents": 4096,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:55:12.8859224Z",
+    "endedUtc": "2026-09-18T18:55:28.6734290Z",
+    "resultFile": "round-2-case-2-batch.json",
+    "microsecondsPerBatch": 301.2137378919633,
+    "bytesPerBatch": 435098.0720299326,
+    "iterations": [
+      308.20596877869605,
+      290.8324122049511,
+      295.9236842105263,
+      293.9154810495627,
+      317.1911432160804
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 0,
+    "shape": "UF2",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:55:28.6747242Z",
+    "endedUtc": "2026-09-18T18:55:44.3948173Z",
+    "resultFile": "round-2-case-0-fresh.json",
+    "microsecondsPerBatch": 13.371670982628899,
+    "bytesPerBatch": 158720.0919930304,
+    "iterations": [
+      12.984201455873652,
+      13.08361277912085,
+      13.288798782907792,
+      13.779043577607311,
+      13.722698317634888
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 0,
+    "shape": "UF2",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:55:44.3957219Z",
+    "endedUtc": "2026-09-18T18:56:00.1330050Z",
+    "resultFile": "round-2-case-0-batch.json",
+    "microsecondsPerBatch": 6.432516199648182,
+    "bytesPerBatch": 4360.044280671967,
+    "iterations": [
+      6.194512795727212,
+      6.340555203447839,
+      7.022977953960637,
+      6.314322950932661,
+      6.290212094172558
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 4,
+    "shape": "NFE1",
+    "documents": 64,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:56:00.1342349Z",
+    "endedUtc": "2026-09-18T18:56:15.8545719Z",
+    "resultFile": "round-2-case-4-fresh.json",
+    "microsecondsPerBatch": 287.198554006943,
+    "bytesPerBatch": 157697.97629522346,
+    "iterations": [
+      282.3562656991348,
+      276.9428571428571,
+      289.2729768372891,
+      294.2020075647367,
+      293.2186627906977
+    ]
+  },
+  {
+    "round": 2,
+    "caseIndex": 4,
+    "shape": "NFE1",
+    "documents": 64,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:56:15.8558710Z",
+    "endedUtc": "2026-09-18T18:56:31.6966015Z",
+    "resultFile": "round-2-case-4-batch.json",
+    "microsecondsPerBatch": 287.8597210252887,
+    "bytesPerBatch": 71513.97371254266,
+    "iterations": [
+      280.04689750692523,
+      309.8382697044335,
+      294.1131708732231,
+      278.7670426409904,
+      276.53322440087146
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 5,
+    "shape": "NFE50",
+    "documents": 64,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:56:31.6975917Z",
+    "endedUtc": "2026-09-18T18:56:47.5381425Z",
+    "resultFile": "round-3-case-5-fresh.json",
+    "microsecondsPerBatch": 2641.3936003062836,
+    "bytesPerBatch": 990738.1785252098,
+    "iterations": [
+      2602.732299741602,
+      2518.423,
+      2647.901832460733,
+      2588.2629820051416,
+      2849.6478873239435
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 5,
+    "shape": "NFE50",
+    "documents": 64,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:56:47.5397193Z",
+    "endedUtc": "2026-09-18T18:57:03.3611513Z",
+    "resultFile": "round-3-case-5-batch.json",
+    "microsecondsPerBatch": 2483.1811446100687,
+    "bytesPerBatch": 904553.108908138,
+    "iterations": [
+      2306.0805491990845,
+      2526.5060453400506,
+      2600.971243523316,
+      2532.2905,
+      2450.0573849878933
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 4,
+    "shape": "NFE1",
+    "documents": 64,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:57:03.3622741Z",
+    "endedUtc": "2026-09-18T18:57:19.1339040Z",
+    "resultFile": "round-3-case-4-batch.json",
+    "microsecondsPerBatch": 274.30334480407345,
+    "bytesPerBatch": 71513.88363676099,
+    "iterations": [
+      274.30504612045576,
+      291.9750943396226,
+      266.88511087645196,
+      264.21863565081026,
+      274.13283703302653
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 4,
+    "shape": "NFE1",
+    "documents": 64,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:57:19.1349418Z",
+    "endedUtc": "2026-09-18T18:57:34.9270160Z",
+    "resultFile": "round-3-case-4-fresh.json",
+    "microsecondsPerBatch": 280.15922009971194,
+    "bytesPerBatch": 157697.92863582456,
+    "iterations": [
+      278.2248698986579,
+      273.58871055495104,
+      291.90296856810244,
+      270.30890796887576,
+      286.7706435079727
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 1,
+    "shape": "UF27",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:57:34.9280636Z",
+    "endedUtc": "2026-09-18T18:57:50.6099675Z",
+    "resultFile": "round-3-case-1-fresh.json",
+    "microsecondsPerBatch": 13.109928303769603,
+    "bytesPerBatch": 158720.09030622215,
+    "iterations": [
+      12.703210059357236,
+      13.062107040789815,
+      12.762941288238647,
+      12.902362770640554,
+      14.11902035982178
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 1,
+    "shape": "UF27",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:57:50.6112305Z",
+    "endedUtc": "2026-09-18T18:58:06.2705772Z",
+    "resultFile": "round-3-case-1-batch.json",
+    "microsecondsPerBatch": 6.787772382778995,
+    "bytesPerBatch": 7792.046751017896,
+    "iterations": [
+      6.684061551163905,
+      6.614032269696513,
+      6.675526102388897,
+      7.245558905879819,
+      6.71968308476584
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 0,
+    "shape": "UF2",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:58:06.2788304Z",
+    "endedUtc": "2026-09-18T18:58:21.9439221Z",
+    "resultFile": "round-3-case-0-batch.json",
+    "microsecondsPerBatch": 6.813829435639725,
+    "bytesPerBatch": 4360.047080146664,
+    "iterations": [
+      6.705888192302311,
+      6.685864916876036,
+      6.5328562332700955,
+      7.196235111675892,
+      6.948302724074292
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 0,
+    "shape": "UF2",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:58:21.9453087Z",
+    "endedUtc": "2026-09-18T18:58:37.6529903Z",
+    "resultFile": "round-3-case-0-fresh.json",
+    "microsecondsPerBatch": 14.439745128214577,
+    "bytesPerBatch": 158720.0990545315,
+    "iterations": [
+      14.02181603773585,
+      14.687735602094241,
+      15.255178899220608,
+      13.605967245013783,
+      14.628027857008412
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 3,
+    "shape": "COLLISION32",
+    "documents": 128,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:58:37.6541106Z",
+    "endedUtc": "2026-09-18T18:58:53.3965912Z",
+    "resultFile": "round-3-case-3-fresh.json",
+    "microsecondsPerBatch": 13.942505696364,
+    "bytesPerBatch": 162816.09597587818,
+    "iterations": [
+      13.825509548480582,
+      13.95969881278793,
+      14.720361495075835,
+      13.632588792848104,
+      13.574369832627546
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 3,
+    "shape": "COLLISION32",
+    "documents": 128,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:58:53.3975017Z",
+    "endedUtc": "2026-09-18T18:59:09.1194535Z",
+    "resultFile": "round-3-case-3-batch.json",
+    "microsecondsPerBatch": 15.005012175096919,
+    "bytesPerBatch": 43736.10328765439,
+    "iterations": [
+      16.097391735431458,
+      15.214908367494575,
+      14.819380504991193,
+      14.493212969361899,
+      14.400167298205476
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 2,
+    "shape": "HIGH4096",
+    "documents": 4096,
+    "variant": "batch",
+    "benchmark": "demo.LifecycleBenchmark.reusedPerBatch",
+    "startedUtc": "2026-09-18T18:59:09.1204486Z",
+    "endedUtc": "2026-09-18T18:59:24.8612664Z",
+    "resultFile": "round-3-case-2-batch.json",
+    "microsecondsPerBatch": 243.84353586474117,
+    "bytesPerBatch": 435097.6814126759,
+    "iterations": [
+      261.97538981288983,
+      244.0498538011696,
+      239.98661077844312,
+      237.12542174320524,
+      236.08040318799812
+    ]
+  },
+  {
+    "round": 3,
+    "caseIndex": 2,
+    "shape": "HIGH4096",
+    "documents": 4096,
+    "variant": "fresh",
+    "benchmark": "demo.LifecycleBenchmark.freshPerDocument",
+    "startedUtc": "2026-09-18T18:59:24.8621292Z",
+    "endedUtc": "2026-09-18T18:59:40.5039139Z",
+    "resultFile": "round-3-case-2-fresh.json",
+    "microsecondsPerBatch": 440.50481751867255,
+    "bytesPerBatch": 5210115.038148826,
+    "iterations": [
+      455.41036834924967,
+      430.4224219084296,
+      443.64927663305565,
+      433.0750649350649,
+      439.96695576756287
+    ]
+  }
+]

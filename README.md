@@ -7,7 +7,9 @@
 
 **Fast, declarative XML extraction for Java.** Fletch reads a document in a single forward
 pass of its own byte-level scanning engine and materializes exactly the values you ask
-for — no DOM tree, no reflection, no annotations, no code generation, no dependencies.
+for, using a runtime with no DOM tree, reflection, annotations or external dependencies.
+The DSL works directly; optional [build-time codegen](codegen/README.md) can specialize
+element and attribute lookup for a fixed mapping.
 
 ```java
 record Book(String title, Integer year) {}
@@ -19,9 +21,9 @@ Book book = Xml.extract(xml, doc -> doc.child("book", b -> new Book(
 
 ## Why Fletch?
 
-- **One pass, minimal buffering.** The document is never materialized into a tree. Reads
-  that follow document order allocate only the values you extract; a read that revisits an
-  earlier sibling buffers just the current element's skipped children.
+- **Minimal buffering.** The document is never materialized into a tree. The cursor
+  records skipped siblings as byte spans for later reads; a compiled mapping can
+  discard subtrees that contain no selected fields.
 - **Declarative, composable extractors.** An `XmlExtractor<T>` is a lambda that maps one
   element to one value. Extractors nest and compose like ordinary functions, and they are
   stateless constants you can share across threads.
@@ -32,8 +34,9 @@ Book book = Xml.extract(xml, doc -> doc.child("book", b -> new Book(
   it must revisit.
 - **Secure by default.** DTDs and external entities are disabled — there is no XXE
   attack surface.
-- **One exception type.** Every failure mode surfaces as the unchecked `XmlException`,
-  carrying the byte offset of the problem in the source document.
+- **Explicit errors.** Parse failures use `XmlException` with a byte offset; I/O
+  failures preserve their cause. Conversion errors retain their Java exception type,
+  such as `NumberFormatException` or `DateTimeParseException`.
 
 ## Installation
 
@@ -114,7 +117,7 @@ Order order = Xml.extract(inputStream, doc -> doc.child("order", OrderExtractors
 
 ## The engine underneath
 
-Fletch 2 replaced the StAX parser with a goal-directed byte-level engine: tokenizer,
+Fletch uses a goal-directed byte-level engine: tokenizer,
 name matching and value decoding run in one fused loop over the document bytes, with
 no per-event objects. Subtrees your extractor never asks about are crossed by a
 balance-counting skip at SWAR scan speed, and — because the document is buffered —
@@ -124,17 +127,23 @@ buffers nothing; reading them in any other order costs a cheap re-scan instead o
 event materialization it cost in 1.x. When your root extractor returns, reading stops:
 trailing content is never scanned.
 
-Measured on the bundled 7 KB NF-e fixture (i7-13700K, JDK 25), extraction runs
-2.6–3.4× faster than Fletch 1.x with 4–8× less allocation, and about 2× faster than a
-bare Woodstox event loop over the same document — while keeping the exact same API.
-Reproduce with `mvn -P benchmarks package -DskipTests -Dgpg.skip=true` and
-`java -jar target/benchmarks.jar ExtractionBenchmark`.
+Measure the bundled NF-e fixture with
+`mvn -P benchmarks package -DskipTests -Dgpg.skip=true` and
+`java -jar target/benchmarks.jar ExtractionBenchmark -prof gc`.
+The benchmark compares cursor and mapping extraction; its bare Woodstox event loop
+is a scanning reference and does not construct the same result object.
+`CorpusBenchmark` adds rotating documents with Unicode, reordered fields,
+attributes and ignored subtrees, across input forms and resource limits. See
+[the benchmark guide](docs/benchmarking.md) for bounded runs and paired comparisons.
 
 Scope notes: the engine reads UTF-8 and US-ASCII natively (ISO-8859-1 and UTF-16 are
-transcoded once; other encodings are rejected), a single text value is capped at
-16 MiB, and subtrees you never read are checked for tag balance only (mappings can opt
-into full checks with `strictSkip()`). The design rationale lives in
-[docs/extraction-engine-proposal.md](docs/extraction-engine-proposal.md).
+transcoded once; other encodings are rejected). Selected text is capped at 16 MiB
+of UTF-8 content bytes before entity decoding and trimming, summed across text and
+CDATA runs of a value. Attributes have the same byte limit; streaming start tags
+and anchored CDATA sections must also fit the 16 MiB token window. Selected values
+are checked for valid UTF-8 and XML 1.0 characters. Mappings can use `strictSkip()`
+to compare complete end-tag names in skipped subtrees. Extraction stops early and
+does not certify the well-formedness of the entire document.
 
 Memory: exactly one path avoids holding the whole document — **a mapping over a UTF-8
 (or US-ASCII) `InputStream`**, which slides a 64 KB window and holds the largest single
@@ -161,8 +170,9 @@ cursor and a push-style mapping:
 | `XmlExtractor<T>` | A lambda mapping one element to a typed value (cursor style) |
 | `XmlCursor` | The navigation surface handed to extractors |
 | `XmlMapping<T>` | A compiled, declarative mapping binding paths into a draft (mapping style) |
+| `XmlLimits` | Immutable limits passed per extraction, shared safely across threads |
 | `XmlBinding<D>` / `XmlValue` | A per-path binding and the lazily-decoded value it receives |
-| `XmlException` | The single unchecked exception for all failures |
+| `XmlException` | Parse, resource-limit and I/O failures; conversion exceptions retain their Java type |
 
 The cursor offers six operations:
 
@@ -237,6 +247,36 @@ Paths are chains of raw tag names (`/order/customer/name`); attributes use `@`
 `strictSkip()` trades throughput to also verify end tags inside the subtrees no
 declared path selects, which are otherwise only counted.
 
+### Optional build-time codegen (experimental)
+
+The [codegen prototype](codegen/README.md) generates Java 17 lookup code from a public
+factory using the existing mapping DSL. Generated mappings retain the same extraction,
+validation, limits and session contracts. Build the core, generator and executable
+consumer with `mvn -f codegen/pom.xml verify -Dgpg.skip=true`.
+
+### Reusable mapping sessions
+
+For a batch of documents on one worker thread, open a session once and reuse
+its dedicated engine:
+
+```java
+try (var session = OrderMapping.ORDER.openSession()) {
+    for (byte[] document : documents) {
+        Order order = session.extract(document); // also String / InputStream
+        process(order);
+    }
+}
+```
+
+Use `openSession(limits)` to apply the same `XmlLimits` independently to every
+document. Create, use and close each session on the same worker thread. Sessions
+reject recursive extraction and closing from a callback. They remain usable after
+parsing or callback failures, and never close input streams supplied by the caller.
+Closing releases the engine and prevents further extraction.
+
+Sessions avoid pool access per document; the benefit depends on the workload.
+See the [session contract and worker example](docs/mapping-sessions.md).
+
 ## How reads work
 
 Fletch is a single streaming pass with a lazy per-scope buffer, so extractor calls are
@@ -272,14 +312,68 @@ The engine is hardened by default:
 
 - `<!DOCTYPE` is rejected at its first byte — no DTD processing, no XXE surface;
 - only the five predefined entities and numeric character references are decoded;
-- a single text value is capped at 16 MiB to guard against pathological inputs.
+- selected values reject malformed UTF-8 and forbidden XML characters;
+- scanned start tags reject unquoted, duplicate and malformed attributes;
+- each start tag is limited to 1,024 attributes, bounding duplicate-name checks;
+- selected text and attributes have a 16 MiB content limit before decoding/trimming.
+
+These checks apply to the content the extraction visits. Unselected text and trailing
+content are not fully validated; `strictSkip()` extends end-tag checks inside skipped
+subtrees, and does not turn extraction into whole-document XML validation.
+
+## Resource limits and validation coverage
+
+Use the same limits with either extraction style and any input form:
+
+```java
+XmlLimits limits = XmlLimits.builder()
+        .maxInputBytes(8 * 1024 * 1024)
+        .maxDepth(64)
+        .maxElements(100_000)
+        .maxNameBytes(256)
+        .maxAttributesPerElement(32)
+        .maxTextBytes(1024 * 1024)
+        .build();
+
+Order order = Xml.extract(bytes, limits, ORDER_MAPPING);
+Order cursorOrder = Xml.extract(bytes, limits, doc -> doc.child("order", OrderExtractors.ORDER));
+```
+
+The numbers above are examples; choose limits for your document contract. Existing
+two-argument calls use `XmlLimits.defaults()`, preserving the 16 MiB content and
+1,024-attribute ceilings without adding input, depth, element-count or name limits.
+Content and attribute limits can be lowered to zero; the other limits must be positive.
+
+Depth and element counts include skipped subtrees and empty elements; a cursor
+replay counts each element once. Names include prefixes and are measured in UTF-8
+bytes. Content limits count raw UTF-8 text before entity decoding and trimming;
+all text/CDATA runs within a selected value count together. Attributes in every
+scanned start tag are checked, even when not selected.
+
+The input limit counts original bytes, including BOMs. Arrays and strings are
+checked in full; strings are measured as UTF-8 before allocating the encoded array.
+Streams are limited as read, including read-ahead, and may consume one extra byte
+to distinguish EOF at the limit from oversized input. A mapping that exits early
+may leave the remainder unread and unchecked. Legacy encodings are counted before
+transcoding; their UTF-8 representation and intermediate buffers can be larger.
+
+Limit violations throw `XmlException`. Streams remain open, and earlier callbacks
+may already have run. Limits cover parser work, not allocations made by callbacks.
+They do not add whole-document XML validation. See the
+[coverage table and resource contract](docs/resource-limits.md) for details.
 
 ## Thread safety
 
 `XmlExtractor` constants are stateless and safe to share across threads. Each
 `Xml.extract(...)` call runs on its own engine drawn from a small internal pool, so
 concurrent extractions never share mutable state and steady-state calls reuse the
-scanning buffers instead of reallocating them.
+scanning buffers instead of reallocating them. Engines release caller-owned source
+references after success or failure and discard scratch buffers larger than 1 MiB
+before returning to the pool.
+
+A mapping may also be shared across workers, provided its callbacks and draft
+suppliers support concurrent use with separate drafts. Each worker must create
+its own `XmlMappingSession`; a session rejects calls from other threads.
 
 ## Performance notes
 

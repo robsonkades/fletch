@@ -1,0 +1,140 @@
+[
+  {
+    "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+    "candidateBenchmark": "demo.NfeTuningBenchmark.canonicalUf",
+    "params": {
+      "items": "1"
+    },
+    "threads": 1,
+    "pairs": 4,
+    "controlScore": 285.83770161010835,
+    "candidateScore": 282.3806799477635,
+    "unit": "ops/ms",
+    "changePercent": -1.2055821020160118,
+    "lower95Percent": -3.838934453194698,
+    "upper95Percent": 1.4998840986299777,
+    "pairChangesPercent": [
+      -3.408161811279875,
+      -0.7178340364233815,
+      -1.2642906777029617,
+      0.6105914361174358
+    ],
+    "controlBytes": 1096.0240256491068,
+    "candidateBytes": 1096.0243211542293
+  },
+  {
+    "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+    "candidateBenchmark": "demo.NfeTuningBenchmark.canonicalUf",
+    "params": {
+      "items": "50"
+    },
+    "threads": 1,
+    "pairs": 4,
+    "controlScore": 31.584268099493013,
+    "candidateScore": 31.866886576552456,
+    "unit": "ops/ms",
+    "changePercent": 0.9086796098839667,
+    "lower95Percent": -3.5562031281825,
+    "upper95Percent": 5.580264888821773,
+    "pairChangesPercent": [
+      -1.231685301803065,
+      5.056138037676017,
+      0.880574382361643,
+      -0.9470367166812932
+    ],
+    "controlBytes": 14112.21775818936,
+    "candidateBytes": 14112.215130586745
+  },
+  {
+    "benchmark": "demo.NfeTuningBenchmark.baseline",
+    "candidateBenchmark": "demo.NfeTuningBenchmark.baseline",
+    "params": {
+      "items": "1"
+    },
+    "threads": 1,
+    "pairs": 4,
+    "controlScore": 286.81383931798814,
+    "candidateScore": 286.0899568913275,
+    "unit": "ops/ms",
+    "changePercent": -0.23232365252965348,
+    "lower95Percent": -4.168811626242341,
+    "upper95Percent": 3.865864680222164,
+    "pairChangesPercent": [
+      -0.8688313108079271,
+      0.8384475859592788,
+      2.5487131605230973,
+      -3.3520076170923008
+    ],
+    "controlBytes": 1192.0239034736173,
+    "candidateBytes": 1192.0239659406839
+  },
+  {
+    "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+    "candidateBenchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+    "params": {
+      "shape": "UF27"
+    },
+    "threads": 1,
+    "pairs": 4,
+    "controlScore": 22475.366962646054,
+    "candidateScore": 23007.027487380466,
+    "unit": "ops/ms",
+    "changePercent": 2.3252505856542705,
+    "lower95Percent": -4.1310601194004875,
+    "upper95Percent": 9.216362676560585,
+    "pairChangesPercent": [
+      -0.2425682598547474,
+      0.6620248377255722,
+      8.780906109519337,
+      0.36162248918725215
+    ],
+    "controlBytes": 24.00030510377213,
+    "candidateBytes": 24.000298155185035
+  },
+  {
+    "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+    "candidateBenchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+    "params": {
+      "shape": "HIGH4096"
+    },
+    "threads": 1,
+    "pairs": 4,
+    "controlScore": 17461.921735467495,
+    "candidateScore": 17819.28841974659,
+    "unit": "ops/ms",
+    "changePercent": 2.063868528528423,
+    "lower95Percent": -0.6654429936343798,
+    "upper95Percent": 4.868170483119827,
+    "pairChangesPercent": [
+      0.8347643250810721,
+      4.125456254154569,
+      2.8998292599207387,
+      0.4398932335287542
+    ],
+    "controlBytes": 72.00042589197551,
+    "candidateBytes": 72.00035118077801
+  },
+  {
+    "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+    "candidateBenchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+    "params": {
+      "shape": "COLLISION32"
+    },
+    "threads": 1,
+    "pairs": 4,
+    "controlScore": 13798.765948643872,
+    "candidateScore": 13389.761495550543,
+    "unit": "ops/ms",
+    "changePercent": -2.9984175803904223,
+    "lower95Percent": -10.640170023618435,
+    "upper95Percent": 5.29683185828862,
+    "pairChangesPercent": [
+      0.8556721687122737,
+      -9.92341793088114,
+      0.047970626016113904,
+      -2.5919687272610847
+    ],
+    "controlBytes": 72.00049447550764,
+    "candidateBytes": 72.00051025766538
+  }
+]

@@ -1,0 +1,560 @@
+{
+  "startedUtc": "2026-09-18T17:30:21.0803361Z",
+  "java": "openjdk version \"21.0.12.1\" 2026-08-18 LTS\r\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\r\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+  "os": "Microsoft Windows 10.0.26200",
+  "processors": 24,
+  "seed": 2026091803,
+  "rounds": 4,
+  "forksPerInvocation": 1,
+  "threads": [
+    1
+  ],
+  "warmupIterations": 10,
+  "measurementIterations": 5,
+  "iterationSeconds": 1,
+  "jvmArguments": "-Xms256m -Xmx256m -XX:+UseG1GC -Xlog:gc+init=info",
+  "affinityMask": 21845,
+  "effectiveRunnerAffinity": 21845,
+  "artifacts": [
+    {
+      "path": "C:\\git\\fletch\\target\\canonical-mixed-hash\\build-audited\\candidate.jar",
+      "variant": "candidate",
+      "sha256": "7E23A0BFB3D7FC104285BD365D0A55E2BA8E4A7C8052C42D3A70895DBA1E301B"
+    },
+    {
+      "path": "C:\\git\\fletch\\target\\canonical-mixed-hash\\build-audited\\control.jar",
+      "variant": "control",
+      "sha256": "7D85F19A5396D8BA793507947D84E851FEF0C2810B3FEE8CE30A453DB3E2B07A"
+    }
+  ],
+  "schedule": [
+    {
+      "round": 0,
+      "caseIndex": 0,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 4,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "HIGH4096"
+        }
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "HIGH4096"
+        }
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "50"
+        }
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 1,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "50"
+        }
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 5,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "COLLISION32"
+        }
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 5,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "COLLISION32"
+        }
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "UF27"
+        }
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 3,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "UF27"
+        }
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 2,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.baseline",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.baseline",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "HIGH4096"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 4,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "HIGH4096"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 3,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "UF27"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "UF27"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 1,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "50"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "50"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 5,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "COLLISION32"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 5,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "COLLISION32"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 0,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.baseline",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 2,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.baseline",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 4,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "HIGH4096"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "HIGH4096"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 0,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 2,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.baseline",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.baseline",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "UF27"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 3,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "UF27"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "50"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 1,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "50"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 5,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "COLLISION32"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 5,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "COLLISION32"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 5,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "COLLISION32"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 5,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "COLLISION32"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.baseline",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 2,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.baseline",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 3,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "UF27"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "UF27"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 1,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "50"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "50"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 0,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.NfeTuningBenchmark.canonicalUf",
+        "params": {
+          "items": "1"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "HIGH4096"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 4,
+      "variant": "control",
+      "case": {
+        "benchmark": "io.github.robsonkades.fletch.CanonicalCacheBenchmark.extract",
+        "params": {
+          "shape": "HIGH4096"
+        }
+      }
+    }
+  ]
+}

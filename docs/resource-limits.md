@@ -136,7 +136,8 @@ callbacks; structural/content checks happen when the relevant input is reached.
 
 This change adds a final public type and six three-argument overloads. Existing
 two-argument descriptors remain, so existing calls keep their source and binary
-shape. Defaults retain the limits from the preceding correctness changes. The
-stricter malformed-input rejection and new 1,024-attribute ceiling from that earlier
-stage remain a separate behavioral compatibility consideration for a future release.
-No release version is changed here.
+shape. Defaults add no input-size, depth, element-count or name-length limit.
+Compared with release 1.2.0, stricter malformed-input checks and the enforced
+16 MiB content and 1,024-attribute ceilings can reject inputs previously accepted.
+Applications relying on those inputs must adjust their document contract before
+upgrading. No release version is changed here.

@@ -1,0 +1,104 @@
+[
+  {
+    "source": "docs/performance-review/2026-09-17-codegen-vs-dsl/runs-21/summary.json",
+    "published": "data/codegen-attributes-summary.json",
+    "originalSha256": "27DBC2925A79A6E10EC4D64758EB8EEC79CA8A79072F4EBA5FF18EB303F59AC5",
+    "normalizedJsonSha256": "FCFF0920139AF0B711A3558E6E4C2AB355F418A515E71F285CDE68406C126075"
+  },
+  {
+    "source": "docs/performance-review/2026-09-17-codegen-vs-dsl/runs-21/completed.json",
+    "published": "data/codegen-attributes-completed.json",
+    "originalSha256": "11A84899EA1D645C6C136504AEEB92B5419C8329F16FDE3B76FB1877DACC2A5B",
+    "normalizedJsonSha256": "C759FF5DF0DB3B9A897C2E93CE8BD58B58AF50E413B0956D8676FDAC1088C0BF"
+  },
+  {
+    "source": "docs/performance-review/2026-09-17-codegen-vs-dsl/runs-21/schedule.json",
+    "published": "data/codegen-attributes-schedule.json",
+    "originalSha256": "A1A17242DD2E3060A8D6BC88042830557C5B910F4056F52F9A6556D92C881C03",
+    "normalizedJsonSha256": "5925BB0CB506F21D9F500C58FAC822D0398CAB4DA380D938EB46FB5DBAEAEAA5"
+  },
+  {
+    "source": "docs/performance-review/2026-09-17-codegen-vs-dsl/runs-21/trajectories.json",
+    "published": "data/codegen-attributes-trajectories.json",
+    "originalSha256": "7475F3AC0F9F60EBCAB1E0FB14AF0CC1A3DE46078EF9476D04AD75611D7B6FA0",
+    "normalizedJsonSha256": "3E8D1063DFA682D92CDA381D8B70ECEDA70AFA7C48134FC16928EA1B1B124521"
+  },
+  {
+    "source": "docs/performance-review/2026-09-17-codegen-nfe/runs-21/summary.json",
+    "published": "data/codegen-nfe-summary.json",
+    "originalSha256": "DFC8F9845BF51449AE7BF71EB143126911EE131519BFBB7B51069564F74C41CD",
+    "normalizedJsonSha256": "2B7A4D112DF332018DDEC9026C7816EC0E5154C026F9FE93F4070A4D246D9D07"
+  },
+  {
+    "source": "docs/performance-review/2026-09-17-codegen-nfe/runs-21/completed.json",
+    "published": "data/codegen-nfe-completed.json",
+    "originalSha256": "BDA188E80D7093233567FF0E6B8B5EA25D6D12861AC792C866A184120BEDE42B",
+    "normalizedJsonSha256": "692C0A48AE37BA404C43C304A51BF8577FB9D1CFC78AC3EA9FAC554DE7FAADE9"
+  },
+  {
+    "source": "docs/performance-review/2026-09-17-codegen-nfe/runs-21/schedule.json",
+    "published": "data/codegen-nfe-schedule.json",
+    "originalSha256": "0589F1ADE777DC66999B1540B0C7F33070D4B557843F1C6B124E93762EC044E5",
+    "normalizedJsonSha256": "0729896DE31E5F636C536004FED17593689C3304A1FE1901CEECF758DBE6CD8B"
+  },
+  {
+    "source": "docs/performance-review/2026-09-17-codegen-nfe/runs-21/trajectories.json",
+    "published": "data/codegen-nfe-trajectories.json",
+    "originalSha256": "3E385C318CD268C33EE883E1CF67526A3C6B35D41E110CFE6763CACA9F818805",
+    "normalizedJsonSha256": "6D1BEF645B7E1EE5BF76916242DA4A864CAD7AD80D51BF893CF55E80E5C24175"
+  },
+  {
+    "source": "docs/performance-review/2026-09-18-canonical-mixed-hash/runs/summary.json",
+    "published": "data/canonical-cache-summary.json",
+    "originalSha256": "C44FACB259A2A9D5AB1F7B02A715CF9E250D2F809352CBE72402B0619677BD70",
+    "normalizedJsonSha256": "15267508582E006B66923D2C00F6A728BBF9B6635D49BB0D78331081FDB955B4"
+  },
+  {
+    "source": "docs/performance-review/2026-09-18-canonical-mixed-hash/runs/completed.json",
+    "published": "data/canonical-cache-completed.json",
+    "originalSha256": "8294047A4B6674A3068F852F5C8AA6D3A07C36CA231F0F891C097252388F7D1C",
+    "normalizedJsonSha256": "79123BE4F22743BE407F62F8C0AF3D61E24102AA9C6AFD19CD8E2A49ED17121B"
+  },
+  {
+    "source": "docs/performance-review/2026-09-18-canonical-mixed-hash/runs/schedule.json",
+    "published": "data/canonical-cache-schedule.json",
+    "originalSha256": "313B89774850D9BA09F2DACB686F27DEFF7EF91A85B66D1CF785D3188C973A1D",
+    "normalizedJsonSha256": "29C9823D31BF8F09B0534D351C1C3C2C826904852D38774EE2E83D460C207283"
+  },
+  {
+    "source": "docs/performance-review/2026-09-18-canonical-mixed-hash/runs/trajectories.json",
+    "published": "data/canonical-cache-trajectories.json",
+    "originalSha256": "60CCBFA13EB9285AAA36004244959E14DF19B70091142B955738A9A6D95C2FEC",
+    "normalizedJsonSha256": "C27953D9BEE20AEDD40F075DE9C52EEA8273545AE2CDD9CC9C309EB82498F944"
+  },
+  {
+    "source": "docs/performance-review/2026-09-18-engine-lifecycle/runs/summary.json",
+    "published": "data/session-lifecycle-summary.json",
+    "originalSha256": "D4ACB14A4B5E993A74EF31798066D4F7F4CBEBC944D06C6381172EDD90C2169C",
+    "normalizedJsonSha256": "41F1E75BC8F35C6D6390554B0529F073158B0B9B04A327EAFE76A7ED8AAA177E"
+  },
+  {
+    "source": "docs/performance-review/2026-09-18-engine-lifecycle/runs/completed.json",
+    "published": "data/session-lifecycle-completed.json",
+    "originalSha256": "2A84806434D734B49E599EA93DF48003C1BD450763F898B08020C1F7F93ED381",
+    "normalizedJsonSha256": "D4AA76126B15B9033DB2F84EFA1C8B6F23C3E0BFD74717B52053BE4A5496A032"
+  },
+  {
+    "source": "docs/performance-review/2026-09-18-engine-lifecycle/runs/schedule.json",
+    "published": "data/session-lifecycle-schedule.json",
+    "originalSha256": "29D11E05A92BF87F486CA5041E165EBB98E2646B6E7B3BC6349102866D4C1B2F",
+    "normalizedJsonSha256": "972ED183F206FDC5DFE46B61C1D4A4873293AFE8C4BDC989641E529CF559B876"
+  },
+  {
+    "source": "docs/performance-review/2026-09-18-engine-lifecycle/runs/trajectories.json",
+    "published": "data/session-lifecycle-trajectories.json",
+    "originalSha256": "B474D395883EE9C2203FE100F3B85D727F073C4F3DB48833418973F609D88304",
+    "normalizedJsonSha256": "0720226B78ADC1E5D4F9FEE1BE7BEC45C8F7567F4C5F31AF4612AEBCADAB20B1"
+  },
+  {
+    "source": "docs/performance-review/2026-09-18-canonical-mixed-hash/validation/memory-summary.json",
+    "published": "data/canonical-cache-memory.json",
+    "originalSha256": "C6D2CB01F17C31E43848CA41C9D526DD3C55EF0846570D9F9EF431026EE6C861",
+    "normalizedJsonSha256": "8D25A27CF25F91DBEF115A4159D21FF19A4943C69D55B18F88FC2E16CE25392C"
+  }
+]

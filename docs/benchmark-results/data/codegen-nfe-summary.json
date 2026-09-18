@@ -1,0 +1,48 @@
+[
+  {
+    "benchmark": "demo.NfeCodegenBenchmark.dynamic",
+    "candidateBenchmark": "demo.NfeCodegenBenchmark.generated",
+    "params": {
+      "items": "1"
+    },
+    "threads": 1,
+    "pairs": 4,
+    "controlScore": 267.75599057458896,
+    "candidateScore": 268.1748908634165,
+    "unit": "ops/ms",
+    "changePercent": 0.16987161820112284,
+    "lower95Percent": -2.757511661160894,
+    "upper95Percent": 3.1853807056402506,
+    "pairChangesPercent": [
+      1.163585724866567,
+      2.1910516034061134,
+      -2.0104860651073087,
+      -0.6124963287847063
+    ],
+    "controlBytes": 1192.0256526008513,
+    "candidateBytes": 1192.0255990746857
+  },
+  {
+    "benchmark": "demo.NfeCodegenBenchmark.dynamic",
+    "candidateBenchmark": "demo.NfeCodegenBenchmark.generated",
+    "params": {
+      "items": "50"
+    },
+    "threads": 1,
+    "pairs": 4,
+    "controlScore": 30.864250396321722,
+    "candidateScore": 31.849283776507548,
+    "unit": "ops/ms",
+    "changePercent": 3.188122015323258,
+    "lower95Percent": 2.1136474975825603,
+    "upper95Percent": 4.273902519262318,
+    "pairChangesPercent": [
+      3.745389066020932,
+      3.001796378572008,
+      2.3106626617257486,
+      3.7013317814128976
+    ],
+    "controlBytes": 14208.223281112394,
+    "candidateBytes": 14208.217185240494
+  }
+]

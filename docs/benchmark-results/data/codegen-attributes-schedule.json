@@ -1,0 +1,136 @@
+{
+  "startedUtc": "2026-09-18T00:26:14.1459308Z",
+  "java": "openjdk version \"21.0.12.1\" 2026-08-18 LTS\r\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\r\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+  "os": "Microsoft Windows 10.0.26200",
+  "processors": 24,
+  "seed": 20260917,
+  "rounds": 4,
+  "forksPerInvocation": 1,
+  "threads": [
+    1
+  ],
+  "warmupIterations": 10,
+  "measurementIterations": 5,
+  "iterationSeconds": 1,
+  "jvmArguments": "-Xms256m -Xmx256m",
+  "affinityMask": 21845,
+  "effectiveRunnerAffinity": 21845,
+  "artifacts": [
+    {
+      "path": "C:\\git\\fletch\\target\\codegen-vs-dsl-review\\benchmarks.jar",
+      "sha256": "C477E5B7E06E210CDAA704846C374F3448EFCC0828DF38A74C8035C7055CBCEE",
+      "variant": "candidate"
+    },
+    {
+      "path": "C:\\git\\fletch\\target\\codegen-vs-dsl-review\\benchmarks.jar",
+      "sha256": "C477E5B7E06E210CDAA704846C374F3448EFCC0828DF38A74C8035C7055CBCEE",
+      "variant": "control"
+    }
+  ],
+  "schedule": [
+    {
+      "round": 0,
+      "caseIndex": 0,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.CodegenBenchmark.dynamic",
+        "candidateBenchmark": "demo.CodegenBenchmark.generated",
+        "params": {
+          "scenario": "ATTRIBUTES_48"
+        },
+        "threads": 1
+      }
+    },
+    {
+      "round": 0,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.CodegenBenchmark.dynamic",
+        "candidateBenchmark": "demo.CodegenBenchmark.generated",
+        "params": {
+          "scenario": "ATTRIBUTES_48"
+        },
+        "threads": 1
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.CodegenBenchmark.dynamic",
+        "candidateBenchmark": "demo.CodegenBenchmark.generated",
+        "params": {
+          "scenario": "ATTRIBUTES_48"
+        },
+        "threads": 1
+      }
+    },
+    {
+      "round": 1,
+      "caseIndex": 0,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.CodegenBenchmark.dynamic",
+        "candidateBenchmark": "demo.CodegenBenchmark.generated",
+        "params": {
+          "scenario": "ATTRIBUTES_48"
+        },
+        "threads": 1
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 0,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.CodegenBenchmark.dynamic",
+        "candidateBenchmark": "demo.CodegenBenchmark.generated",
+        "params": {
+          "scenario": "ATTRIBUTES_48"
+        },
+        "threads": 1
+      }
+    },
+    {
+      "round": 2,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.CodegenBenchmark.dynamic",
+        "candidateBenchmark": "demo.CodegenBenchmark.generated",
+        "params": {
+          "scenario": "ATTRIBUTES_48"
+        },
+        "threads": 1
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "case": {
+        "benchmark": "demo.CodegenBenchmark.dynamic",
+        "candidateBenchmark": "demo.CodegenBenchmark.generated",
+        "params": {
+          "scenario": "ATTRIBUTES_48"
+        },
+        "threads": 1
+      }
+    },
+    {
+      "round": 3,
+      "caseIndex": 0,
+      "variant": "control",
+      "case": {
+        "benchmark": "demo.CodegenBenchmark.dynamic",
+        "candidateBenchmark": "demo.CodegenBenchmark.generated",
+        "params": {
+          "scenario": "ATTRIBUTES_48"
+        },
+        "threads": 1
+      }
+    }
+  ]
+}
