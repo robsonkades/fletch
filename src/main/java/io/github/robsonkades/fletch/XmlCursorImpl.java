@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Order-tolerant {@link XmlCursor} implemented directly over the byte-level
@@ -113,6 +114,26 @@ final class XmlCursorImpl implements XmlCursor {
     // -------------------------------------------------------------------------
     // XmlCursor interface
     // -------------------------------------------------------------------------
+
+    @Override
+    public boolean exists(final String name) {
+        Objects.requireNonNull(name, "name");
+        if (ctx.owner != this) {
+            throw new XmlException("Cursor used out of scope: a nested extraction is still active");
+        }
+        final int q = locate(name, null);
+        if (q == MISS) return false;
+        if (q == LIVE) {
+            // Revisit only the matched start tag on the next operation. Siblings
+            // crossed by locate remain pending; the matched subtree stays live,
+            // preserving child draining and complete end-tag validation.
+            ctx.pos = eng.hitS - 1;
+            // A root match has just set this flag. Reading that same start tag
+            // again must not be mistaken for a second document element.
+            if (nameS < 0) rootElementSeen = false;
+        }
+        return true;
+    }
 
     @Override
     public <T> T child(final String name, final XmlExtractor<T> extractor) {

@@ -91,6 +91,51 @@ collection or use application-specific parsing, normalization and validation.
 
 ## Text, absence and failures
 
+For a presence check followed by reading, use the cursor's non-consuming
+`exists`. For a conditional conversion, supply a lazy fallback:
+
+```java
+if (cursor.exists("details")) {
+    Details details = cursor.child("details", READ_DETAILS);
+}
+LocalDate date = cursor.valueWith("date", READ_DATE, () -> defaultDate);
+ProductCode code = cursor.attributeWith("code", READ_CODE, () -> DEFAULT_CODE);
+```
+
+`exists` tests for a remaining direct child, including empty or blank elements.
+Repeated checks do not consume it, and a later `child`, `value`, `firstOf` or
+`children` can still read it. A consumed occurrence is no longer present, but
+another occurrence with the same name can be. Probing may scan and buffer sibling
+spans, subject to XML resource limits, and stops at the matched start tag without
+traversing that subtree. It is not full-document validation. Cursors
+supplied by `Xml.extract` support this operation. External `XmlCursor`
+implementations must override it; its default throws
+`UnsupportedOperationException` without consuming input.
+
+The three-argument `valueWith` and `attributeWith` choose a branch based on the
+source text: they invoke the converter once when text is available, or invoke the
+fallback supplier once when absent or empty. Whitespace-only element text uses
+the fallback; whitespace-only attributes remain values. A converter returning
+null returns null directly, and conversion or XML errors propagate; neither
+triggers fallback. Both functions must be non-null and are checked before reading.
+The supplier can return null and its exceptions propagate unchanged.
+
+In mappings, bindings already run only for present, non-empty values. Put simple
+defaults in the draft factory, or compute a lazy fallback in the finisher after
+the document has been read. `XmlValue` is only supplied to an active binding, so
+it does not represent an absent field. If your converter can return null and you
+need to distinguish it from absence, keep a separate flag in the draft:
+
+```java
+class DateDraft { boolean present; LocalDate date; }
+XmlMapping<LocalDate> dateMapping = Xml.mapping(DateDraft::new)
+        .text("/order/date", (draft, value) -> {
+            draft.present = true;
+            draft.date = value.convert(READ_DATE);
+        })
+        .build(draft -> draft.present ? draft.date : fallbackDate.get());
+```
+
 | Input or outcome | Contract |
 |---|---|
 | Element text | Entities and CDATA are decoded; surrounding whitespace is trimmed |

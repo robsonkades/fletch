@@ -181,14 +181,17 @@ The cursor offers these operations:
 
 | Method | Purpose |
 |---|---|
+| `exists(name)` | Check for a remaining direct child, including empty tags, preserving it for a later read |
 | `child(name, extractor)` | Extract the first direct child with that name; `null` if absent |
 | `children(name, extractor)` | Collect **all** direct children with that name into a mutable `List` |
 | `value(name, type)` | Read a child's text converted to `type`; `null` if absent or empty |
 | `firstOf(type, names...)` | Read whichever of several alternative elements is present (`xsd:choice`) |
 | `attribute(name, type)` | Read an attribute of the current element; `null` if absent or empty |
 | `valueWith(name, converter)` | Read a child's text using your conversion function |
+| `valueWith(name, converter, fallbackSupplier)` | Convert available text or lazily compute a fallback for absent/empty text |
 | `firstOfWith(converter, names...)` | Convert the first matching alternative in document order |
 | `attributeWith(name, converter)` | Read an attribute using your conversion function |
+| `attributeWith(name, converter, fallbackSupplier)` | Convert an attribute or lazily compute a fallback when absent/empty |
 | `skip()` | Discard the current element and its whole subtree |
 
 ### Supported value types
@@ -223,6 +226,7 @@ DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/uuuu", Locale.
 Function<String, LocalDate> readDate = text -> LocalDate.parse(text, dateFormat);
 
 LocalDate date = cursor.valueWith("date", readDate);
+LocalDate effectiveDate = cursor.valueWith("effectiveDate", readDate, () -> defaultDate);
 // The same function in a mapping:
 XmlMapping<LocalDate> mapping = Xml.mapping(() -> new LocalDate[1])
         .text("/order/date", (draft, value) -> draft[0] = value.convert(readDate))
@@ -232,8 +236,11 @@ XmlMapping<LocalDate> mapping = Xml.mapping(() -> new LocalDate[1])
 Converters receive decoded text, run only for present, non-empty values, and may
 return `null`. Their exceptions propagate unchanged. See the
 [conversion guide](docs/value-conversions.md) for complete examples and contracts.
-These additional types and custom conversion methods are unreleased; Maven Central
-1.3.0 contains the previous set of conversions.
+The fallback supplier runs only when the source text is absent or empty; a null
+converter result or a conversion error does not trigger it. `exists("date")`
+checks tag presence, so an empty tag exists even though its text uses the fallback.
+The check preserves the occurrence for a later read. These additions are
+unreleased; Maven Central 1.3.0 contains the previous API.
 
 ### Declarative mappings
 
