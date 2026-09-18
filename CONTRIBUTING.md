@@ -37,13 +37,29 @@ First off, **thank you** for considering a contribution to Fletch! Your support 
 
 ## Pull Request Checklist
 
-- [ ] Your code compiles and tests pass (`mvn clean verify -Dgpg.skip=true`).
+- [ ] Your code compiles and tests pass (`mvn -f codegen/pom.xml verify -Dgpg.skip=true`).
 - [ ] New or updated methods include proper Javadoc (`mvn javadoc:javadoc` should produce no errors).
 - [ ] New behavior is covered by unit tests.
 - [ ] Performance-sensitive changes include JMH results.
 - [ ] The PR description explains both "what" and "why" (not just "how") you made the change.
 
 Once your PR is approved, one of the maintainers will merge it and trigger CI to run additional checks. Thank you for making Fletch better!
+
+## Preparing a release
+
+Choose the release version and run `bash scripts/set-release-version.sh <version>`
+from the repository root (Git Bash on Windows). This updates the core, optional
+generator and example together. Run `mvn -f codegen/pom.xml verify -Dgpg.skip=true`,
+update the installation/consumer examples, and write `docs/releases/<version>.md`
+with the user-visible changes and upgrade considerations. Commit all four POMs.
+The Java 17 CI job rehearses this version update and reactor build with a temporary
+version. Preserve local benchmark evidence before using `clean`.
+
+Publication is a separate operation: after the preparation is merged, a maintainer
+can dispatch the **Release** workflow on `master` with that version. It signs and
+publishes the core to Maven Central, then creates the GitHub release with the
+prepared notes followed by generated PR notes. The optional generator and example
+remain source-built tools and are not deployed by that workflow.
 
 ---
 

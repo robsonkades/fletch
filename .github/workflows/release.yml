@@ -1,11 +1,11 @@
 name: Release
 
 # Manually triggered release pipeline:
-#   1. sets the project version in pom.xml
-#   2. builds and runs the full test suite
+#   1. synchronizes the core, generator and consumer versions
+#   2. builds and runs the full reactor test suite
 #   3. commits the version bump, tags it (v<version>) and pushes
 #   4. deploys the signed artifacts to Maven Central (central-publishing-maven-plugin)
-#   5. creates the GitHub Release with the jars attached and generated notes
+#   5. creates the GitHub Release with jars, prepared notes and generated notes
 #
 # Required repository secrets:
 #   CENTRAL_USERNAME       - Sonatype Central Portal token username
@@ -59,17 +59,18 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
       - name: Set release version
-        run: mvn -B -ntp versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false
+        run: bash scripts/set-release-version.sh "$VERSION"
 
       - name: Build and test
-        run: mvn -B -ntp verify -Dgpg.skip=true
+        run: mvn -B -ntp -f codegen/pom.xml verify -Dgpg.skip=true
 
       - name: Commit version bump and tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if ! git diff --quiet pom.xml; then
-            git add pom.xml
+          poms=(pom.xml codegen/pom.xml codegen/generator/pom.xml codegen/example/pom.xml)
+          if ! git diff --quiet -- "${poms[@]}"; then
+            git add -- "${poms[@]}"
             git commit -m "Release $VERSION"
           fi
           git tag -a "v$VERSION" -m "Release $VERSION"
@@ -86,9 +87,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          notes=()
+          if [[ -f "docs/releases/$VERSION.md" ]]; then
+            notes=(--notes-file "docs/releases/$VERSION.md")
+          fi
           gh release create "v$VERSION" \
             "target/fletch-$VERSION.jar" \
             "target/fletch-$VERSION-sources.jar" \
             "target/fletch-$VERSION-javadoc.jar" \
             --title "v$VERSION" \
+            "${notes[@]}" \
             --generate-notes
