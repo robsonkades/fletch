@@ -34,3 +34,10 @@ jobs:
       # gpg.skip: artifact signing only happens in the release workflow
       - name: Build and test
         run: mvn -B -ntp -f codegen/pom.xml verify -Dgpg.skip=true
+
+      # Exercise the same version update used by Release, without deploying.
+      - name: Verify release version synchronization
+        if: matrix.java == 17
+        run: |
+          bash scripts/set-release-version.sh 0.0.0-ci
+          mvn -B -ntp -f codegen/pom.xml verify -Dgpg.skip=true
