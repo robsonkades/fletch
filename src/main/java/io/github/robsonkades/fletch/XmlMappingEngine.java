@@ -111,8 +111,12 @@ final class XmlMappingEngine<T> extends ByteScanner {
      */
     public T extract(final byte[] xml) {
         Objects.requireNonNull(xml, "xml");
-        prepare(xml, xml.length, true);
-        return go();
+        try {
+            prepare(xml, xml.length, true);
+            return run(scanFrom);
+        } finally {
+            clearExtraction();
+        }
     }
 
     /**
@@ -126,9 +130,14 @@ final class XmlMappingEngine<T> extends ByteScanner {
      */
     public T extract(final String xml) {
         Objects.requireNonNull(xml, "xml");
-        final byte[] u = xml.getBytes(StandardCharsets.UTF_8);
-        prepare(u, u.length, false);
-        return go();
+        try {
+            checkStringSize(xml);
+            final byte[] u = xml.getBytes(StandardCharsets.UTF_8);
+            prepare(u, u.length, false);
+            return run(scanFrom);
+        } finally {
+            clearExtraction();
+        }
     }
 
     /**
@@ -144,30 +153,24 @@ final class XmlMappingEngine<T> extends ByteScanner {
      */
     public T extract(final InputStream xml) {
         Objects.requireNonNull(xml, "xml");
-        if (io == null) {
-            io = new byte[window];
+        try {
+            beginStream(xml);
+            while (n < 512 && n < limits.maxInputBytes && more(0) >= 0) {
+                // Fill enough of the window to sniff the prolog.
+            }
+            sniffStream();
+            return run(scanFrom);
+        } finally {
+            clearExtraction();
         }
-        b = io;
-        n = 0;
-        base = 0;
-        eof = false;
-        src = xml;
-        while (n < 512 && more(0) >= 0) {
-            // fill enough of the window to sniff the prolog
-        }
-        sniffStream();
-        return go();
     }
 
     // ------------------------------------------------------------------ fused scan loop
 
-    private T go() {
-        try {
-            return run(scanFrom);
-        } finally {
-            releaseSource();
-            Arrays.fill(drafts, null);
-        }
+    private void clearExtraction() {
+        releaseSource();
+        val.set(null, 0, 0);
+        Arrays.fill(drafts, null);
     }
 
     private T run(int i) {
@@ -212,7 +215,7 @@ final class XmlMappingEngine<T> extends ByteScanner {
                     i -= sh;
                 }
                 final int st = stack[sp];
-                if (sp == 0 || Swar.hash(b, s, e - s) != mapping.stateTag[st]) {
+                if (sp == 0 || !nameMatches(mapping.blob, mapping.stateNameOff[st], mapping.stateNameLen[st], s, e)) {
                     throw fail("Mismatched end tag", i);
                 }
                 final int g = mapping.stateGroup[st];
@@ -238,12 +241,13 @@ final class XmlMappingEngine<T> extends ByteScanner {
                     if (sh < 0) throw fail("Unterminated start tag", i);
                     i -= sh;
                 }
+                checkElement(sp + 1, i);
                 if (sp == 0) rootSeen = true;
                 final long h = Swar.hash(b, s, e - s);
                 final int t = mapping.transition(stack[sp], h, b, s, e - s);
                 final boolean selfClose = b[gt - 1] == '/';
                 if (t < 0) {
-                    i = selfClose ? gt + 1 : skipSubtree(gt + 1, h);
+                    i = selfClose ? gt + 1 : skipSubtree(gt + 1, s, e, sp + 1);
                 } else {
                     final int g = mapping.stateGroup[t];
                     if (g >= 0) beginGroup(g);
@@ -252,7 +256,7 @@ final class XmlMappingEngine<T> extends ByteScanner {
                         if (g >= 0) commitGroup(g);
                         i = gt + 1;
                     } else if (mapping.stateText[t] >= 0) {
-                        i = leaf(t, mapping.stateText[t], gt + 1);
+                        i = leaf(t, mapping.stateText[t], gt + 1, sp + 1);
                     } else {
                         if (++sp == stack.length) stack = Arrays.copyOf(stack, sp << 1);
                         stack[sp] = t;
@@ -293,8 +297,8 @@ final class XmlMappingEngine<T> extends ByteScanner {
      * Reads a matched leaf element's text through the shared scanner and
      * binds it when non-blank, returning the index just past the end tag.
      */
-    private int leaf(final int t, final int f, final int start) {
-        final int nx = readLeafText(mapping.stateTag[t], start);
+    private int leaf(final int t, final int f, final int start, final int depth) {
+        final int nx = readLeafText(mapping.blob, mapping.stateNameOff[t], mapping.stateNameLen[t], start, depth);
         if (valS < valE) bind(f, valA, valS, valE);
         return nx;
     }
@@ -347,6 +351,8 @@ final class XmlMappingEngine<T> extends ByteScanner {
     }
 
     private void bindAttrValue(final int f, final int vs, final int ve) {
+        checkTextSize(ve - vs, vs);
+        validateXmlBytes(vs, ve, false);
         if (attrDirty(vs, ve)) {
             cookAttrValue(vs, ve);
             bind(f, cook, 0, cookLen);

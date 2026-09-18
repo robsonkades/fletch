@@ -42,6 +42,27 @@ final class Swar {
 
     private Swar() {}
 
+    /** Skips printable ASCII except ']', which may begin a forbidden XML text delimiter. */
+    static int asciiEnd(final byte[] b, int from, final int to) {
+        for (; from + 8 <= to; from += 8) {
+            final long w = (long) LONGS.get(b, from);
+            final long brackets = w ^ (ONES * ']');
+            final long sensitive = (w | ((w - ONES * 0x20) & ~w)
+                    | ((brackets - ONES) & ~brackets)) & HIGHS;
+            if (sensitive != 0) return from + (Long.numberOfTrailingZeros(sensitive) >>> 3);
+        }
+        final int remaining = to - from;
+        if (remaining > 0 && from + 8 <= b.length) {
+            final long w = (long) LONGS.get(b, from);
+            final long brackets = w ^ (ONES * ']');
+            final long sensitive = (w | ((w - ONES * 0x20) & ~w)
+                    | ((brackets - ONES) & ~brackets)) & HIGHS & ((1L << (remaining << 3)) - 1);
+            return sensitive == 0 ? to : from + (Long.numberOfTrailingZeros(sensitive) >>> 3);
+        }
+        while (from < to && b[from] >= 0x20 && b[from] != ']') from++;
+        return from;
+    }
+
     /**
      * Returns the index of the first occurrence of {@code target} in
      * {@code b[from, to)}, or {@code -1} when absent.
@@ -135,11 +156,9 @@ final class Swar {
 
     /**
      * 64-bit hash of a tag or attribute name. Mixes the length with up to the
-     * first sixteen bytes, which fully fingerprints every realistic XML name.
-     * Name and attribute selection reverify the actual bytes, so a collision
-     * there only costs a wasted compare; end-tag well-formedness checks trust
-     * the hash alone, so two names agreeing on length and first sixteen bytes
-     * (or colliding outright) are not reported as mismatched.
+     * first sixteen bytes. This is a selection filter, never proof of name
+     * equality: callers reverify the complete bytes so collisions cannot
+     * select a different name. End-tag checks compare complete names directly.
      *
      * <p>Away from the end of the array the words are read whole and masked
      * down to {@code len} — bytes past the name stay inside the array and the

@@ -37,9 +37,6 @@ import java.util.Objects;
  */
 final class XmlCursorEngine extends ByteScanner {
 
-    /** Pool hygiene: buffers above this size are dropped instead of retained. */
-    private static final int RETAIN = 1 << 20;
-
     // Start-tag scratch of the last live match found by a cursor scan:
     // name span [hitS, hitE), tag end at hitGt. Consumed immediately.
     int hitS;
@@ -53,48 +50,43 @@ final class XmlCursorEngine extends ByteScanner {
 
     <T> T extract(final byte[] bytes, final XmlExtractor<T> extractor) {
         Objects.requireNonNull(bytes, "bytes");
-        prepare(bytes, bytes.length, true);
-        return go(extractor);
-    }
-
-    <T> T extract(final String xml, final XmlExtractor<T> extractor) {
-        Objects.requireNonNull(xml, "xml");
-        final byte[] u = xml.getBytes(StandardCharsets.UTF_8);
-        prepare(u, u.length, false);
-        return go(extractor);
-    }
-
-    <T> T extract(final InputStream input, final XmlExtractor<T> extractor) {
-        Objects.requireNonNull(input, "input");
-        if (io == null) {
-            io = new byte[window];
-        }
-        b = io;
-        n = 0;
-        base = 0;
-        eof = false;
-        src = input;
-        drainFully();
-        prepare(b, n, true);
-        return go(extractor);
-    }
-
-    private <T> T go(final XmlExtractor<T> extractor) {
         try {
-            final XmlCursorImpl.Ctx ctx = new XmlCursorImpl.Ctx();
-            ctx.pos = scanFrom;
-            final XmlCursorImpl root = new XmlCursorImpl(this, ctx);
-            ctx.owner = root;
-            return extractor.extract(root);
+            prepare(bytes, bytes.length, true);
+            return go(extractor);
         } finally {
             releaseSource();
         }
     }
 
-    /** Drops document-sized scratch before the engine returns to the pool. */
-    void trimForReuse() {
-        if (io != null && io.length > RETAIN) io = null;
-        if (trans != null && trans.length > RETAIN) trans = null;
-        if (cook.length > RETAIN) cook = new byte[256];
+    <T> T extract(final String xml, final XmlExtractor<T> extractor) {
+        Objects.requireNonNull(xml, "xml");
+        try {
+            checkStringSize(xml);
+            final byte[] u = xml.getBytes(StandardCharsets.UTF_8);
+            prepare(u, u.length, false);
+            return go(extractor);
+        } finally {
+            releaseSource();
+        }
+    }
+
+    <T> T extract(final InputStream input, final XmlExtractor<T> extractor) {
+        Objects.requireNonNull(input, "input");
+        try {
+            beginStream(input);
+            drainFully();
+            prepare(b, n, true);
+            return go(extractor);
+        } finally {
+            releaseSource();
+        }
+    }
+
+    private <T> T go(final XmlExtractor<T> extractor) {
+        final XmlCursorImpl.Ctx ctx = new XmlCursorImpl.Ctx();
+        ctx.pos = scanFrom;
+        final XmlCursorImpl root = new XmlCursorImpl(this, ctx);
+        ctx.owner = root;
+        return extractor.extract(root);
     }
 }

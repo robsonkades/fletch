@@ -70,10 +70,19 @@ import java.util.function.Supplier;
  *       (declared in the XML declaration) and UTF-16 (detected from the
  *       byte-order mark or a {@code 3C 00}/{@code 00 3C} prefix) are
  *       transcoded once; other encodings are rejected.</li>
- *   <li><b>Limits.</b> A single text value is capped at 16&nbsp;MiB.</li>
+ *   <li><b>Limits.</b> Selected text and attributes are capped at 16&nbsp;MiB
+ *       of UTF-8 content bytes before entity decoding and trimming. Text and
+ *       CDATA runs count together. Streaming start tags and anchored CDATA
+ *       sections must also fit the 16&nbsp;MiB token window. A start tag may
+ *       contain at most 1,024 attributes. Overloads accepting {@link XmlLimits}
+ *       can lower these limits and add input-size, depth, element-count and
+ *       name-length limits for an individual extraction.</li>
  *   <li><b>Well-formedness.</b> Elements the extractor traverses get their
- *       end tags verified and attribute syntax enforced; skipped subtrees
- *       are checked for tag balance only.</li>
+ *       complete end tags verified and attribute syntax enforced. Selected
+ *       values reject malformed UTF-8 and forbidden XML characters. Skipped
+ *       subtree end tags are balance-checked by default; mappings can compare
+ *       their names with {@code strictSkip()}. This is selective extraction,
+ *       not whole-document XML validation.</li>
  * </ul>
  *
  * <h2>Error contract</h2>
@@ -109,13 +118,30 @@ public final class Xml {
      * @param extractor extraction logic invoked with a cursor positioned
      *                  before the document's root element
      * @return whatever the extractor returns (possibly {@code null})
-     * @throws XmlException if the document is not well-formed or an I/O error
+     * @throws XmlException if scanned content is malformed, a limit is exceeded, or an I/O error
      *                      occurs while reading
      */
     public static <T> T extract(final InputStream input, final XmlExtractor<T> extractor) {
+        return extract(input, XmlLimits.defaults(), extractor);
+    }
+
+    /**
+     * Extracts with explicit resource limits, buffering the stream in full.
+     * The caller retains ownership of the stream; it is never closed here.
+     * @param <T> result type
+     * @param input encoded XML stream
+     * @param limits immutable resource limits
+     * @param extractor extraction logic, starting before the document element
+     * @return the extractor's result, possibly null
+     * @throws XmlException if a limit is exceeded, scanned content is malformed or reading fails
+     * @throws NullPointerException if any argument is null
+     */
+    public static <T> T extract(final InputStream input, final XmlLimits limits, final XmlExtractor<T> extractor) {
         Objects.requireNonNull(extractor, "extractor");
+        Objects.requireNonNull(limits, "limits");
         final XmlCursorEngine engine = take();
         try {
+            engine.limits = limits;
             return engine.extract(input, extractor);
         } finally {
             release(engine);
@@ -135,12 +161,29 @@ public final class Xml {
      * @param extractor extraction logic invoked with a cursor positioned
      *                  before the document's root element
      * @return whatever the extractor returns (possibly {@code null})
-     * @throws XmlException if the document is not well-formed
+     * @throws XmlException if scanned content is malformed or a resource limit is exceeded
      */
     public static <T> T extract(final String xml, final XmlExtractor<T> extractor) {
+        return extract(xml, XmlLimits.defaults(), extractor);
+    }
+
+    /**
+     * Extracts with explicit resource limits. Input size is measured as UTF-8
+     * bytes before the encoded array is allocated.
+     * @param <T> result type
+     * @param xml XML text
+     * @param limits immutable resource limits
+     * @param extractor extraction logic, starting before the document element
+     * @return the extractor's result, possibly null
+     * @throws XmlException if a limit is exceeded or scanned content is malformed
+     * @throws NullPointerException if any argument is null
+     */
+    public static <T> T extract(final String xml, final XmlLimits limits, final XmlExtractor<T> extractor) {
         Objects.requireNonNull(extractor, "extractor");
+        Objects.requireNonNull(limits, "limits");
         final XmlCursorEngine engine = take();
         try {
+            engine.limits = limits;
             return engine.extract(xml, extractor);
         } finally {
             release(engine);
@@ -159,12 +202,29 @@ public final class Xml {
      * @param extractor extraction logic invoked with a cursor positioned
      *                  before the document's root element
      * @return whatever the extractor returns (possibly {@code null})
-     * @throws XmlException if the document is not well-formed
+     * @throws XmlException if scanned content is malformed or a resource limit is exceeded
      */
     public static <T> T extract(final byte[] bytes, final XmlExtractor<T> extractor) {
+        return extract(bytes, XmlLimits.defaults(), extractor);
+    }
+
+    /**
+     * Extracts with explicit resource limits. The entire array's byte length is
+     * checked before parsing, even if the extractor returns early.
+     * @param <T> result type
+     * @param bytes encoded XML document
+     * @param limits immutable resource limits
+     * @param extractor extraction logic, starting before the document element
+     * @return the extractor's result, possibly null
+     * @throws XmlException if a limit is exceeded or scanned content is malformed
+     * @throws NullPointerException if any argument is null
+     */
+    public static <T> T extract(final byte[] bytes, final XmlLimits limits, final XmlExtractor<T> extractor) {
         Objects.requireNonNull(extractor, "extractor");
+        Objects.requireNonNull(limits, "limits");
         final XmlCursorEngine engine = take();
         try {
+            engine.limits = limits;
             return engine.extract(bytes, extractor);
         } finally {
             release(engine);
@@ -195,11 +255,27 @@ public final class Xml {
      * @param bytes the encoded XML document
      * @param mapping  the compiled extraction mapping
      * @return the finisher's result
-     * @throws XmlException if the document is not well-formed
+     * @throws XmlException if scanned content is malformed or a resource limit is exceeded
      */
     public static <T> T extract(final byte[] bytes, final XmlMapping<T> mapping) {
+        return extract(bytes, XmlLimits.defaults(), mapping);
+    }
+
+    /**
+     * Runs a mapping with explicit limits, checking the entire array's byte
+     * length before parsing, even if the mapping exits early.
+     * @param <T> result type
+     * @param bytes encoded XML document
+     * @param limits immutable resource limits
+     * @param mapping compiled mapping, reusable across threads
+     * @return the mapping finisher's result
+     * @throws XmlException if a limit is exceeded or scanned content is malformed
+     * @throws NullPointerException if any argument is null
+     */
+    public static <T> T extract(final byte[] bytes, final XmlLimits limits, final XmlMapping<T> mapping) {
         Objects.requireNonNull(mapping, "mapping");
-        return mapping.extract(bytes);
+        Objects.requireNonNull(limits, "limits");
+        return mapping.extract(bytes, limits);
     }
 
     /**
@@ -211,11 +287,27 @@ public final class Xml {
      * @param xml  the XML document text
      * @param mapping the compiled extraction mapping
      * @return the finisher's result
-     * @throws XmlException if the document is not well-formed
+     * @throws XmlException if scanned content is malformed or a resource limit is exceeded
      */
     public static <T> T extract(final String xml, final XmlMapping<T> mapping) {
+        return extract(xml, XmlLimits.defaults(), mapping);
+    }
+
+    /**
+     * Runs a mapping with explicit limits. Input size is measured as UTF-8
+     * bytes before the encoded array is allocated.
+     * @param <T> result type
+     * @param xml XML text
+     * @param limits immutable resource limits
+     * @param mapping compiled mapping, reusable across threads
+     * @return the mapping finisher's result
+     * @throws XmlException if a limit is exceeded or scanned content is malformed
+     * @throws NullPointerException if any argument is null
+     */
+    public static <T> T extract(final String xml, final XmlLimits limits, final XmlMapping<T> mapping) {
         Objects.requireNonNull(mapping, "mapping");
-        return mapping.extract(xml);
+        Objects.requireNonNull(limits, "limits");
+        return mapping.extract(xml, limits);
     }
 
     /**
@@ -231,12 +323,30 @@ public final class Xml {
      * @param input the stream to read; consumed but not closed
      * @param mapping  the compiled extraction mapping
      * @return the finisher's result
-     * @throws XmlException if the document is not well-formed or an I/O error
+     * @throws XmlException if scanned content is malformed, a limit is exceeded, or an I/O error
      *                      occurs while reading
      */
     public static <T> T extract(final InputStream input, final XmlMapping<T> mapping) {
+        return extract(input, XmlLimits.defaults(), mapping);
+    }
+
+    /**
+     * Runs a mapping with explicit limits. UTF-8 streams use a sliding window;
+     * legacy encodings are buffered in full. See {@link XmlLimits#maxInputBytes()}
+     * for the input budget, read-ahead and early-exit contract. The stream is
+     * never closed here.
+     * @param <T> result type
+     * @param input encoded XML stream
+     * @param limits immutable resource limits
+     * @param mapping compiled mapping, reusable across threads
+     * @return the mapping finisher's result
+     * @throws XmlException if a limit is exceeded, scanned content is malformed or reading fails
+     * @throws NullPointerException if any argument is null
+     */
+    public static <T> T extract(final InputStream input, final XmlLimits limits, final XmlMapping<T> mapping) {
         Objects.requireNonNull(mapping, "mapping");
-        return mapping.extract(input);
+        Objects.requireNonNull(limits, "limits");
+        return mapping.extract(input, limits);
     }
 
     private static XmlCursorEngine take() {
