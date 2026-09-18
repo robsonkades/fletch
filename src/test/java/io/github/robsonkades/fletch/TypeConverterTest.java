@@ -132,6 +132,21 @@ class TypeConverterTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"+18:01", "-18:01", "+18:59", "-18:59"})
+    void offsetsBeyondEighteenHoursAreRejected(final String offset) {
+        final String text = "2026-01-01T00:00:00" + offset;
+        assertThrows(java.time.format.DateTimeParseException.class, () -> Instant.parse(text));
+        assertThrows(java.time.format.DateTimeParseException.class, () -> convert(text, Instant.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"+18:00", "-18:00", "+17:59", "-17:59"})
+    void offsetsAtTheSupportedBoundaryMatchTheJdk(final String offset) {
+        final String text = "2026-01-01T00:00:00" + offset;
+        assertEquals(Instant.parse(text), convert(text, Instant.class));
+    }
+
     @Test
     void convertsEnumsByConstantName() {
         assertEquals(Status.ACTIVE, convert("ACTIVE", Status.class));

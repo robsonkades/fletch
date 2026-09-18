@@ -66,7 +66,7 @@ import java.util.function.Supplier;
  * default namespace match by plain local name, prefixed elements include the
  * prefix ({@code /soap:Envelope/soap:Body}). An attribute is addressed with
  * {@code @}: {@code /order@id}. There are no wildcards or predicates; every
- * construct compiles to a constant-time table transition.
+ * construct compiles to a per-state transition slice over primitive arrays.
  *
  * <h2>Bindings</h2>
  * <p>Each path carries an {@link XmlBinding} that stores the decoded
@@ -93,8 +93,9 @@ import java.util.function.Supplier;
  * <p>A compiled mapping is immutable — define it as a {@code static final}
  * constant and share it across threads. Running it through
  * {@link Xml#extract(byte[], XmlMapping)} draws a reusable engine from an
- * internal pool, so steady-state extraction allocates only the caller's draft
- * and result objects.
+ * internal pool. For a batch on one worker thread, {@link #openSession()} keeps
+ * a dedicated engine across documents. Callbacks must be safe to invoke
+ * concurrently with separate drafts when sharing a mapping across workers.
  *
  * <h2>Semantics and limits</h2>
  * <p>The engine reads UTF-8 (and US-ASCII) natively and transcodes ISO-8859-1
@@ -127,7 +128,8 @@ public final class XmlMapping<T> {
     final int[] transNameOff;
     final int[] transNameLen;
 
-    final long[] stateTag;
+    final int[] stateNameOff;
+    final int[] stateNameLen;
     final int[] stateText;
     final int[] stateGroup;
 
@@ -145,6 +147,37 @@ public final class XmlMapping<T> {
     final long[] groupReset;
 
     private final AtomicReferenceArray<XmlMappingEngine<T>> pool = new AtomicReferenceArray<>(8);
+    private final XmlMappingCode generated;
+
+    XmlMapping(final XmlMapping<T> source, final XmlMappingCode generated) {
+        this.generated = generated;
+        rootDraft = source.rootDraft;
+        finisher = source.finisher;
+        bindings = source.bindings;
+        onceMask = source.onceMask;
+        requiredMask = source.requiredMask;
+        strictSkip = source.strictSkip;
+        transBase = source.transBase;
+        transCount = source.transCount;
+        transHash = source.transHash;
+        transTarget = source.transTarget;
+        transNameOff = source.transNameOff;
+        transNameLen = source.transNameLen;
+        stateNameOff = source.stateNameOff;
+        stateNameLen = source.stateNameLen;
+        stateText = source.stateText;
+        stateGroup = source.stateGroup;
+        attrBase = source.attrBase;
+        attrCount = source.attrCount;
+        attrHash = source.attrHash;
+        attrField = source.attrField;
+        attrNameOff = source.attrNameOff;
+        attrNameLen = source.attrNameLen;
+        blob = source.blob;
+        groupDraft = source.groupDraft;
+        groupCommit = source.groupCommit;
+        groupReset = source.groupReset;
+    }
 
     /**
      * Starts a mapping definition.
@@ -173,16 +206,52 @@ public final class XmlMapping<T> {
     }
 
     /**
+     * Opens a reusable session with default resource limits. Create, use and
+     * close it on the worker thread that processes the documents.
+     *
+     * @return a new session owned by the caller; close it after the batch
+     * @see #openSession(XmlLimits)
+     */
+    public XmlMappingSession<T> openSession() {
+        return openSession(XmlLimits.defaults());
+    }
+
+    /**
+     * Opens a reusable session with fixed resource limits applied independently
+     * to every document. The session owns a dedicated engine outside the pool.
+     *
+     * <p>Use one session per worker thread, preferably in a try-with-resources
+     * block. A session rejects calls from other threads and recursive extraction
+     * or closing from its callbacks. This mapping may still be shared, provided
+     * its callbacks are safe to invoke concurrently with separate drafts.
+     *
+     * @param limits immutable resource limits for each extraction
+     * @return a new session owned by the caller; close it after the batch
+     * @throws NullPointerException if limits is null
+     */
+    public XmlMappingSession<T> openSession(final XmlLimits limits) {
+        return new XmlMappingSession<>(this, Objects.requireNonNull(limits, "limits"));
+    }
+
+    T extract(final byte[] xml) { return extract(xml, XmlLimits.defaults()); }
+
+    T extract(final String xml) { return extract(xml, XmlLimits.defaults()); }
+
+    T extract(final InputStream xml) { return extract(xml, XmlLimits.defaults()); }
+
+    /**
      * Extracts from a raw XML document using a pooled engine. Encoding is
      * detected from the byte-order mark or the XML declaration.
      *
      * @param xml the encoded document
+     * @param limits resource budgets for this call
      * @return the finisher's result
      * @throws XmlException if the document is malformed
      */
-    T extract(final byte[] xml) {
+    T extract(final byte[] xml, final XmlLimits limits) {
         final XmlMappingEngine<T> s = take();
         try {
+            s.limits = limits;
             return s.extract(xml);
         } finally {
             release(s);
@@ -193,12 +262,14 @@ public final class XmlMapping<T> {
      * Extracts from an XML string using a pooled engine.
      *
      * @param xml the document text
+     * @param limits resource budgets for this call
      * @return the finisher's result
      * @throws XmlException if the document is malformed
      */
-    T extract(final String xml) {
+    T extract(final String xml, final XmlLimits limits) {
         final XmlMappingEngine<T> s = take();
         try {
+            s.limits = limits;
             return s.extract(xml);
         } finally {
             release(s);
@@ -211,12 +282,14 @@ public final class XmlMapping<T> {
      * are drained and transcoded first. The stream is not closed.
      *
      * @param xml the stream to read; consumed but not closed
+     * @param limits resource budgets for this call
      * @return the finisher's result
      * @throws XmlException if the document is malformed or reading fails
      */
-    T extract(final InputStream xml) {
+    T extract(final InputStream xml, final XmlLimits limits) {
         final XmlMappingEngine<T> s = take();
         try {
+            s.limits = limits;
             return s.extract(xml);
         } finally {
             release(s);
@@ -230,6 +303,7 @@ public final class XmlMapping<T> {
     }
 
     private void release(final XmlMappingEngine<T> s) {
+        s.trimForReuse();
         pool.set((int) Thread.currentThread().getId() & 7, s);
     }
 
@@ -239,12 +313,25 @@ public final class XmlMapping<T> {
      * a collision can never misroute. Returns the target state or -1.
      */
     int transition(final int state, final long h, final byte[] b, final int off, final int len) {
+        if (generated != null) return generated.transition(state, h, b, off, len);
         int k = transBase[state];
         final int end = k + transCount[state];
         for (; k < end; k++) {
             if (transHash[k] == h && transNameLen[k] == len
                     && java.util.Arrays.equals(blob, transNameOff[k], transNameOff[k] + len, b, off, off + len)) {
                 return transTarget[k];
+            }
+        }
+        return -1;
+    }
+
+    int attribute(final int state, final long h, final byte[] b, final int off, final int len) {
+        if (generated != null) return generated.attribute(state, h, b, off, len);
+        final int end = attrBase[state] + attrCount[state];
+        for (int k = attrBase[state]; k < end; k++) {
+            if (attrHash[k] == h && attrNameLen[k] == len
+                    && java.util.Arrays.equals(blob, attrNameOff[k], attrNameOff[k] + len, b, off, off + len)) {
+                return attrField[k];
             }
         }
         return -1;
@@ -348,13 +435,12 @@ public final class XmlMapping<T> {
          * their names are never read, so {@code <a></b>} inside an unselected
          * region passes unnoticed. This turns those regions into full end-tag
          * checks. The cost scales with how much of the document goes
-         * unselected: on the bundled NF-e fixture it measures ~18% less
-         * throughput. Elements the mapping does select are always verified,
+         * unselected. Elements the mapping does select are always verified,
          * with or without this.
          *
-         * <p>End tags are matched by name hash, as everywhere else in the
-         * engine — two names agreeing on length and first sixteen bytes are
-         * not reported as mismatched.
+         * <p>End tags are compared by their complete name bytes, including
+         * names spanning multiple stream windows.
+         * This does not validate ignored text or content after an early exit.
          *
          * @return this builder
          */
@@ -641,6 +727,7 @@ public final class XmlMapping<T> {
 
     @SuppressWarnings("unchecked")
     private XmlMapping(final Spec spec, final Function<?, T> finish) {
+        this.generated = null;
         this.rootDraft = (Supplier<Object>) spec.rootDraft;
         this.finisher = (Function<Object, T>) finish;
         this.bindings = spec.fields.toArray(new XmlBinding[0]);
@@ -713,7 +800,8 @@ public final class XmlMapping<T> {
         final int n = nodes.size();
         transBase = new int[n];
         transCount = new int[n];
-        stateTag = new long[n];
+        stateNameOff = new int[n];
+        stateNameLen = new int[n];
         stateText = new int[n];
         stateGroup = new int[n];
         attrBase = new int[n];
@@ -733,11 +821,12 @@ public final class XmlMapping<T> {
             final int s = nd.id;
             stateText[s] = nd.text;
             stateGroup[s] = nd.group;
-            stateTag[s] = nd.name == null ? 0 : hashOf(nd.name);
             transBase[s] = tHash.size();
             transCount[s] = nd.children.size();
             for (final Node child : nd.children.values()) {
                 final byte[] nb = child.name.getBytes(StandardCharsets.UTF_8);
+                stateNameOff[child.id] = blobOut.size();
+                stateNameLen[child.id] = nb.length;
                 tHash.add(Swar.hash(nb, 0, nb.length));
                 tTarget.add(child.id);
                 tOff.add(blobOut.size());
@@ -777,11 +866,6 @@ public final class XmlMapping<T> {
                 groupReset[g] |= 1L << en.field();
             }
         }
-    }
-
-    private static long hashOf(final String name) {
-        final byte[] nb = name.getBytes(StandardCharsets.UTF_8);
-        return Swar.hash(nb, 0, nb.length);
     }
 
     private static Node insert(final Node root, final String[] steps) {

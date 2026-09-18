@@ -1,0 +1,480 @@
+{
+  "affinity": 21845,
+  "os": "Microsoft Windows 10.0.26200",
+  "selectedCpus": [
+    {
+      "Id": 256,
+      "Group": 0,
+      "LogicalProcessor": 0,
+      "Core": 0,
+      "EfficiencyClass": 1,
+      "Flags": 0
+    },
+    {
+      "Id": 258,
+      "Group": 0,
+      "LogicalProcessor": 2,
+      "Core": 2,
+      "EfficiencyClass": 1,
+      "Flags": 0
+    },
+    {
+      "Id": 260,
+      "Group": 0,
+      "LogicalProcessor": 4,
+      "Core": 4,
+      "EfficiencyClass": 1,
+      "Flags": 0
+    },
+    {
+      "Id": 262,
+      "Group": 0,
+      "LogicalProcessor": 6,
+      "Core": 6,
+      "EfficiencyClass": 1,
+      "Flags": 0
+    },
+    {
+      "Id": 264,
+      "Group": 0,
+      "LogicalProcessor": 8,
+      "Core": 8,
+      "EfficiencyClass": 1,
+      "Flags": 0
+    },
+    {
+      "Id": 266,
+      "Group": 0,
+      "LogicalProcessor": 10,
+      "Core": 10,
+      "EfficiencyClass": 1,
+      "Flags": 0
+    },
+    {
+      "Id": 268,
+      "Group": 0,
+      "LogicalProcessor": 12,
+      "Core": 12,
+      "EfficiencyClass": 1,
+      "Flags": 0
+    },
+    {
+      "Id": 270,
+      "Group": 0,
+      "LogicalProcessor": 14,
+      "Core": 14,
+      "EfficiencyClass": 1,
+      "Flags": 1
+    }
+  ],
+  "seed": 2026091804,
+  "iterationSeconds": 1,
+  "mode": "avgt",
+  "artifact": {
+    "Algorithm": "SHA256",
+    "Hash": "6E5873F5FD9764C0EFCD939C9D952CBA5B48FC26DD02AFA437B1E7CAC9451662",
+    "Path": "C:\\git\\fletch\\target\\engine-lifecycle-review\\build\\benchmarks.jar"
+  },
+  "rounds": 4,
+  "schedule": [
+    {
+      "round": 0,
+      "caseIndex": 3,
+      "shape": "COLLISION32",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 0,
+      "caseIndex": 3,
+      "shape": "COLLISION32",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 0,
+      "caseIndex": 4,
+      "shape": "NFE1",
+      "documents": 64,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 0,
+      "caseIndex": 4,
+      "shape": "NFE1",
+      "documents": 64,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 0,
+      "caseIndex": 2,
+      "shape": "HIGH4096",
+      "documents": 4096,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 0,
+      "caseIndex": 2,
+      "shape": "HIGH4096",
+      "documents": 4096,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 0,
+      "caseIndex": 1,
+      "shape": "UF27",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 0,
+      "caseIndex": 1,
+      "shape": "UF27",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 0,
+      "caseIndex": 5,
+      "shape": "NFE50",
+      "documents": 64,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 0,
+      "caseIndex": 5,
+      "shape": "NFE50",
+      "documents": 64,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 0,
+      "caseIndex": 0,
+      "shape": "UF2",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 0,
+      "caseIndex": 0,
+      "shape": "UF2",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 1,
+      "caseIndex": 4,
+      "shape": "NFE1",
+      "documents": 64,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 1,
+      "caseIndex": 4,
+      "shape": "NFE1",
+      "documents": 64,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 1,
+      "caseIndex": 5,
+      "shape": "NFE50",
+      "documents": 64,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 1,
+      "caseIndex": 5,
+      "shape": "NFE50",
+      "documents": 64,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 1,
+      "caseIndex": 2,
+      "shape": "HIGH4096",
+      "documents": 4096,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 1,
+      "caseIndex": 2,
+      "shape": "HIGH4096",
+      "documents": 4096,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 1,
+      "caseIndex": 0,
+      "shape": "UF2",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 1,
+      "caseIndex": 0,
+      "shape": "UF2",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 1,
+      "caseIndex": 3,
+      "shape": "COLLISION32",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 1,
+      "caseIndex": 3,
+      "shape": "COLLISION32",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 1,
+      "caseIndex": 1,
+      "shape": "UF27",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 1,
+      "caseIndex": 1,
+      "shape": "UF27",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 2,
+      "caseIndex": 3,
+      "shape": "COLLISION32",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 2,
+      "caseIndex": 3,
+      "shape": "COLLISION32",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 2,
+      "caseIndex": 5,
+      "shape": "NFE50",
+      "documents": 64,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 2,
+      "caseIndex": 5,
+      "shape": "NFE50",
+      "documents": 64,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 2,
+      "caseIndex": 1,
+      "shape": "UF27",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 2,
+      "caseIndex": 1,
+      "shape": "UF27",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 2,
+      "caseIndex": 2,
+      "shape": "HIGH4096",
+      "documents": 4096,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 2,
+      "caseIndex": 2,
+      "shape": "HIGH4096",
+      "documents": 4096,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 2,
+      "caseIndex": 0,
+      "shape": "UF2",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 2,
+      "caseIndex": 0,
+      "shape": "UF2",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 2,
+      "caseIndex": 4,
+      "shape": "NFE1",
+      "documents": 64,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 2,
+      "caseIndex": 4,
+      "shape": "NFE1",
+      "documents": 64,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 3,
+      "caseIndex": 5,
+      "shape": "NFE50",
+      "documents": 64,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 3,
+      "caseIndex": 5,
+      "shape": "NFE50",
+      "documents": 64,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 3,
+      "caseIndex": 4,
+      "shape": "NFE1",
+      "documents": 64,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 3,
+      "caseIndex": 4,
+      "shape": "NFE1",
+      "documents": 64,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 3,
+      "caseIndex": 1,
+      "shape": "UF27",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 3,
+      "caseIndex": 1,
+      "shape": "UF27",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 3,
+      "caseIndex": 0,
+      "shape": "UF2",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 3,
+      "caseIndex": 0,
+      "shape": "UF2",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 3,
+      "caseIndex": 3,
+      "shape": "COLLISION32",
+      "documents": 128,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    },
+    {
+      "round": 3,
+      "caseIndex": 3,
+      "shape": "COLLISION32",
+      "documents": 128,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 3,
+      "caseIndex": 2,
+      "shape": "HIGH4096",
+      "documents": 4096,
+      "variant": "batch",
+      "method": "reusedPerBatch"
+    },
+    {
+      "round": 3,
+      "caseIndex": 2,
+      "shape": "HIGH4096",
+      "documents": 4096,
+      "variant": "fresh",
+      "method": "freshPerDocument"
+    }
+  ],
+  "java": "openjdk version \"21.0.12.1\" 2026-08-18 LTS\r\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\r\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+  "startedUtc": "2026-09-18T18:47:02.6215279Z",
+  "flags": "-Xms256m -Xmx256m -XX:+UseG1GC -Xlog:gc+init=info",
+  "planHash": "3A2A795AC0D4A68A01AA4689B210D789EA429414332BD2C63543305C9B42A521",
+  "unit": "us/op",
+  "measurements": 5,
+  "cpu": [
+    {
+      "Name": "13th Gen Intel(R) Core(TM) i7-13700K",
+      "NumberOfCores": 16,
+      "NumberOfLogicalProcessors": 24
+    }
+  ],
+  "warmup": 10,
+  "operation": "one complete batch"
+}

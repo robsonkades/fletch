@@ -16,8 +16,9 @@ First off, **thank you** for considering a contribution to Fletch! Your support 
     - Write clear, concise commit messages.
     - Follow the existing code style and keep the hot path allocation-free (see the performance notes in the Javadoc of `XmlCursorImpl` and `TypeConverter`).
     - Include **unit tests** for any new functionality or bug fixes. Tests use JUnit 5 and live in `src/test/java`.
-    - Run `mvn clean verify -Dgpg.skip=true` locally to ensure compilation, tests and Javadoc generation succeed. (Artifact signing is bound to `verify` but runs only during a release; `-Dgpg.skip=true` skips it — the CI build uses the same flag.)
-    - Submit a **Pull Request** targeting the `main` branch. Provide a thorough description of your changes.
+    - Run `mvn verify -Dgpg.skip=true` locally to ensure compilation, tests and Javadoc generation succeed. (Artifact signing is bound to `verify` but runs only during a release; `-Dgpg.skip=true` skips it — the CI build uses the same flag.)
+    - Run `mvn -f codegen/pom.xml verify -Dgpg.skip=true` to include the optional generator and its consumer, as CI does. See the [codegen build guide](codegen/README.md). Preserve benchmark evidence before using `clean`.
+    - Submit a **Pull Request** targeting the `master` branch. Describe the resulting behavior and relevant validation.
 
 3. **Documentation Improvements**
     - Found a typo in the docs? Think of an example that would better illustrate how to use the API?
@@ -31,7 +32,7 @@ First off, **thank you** for considering a contribution to Fletch! Your support 
 
 - Target Java 17 (`maven.compiler.release` in `pom.xml`).
 - Document every public type and method with Javadoc, including `{@link ...}` tags and code examples when appropriate.
-- Keep behavioral contracts explicit: absence is `null` / empty list, all failures are `XmlException`, and reads tolerate children in any order.
+- Keep behavioral contracts explicit: absence is `null` / empty list, parse failures use `XmlException`, conversion errors retain their Java exception type, and reads tolerate children in any order.
 - If you modify `pom.xml`, ensure file structure and indentation remain consistent.
 
 ## Pull Request Checklist

@@ -1,0 +1,344 @@
+[
+  {
+    "caseIndex": 0,
+    "shape": "UF2",
+    "documents": 128,
+    "pairs": [
+      {
+        "round": 0,
+        "freshMicrosecondsPerBatch": 13.698781087304576,
+        "batchMicrosecondsPerBatch": 6.582586657396208,
+        "logRatio": -0.7328790800293719,
+        "timeChangePercent": -51.94764690782119,
+        "freshBytesPerBatch": 158720.09414341356,
+        "batchBytesPerBatch": 4360.045122825021
+      },
+      {
+        "round": 1,
+        "freshMicrosecondsPerBatch": 12.560116221009604,
+        "batchMicrosecondsPerBatch": 6.150325257086168,
+        "logRatio": -0.7140214465113122,
+        "timeChangePercent": -51.03289532625206,
+        "freshBytesPerBatch": 158720.08652136143,
+        "batchBytesPerBatch": 4360.042161879026
+      },
+      {
+        "round": 2,
+        "freshMicrosecondsPerBatch": 13.371670982628899,
+        "batchMicrosecondsPerBatch": 6.432516199648182,
+        "logRatio": -0.7317725797298258,
+        "timeChangePercent": -51.894447537599106,
+        "freshBytesPerBatch": 158720.0919930304,
+        "batchBytesPerBatch": 4360.044280671967
+      },
+      {
+        "round": 3,
+        "freshMicrosecondsPerBatch": 14.439745128214577,
+        "batchMicrosecondsPerBatch": 6.813829435639725,
+        "logRatio": -0.7510301954415765,
+        "timeChangePercent": -52.81198265524905,
+        "freshBytesPerBatch": 158720.0990545315,
+        "batchBytesPerBatch": 4360.047080146664
+      }
+    ],
+    "freshMicrosecondsPerBatch": 13.517578354789414,
+    "batchMicrosecondsPerBatch": 6.49481438744257,
+    "freshAmortizedMicrosecondsPerDocument": 0.1056060808967923,
+    "batchAmortizedMicrosecondsPerDocument": 0.05074073740189508,
+    "timeChangePercent": -51.925862020999304,
+    "lower95Percent": -53.06838653403736,
+    "upper95Percent": -50.75552337231812,
+    "materialLocalTimeBenefit": true,
+    "freshBytesPerBatch": 158720.09292808422,
+    "batchBytesPerBatch": 4360.044661380669,
+    "freshBytesPerDocument": 1240.000726000658,
+    "batchBytesPerDocument": 34.062848917036476,
+    "allocationChangePercent": -97.25299766340473,
+    "driftFlags": 4
+  },
+  {
+    "caseIndex": 1,
+    "shape": "UF27",
+    "documents": 128,
+    "pairs": [
+      {
+        "round": 0,
+        "freshMicrosecondsPerBatch": 13.686587657819729,
+        "batchMicrosecondsPerBatch": 6.893121779784977,
+        "logRatio": -0.685892279303844,
+        "timeChangePercent": -49.63593590951325,
+        "freshBytesPerBatch": 158720.0940786723,
+        "batchBytesPerBatch": 7792.047372521187
+      },
+      {
+        "round": 1,
+        "freshMicrosecondsPerBatch": 13.69487327058076,
+        "batchMicrosecondsPerBatch": 7.868288327187889,
+        "logRatio": -0.5541810035669479,
+        "timeChangePercent": -42.54573830857935,
+        "freshBytesPerBatch": 158720.09392554857,
+        "batchBytesPerBatch": 7792.054077724335
+      },
+      {
+        "round": 2,
+        "freshMicrosecondsPerBatch": 13.575295411786708,
+        "batchMicrosecondsPerBatch": 7.604752599404729,
+        "logRatio": -0.5794782331664327,
+        "timeChangePercent": -43.9809420809957,
+        "freshBytesPerBatch": 158720.0934561196,
+        "batchBytesPerBatch": 7792.052307443414
+      },
+      {
+        "round": 3,
+        "freshMicrosecondsPerBatch": 13.109928303769603,
+        "batchMicrosecondsPerBatch": 6.787772382778995,
+        "logRatio": -0.6582470144262544,
+        "timeChangePercent": -48.22418379795981,
+        "freshBytesPerBatch": 158720.09030622215,
+        "batchBytesPerBatch": 7792.046751017896
+      }
+    ],
+    "freshMicrosecondsPerBatch": 13.516671160989201,
+    "batchMicrosecondsPerBatch": 7.288483772289148,
+    "freshAmortizedMicrosecondsPerDocument": 0.10559899344522813,
+    "batchAmortizedMicrosecondsPerDocument": 0.056941279471008965,
+    "timeChangePercent": -46.175941384462014,
+    "lower95Percent": -51.28339997387214,
+    "upper95Percent": -40.53301576269437,
+    "materialLocalTimeBenefit": true,
+    "freshBytesPerBatch": 158720.09294164064,
+    "batchBytesPerBatch": 7792.050127176708,
+    "freshBytesPerDocument": 1240.0007261065675,
+    "batchBytesPerDocument": 60.87539161856803,
+    "allocationChangePercent": -95.09069709904861,
+    "driftFlags": 2
+  },
+  {
+    "caseIndex": 2,
+    "shape": "HIGH4096",
+    "documents": 4096,
+    "pairs": [
+      {
+        "round": 0,
+        "freshMicrosecondsPerBatch": 461.13606202125794,
+        "batchMicrosecondsPerBatch": 278.41505815672554,
+        "logRatio": -0.5045801296279773,
+        "timeChangePercent": -39.62409772587014,
+        "freshBytesPerBatch": 5210115.1673660185,
+        "batchBytesPerBatch": 435097.90945486433
+      },
+      {
+        "round": 1,
+        "freshMicrosecondsPerBatch": 424.3625135306767,
+        "batchMicrosecondsPerBatch": 296.929328761479,
+        "logRatio": -0.35709391449287753,
+        "timeChangePercent": -30.029321795876708,
+        "freshBytesPerBatch": 5210114.920595241,
+        "batchBytesPerBatch": 435098.04492293176
+      },
+      {
+        "round": 2,
+        "freshMicrosecondsPerBatch": 448.79431459629916,
+        "batchMicrosecondsPerBatch": 301.2137378919633,
+        "logRatio": -0.39874458069973895,
+        "timeChangePercent": -32.88378927818816,
+        "freshBytesPerBatch": 5210115.091022911,
+        "batchBytesPerBatch": 435098.0720299326
+      },
+      {
+        "round": 3,
+        "freshMicrosecondsPerBatch": 440.50481751867255,
+        "batchMicrosecondsPerBatch": 243.84353586474117,
+        "logRatio": -0.5913946086439099,
+        "timeChangePercent": -44.644524607405714,
+        "freshBytesPerBatch": 5210115.038148826,
+        "batchBytesPerBatch": 435097.6814126759
+      }
+    ],
+    "freshMicrosecondsPerBatch": 443.69942691672657,
+    "batchMicrosecondsPerBatch": 280.10041516872724,
+    "freshAmortizedMicrosecondsPerDocument": 0.10832505539959145,
+    "batchAmortizedMicrosecondsPerDocument": 0.06838389042205255,
+    "timeChangePercent": -37.05779794353942,
+    "lower95Percent": -46.80733059223884,
+    "upper95Percent": -25.52130126527792,
+    "materialLocalTimeBenefit": true,
+    "freshBytesPerBatch": 5210115.054283249,
+    "batchBytesPerBatch": 435097.92695510114,
+    "freshBytesPerDocument": 1272.0007456746214,
+    "batchBytesPerDocument": 106.22507982302274,
+    "allocationChangePercent": -91.64897660758172,
+    "driftFlags": 2
+  },
+  {
+    "caseIndex": 3,
+    "shape": "COLLISION32",
+    "documents": 128,
+    "pairs": [
+      {
+        "round": 0,
+        "freshMicrosecondsPerBatch": 14.390922003011275,
+        "batchMicrosecondsPerBatch": 15.094224690590739,
+        "logRatio": 0.047714608510057765,
+        "timeChangePercent": 4.8871273670463955,
+        "freshBytesPerBatch": 162816.09920535822,
+        "batchBytesPerBatch": 43736.103536050054
+      },
+      {
+        "round": 1,
+        "freshMicrosecondsPerBatch": 14.140088536259139,
+        "batchMicrosecondsPerBatch": 14.934676659786746,
+        "logRatio": 0.054671879750275154,
+        "timeChangePercent": 5.6193999174054765,
+        "freshBytesPerBatch": 162816.09733844313,
+        "batchBytesPerBatch": 43736.10278108059
+      },
+      {
+        "round": 2,
+        "freshMicrosecondsPerBatch": 13.546667257414594,
+        "batchMicrosecondsPerBatch": 15.073322809716842,
+        "logRatio": 0.10678592180979353,
+        "timeChangePercent": 11.26960250290825,
+        "freshBytesPerBatch": 162816.09322656333,
+        "batchBytesPerBatch": 43736.10344186474
+      },
+      {
+        "round": 3,
+        "freshMicrosecondsPerBatch": 13.942505696364,
+        "batchMicrosecondsPerBatch": 15.005012175096919,
+        "logRatio": 0.07344215245201147,
+        "timeChangePercent": 7.620627897681298,
+        "freshBytesPerBatch": 162816.09597587818,
+        "batchBytesPerBatch": 43736.10328765439
+      }
+    ],
+    "freshMicrosecondsPerBatch": 14.005045873262253,
+    "batchMicrosecondsPerBatch": 15.026809083797811,
+    "freshAmortizedMicrosecondsPerDocument": 0.10941442088486135,
+    "batchAmortizedMicrosecondsPerDocument": 0.1173969459671704,
+    "timeChangePercent": 7.320944534044682,
+    "lower95Percent": 2.901769201373283,
+    "upper95Percent": 11.929903878910043,
+    "materialLocalTimeBenefit": false,
+    "freshBytesPerBatch": 162816.0964365607,
+    "batchBytesPerBatch": 43736.10326166244,
+    "freshBytesPerDocument": 1272.0007534106305,
+    "batchBytesPerDocument": 341.68830673173784,
+    "allocationChangePercent": -73.13772764555641,
+    "driftFlags": 4
+  },
+  {
+    "caseIndex": 4,
+    "shape": "NFE1",
+    "documents": 64,
+    "pairs": [
+      {
+        "round": 0,
+        "freshMicrosecondsPerBatch": 278.01687969361495,
+        "batchMicrosecondsPerBatch": 268.1353377921585,
+        "logRatio": -0.03618998536249699,
+        "timeChangePercent": -3.5542956644741386,
+        "freshBytesPerBatch": 157697.91352088918,
+        "batchBytesPerBatch": 71513.84047319964
+      },
+      {
+        "round": 1,
+        "freshMicrosecondsPerBatch": 294.8963048983825,
+        "batchMicrosecondsPerBatch": 272.5005244696201,
+        "logRatio": -0.07898324696646847,
+        "timeChangePercent": -7.594459495340134,
+        "freshBytesPerBatch": 157698.03427248495,
+        "batchBytesPerBatch": 71513.8752142246
+      },
+      {
+        "round": 2,
+        "freshMicrosecondsPerBatch": 287.198554006943,
+        "batchMicrosecondsPerBatch": 287.8597210252887,
+        "logRatio": 0.0022994793341286736,
+        "timeChangePercent": 0.23021251643546847,
+        "freshBytesPerBatch": 157697.97629522346,
+        "batchBytesPerBatch": 71513.97371254266
+      },
+      {
+        "round": 3,
+        "freshMicrosecondsPerBatch": 280.15922009971194,
+        "batchMicrosecondsPerBatch": 274.30334480407345,
+        "logRatio": -0.021123492933925726,
+        "timeChangePercent": -2.0901954586946436,
+        "freshBytesPerBatch": 157697.92863582456,
+        "batchBytesPerBatch": 71513.88363676099
+      }
+    ],
+    "freshMicrosecondsPerBatch": 285.0677396746631,
+    "batchMicrosecondsPerBatch": 275.6997320227852,
+    "freshAmortizedMicrosecondsPerDocument": 4.4541834324166105,
+    "batchAmortizedMicrosecondsPerDocument": 4.307808312856019,
+    "timeChangePercent": -3.2944422933838813,
+    "lower95Percent": -8.417801566039262,
+    "upper95Percent": 2.115531743773258,
+    "materialLocalTimeBenefit": false,
+    "freshBytesPerBatch": 157697.96318110553,
+    "batchBytesPerBatch": 71513.89325918198,
+    "freshBytesPerDocument": 2464.030674704774,
+    "batchBytesPerDocument": 1117.4045821747184,
+    "allocationChangePercent": -54.65135261318939,
+    "driftFlags": 3
+  },
+  {
+    "caseIndex": 5,
+    "shape": "NFE50",
+    "documents": 64,
+    "pairs": [
+      {
+        "round": 0,
+        "freshMicrosecondsPerBatch": 2408.9254031314194,
+        "batchMicrosecondsPerBatch": 2431.5198239609845,
+        "logRatio": 0.009335746557547956,
+        "timeChangePercent": 0.9379460567850773,
+        "freshBytesPerBatch": 990736.5659644852,
+        "batchBytesPerBatch": 904552.7436771977
+      },
+      {
+        "round": 1,
+        "freshMicrosecondsPerBatch": 2301.9182971239507,
+        "batchMicrosecondsPerBatch": 2371.970624414481,
+        "logRatio": 0.029978279204902848,
+        "timeChangePercent": 3.043215190480675,
+        "freshBytesPerBatch": 990735.8314857672,
+        "batchBytesPerBatch": 904552.308677163
+      },
+      {
+        "round": 2,
+        "freshMicrosecondsPerBatch": 2276.877799968569,
+        "batchMicrosecondsPerBatch": 2442.66139477655,
+        "logRatio": 0.07028306192760574,
+        "timeChangePercent": 7.281181045828178,
+        "freshBytesPerBatch": 990735.6713442022,
+        "batchBytesPerBatch": 904552.7628570311
+      },
+      {
+        "round": 3,
+        "freshMicrosecondsPerBatch": 2641.3936003062836,
+        "batchMicrosecondsPerBatch": 2483.1811446100687,
+        "logRatio": -0.06176619898728673,
+        "timeChangePercent": -5.989734194777685,
+        "freshBytesPerBatch": 990738.1785252098,
+        "batchBytesPerBatch": 904553.108908138
+      }
+    ],
+    "freshMicrosecondsPerBatch": 2407.278775132556,
+    "batchMicrosecondsPerBatch": 2432.333246940521,
+    "freshAmortizedMicrosecondsPerDocument": 37.613730861446186,
+    "batchAmortizedMicrosecondsPerDocument": 38.00520698344564,
+    "timeChangePercent": 1.2029501556146016,
+    "lower95Percent": -7.319314659466947,
+    "upper95Percent": 10.50886258089152,
+    "materialLocalTimeBenefit": false,
+    "freshBytesPerBatch": 990736.5618299161,
+    "batchBytesPerBatch": 904552.7310298826,
+    "freshBytesPerDocument": 15480.258778592439,
+    "batchBytesPerDocument": 14133.636422341915,
+    "allocationChangePercent": -8.698965408205972,
+    "driftFlags": 3
+  }
+]

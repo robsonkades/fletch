@@ -28,11 +28,15 @@
  *   <li>{@link io.github.robsonkades.fletch.XmlMapping} — a compiled, declarative
  *       mapping that binds wanted paths into a draft (build via
  *       {@link io.github.robsonkades.fletch.Xml#mapping});</li>
+ *   <li>{@link io.github.robsonkades.fletch.XmlMappingSession} — a reusable
+ *       mapping session owned by one worker thread;</li>
  *   <li>{@link io.github.robsonkades.fletch.XmlBinding} and
  *       {@link io.github.robsonkades.fletch.XmlValue} — the per-path binding
  *       and the lazily-decoded value it receives;</li>
- *   <li>{@link io.github.robsonkades.fletch.XmlException} — the single
- *       unchecked exception type for every failure mode.</li>
+ *   <li>{@link io.github.robsonkades.fletch.XmlLimits} — immutable resource
+ *       limits shared by both extraction styles;</li>
+ *   <li>{@link io.github.robsonkades.fletch.XmlException} — parse, resource-limit
+ *       and I/O failures; conversion exceptions retain their Java type.</li>
  * </ul>
  *
  * <p>Typical usage:

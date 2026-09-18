@@ -29,6 +29,7 @@ import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
 import javax.xml.stream.XMLStreamConstants;
@@ -103,7 +104,7 @@ public class ExtractionBenchmark {
     /** Same paths, but end tags inside the subtrees the plan never selects are verified. */
     static final XmlMapping<Nfe> PLAN_STRICT = nfePlan(true);
 
-    private static XmlMapping<Nfe> nfePlan(final boolean strict) {
+    static XmlMapping<Nfe> nfePlan(final boolean strict) {
         final XmlMapping.Builder<NfeDraft> b = XmlMapping.builder(NfeDraft::new);
         if (strict) b.strictSkip();
         return b
@@ -211,7 +212,33 @@ public class ExtractionBenchmark {
 
     public byte[] doc;
 
-    private XmlMappingEngine<Nfe> session;
+    private static final XmlLimits LIMITS = XmlLimits.builder()
+            .maxInputBytes(32 * 1024 * 1024)
+            .maxDepth(64)
+            .maxElements(100_000)
+            .maxNameBytes(256)
+            .maxAttributesPerElement(64)
+            .maxTextBytes(1024 * 1024)
+            .build();
+
+    /** Each benchmark worker owns its mutable engine; the document stays shared. */
+    @State(Scope.Thread)
+    public static class SessionState {
+        private XmlMappingSession<Nfe> session;
+        private XmlMappingSession<Nfe> limited;
+
+        @Setup
+        public void setup() {
+            session = PLAN.openSession();
+            limited = PLAN.openSession(LIMITS);
+        }
+
+        @TearDown
+        public void close() {
+            session.close();
+            limited.close();
+        }
+    }
 
     @Setup
     public void setup() throws IOException {
@@ -224,12 +251,22 @@ public class ExtractionBenchmark {
             throw new UncheckedIOException(e);
         }
         doc = scale(base, dets);
-        session = PLAN.newEngine();
         if (!PLAN.extract(doc).equals(Xml.extract(doc, CURSOR_DOC_ORDER))) {
             throw new IllegalStateException("plan and cursor disagree");
         }
         if (!PLAN.extract(doc).equals(PLAN_STRICT.extract(doc))) {
             throw new IllegalStateException("strict skip changes the result");
+        }
+        final Nfe expected = PLAN.extract(doc);
+        try (var session = PLAN.openSession(); var limited = PLAN.openSession(LIMITS)) {
+            if (!expected.equals(session.extract(doc)) || !expected.equals(limited.extract(doc))) {
+                throw new IllegalStateException("session changes the result");
+            }
+        }
+        if (!expected.equals(Xml.extract(doc, LIMITS, PLAN))
+                || !expected.equals(Xml.extract(doc, LIMITS, PLAN_STRICT))
+                || !expected.equals(Xml.extract(doc, LIMITS, CURSOR_DOC_ORDER))) {
+            throw new IllegalStateException("resource limits change the result");
         }
     }
 
@@ -254,8 +291,28 @@ public class ExtractionBenchmark {
     }
 
     @Benchmark
-    public Nfe planSession() {
-        return session.extract(doc);
+    public Nfe planLimited() {
+        return Xml.extract(doc, LIMITS, PLAN);
+    }
+
+    @Benchmark
+    public Nfe planStrictSkipLimited() {
+        return Xml.extract(doc, LIMITS, PLAN_STRICT);
+    }
+
+    @Benchmark
+    public Nfe cursorDocOrderLimited() {
+        return Xml.extract(doc, LIMITS, CURSOR_DOC_ORDER);
+    }
+
+    @Benchmark
+    public Nfe planSession(final SessionState state) {
+        return state.session.extract(doc);
+    }
+
+    @Benchmark
+    public Nfe planSessionLimited(final SessionState state) {
+        return state.limited.extract(doc);
     }
 
     @Benchmark

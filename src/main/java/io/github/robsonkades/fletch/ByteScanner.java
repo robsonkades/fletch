@@ -41,12 +41,25 @@ abstract class ByteScanner {
 
     static final int MAX_TEXT = 16 * 1024 * 1024;
     static final int DEFAULT_WINDOW = 64 * 1024;
+    static final int MAX_ATTRIBUTES = 1024;
+    private static final int RETAIN = 1 << 20;
 
     final int window;
 
+    XmlLimits limits = XmlLimits.defaults();
+    private long inputBytes;
+    private long elements;
+    private long lastElementOffset = -1;
+
     // Verify end tags inside skipped subtrees instead of only counting them.
     boolean strictSkip;
-    private long[] skipStack = new long[16];
+    private int[] nameSpans = new int[32];
+    private byte[] nameBytes;
+    private int[] attributeSpans;
+    // Wide tags use an index into attributeSpans; zero denotes an empty slot.
+    // Both arrays are bounded by MAX_ATTRIBUTES and contain no document references.
+    private int[] attributeTable;
+    private int attributeMask;
 
     // Document view being scanned (caller bytes, the window, or a transcode buffer).
     byte[] b;
@@ -70,6 +83,7 @@ abstract class ByteScanner {
     byte[] valA;
     int valS;
     int valE;
+    private int textBytes;
 
     ByteScanner(final int window) {
         this.window = Math.max(window, 16);
@@ -89,6 +103,10 @@ abstract class ByteScanner {
         if (src == null || eof) {
             return -1;
         }
+        if (inputBytes == limits.maxInputBytes) {
+            probeInputEnd();
+            return -1;
+        }
         int shift = 0;
         if (keep > 0 && (keep == n || n == b.length)) {
             System.arraycopy(b, keep, b, 0, n - keep);
@@ -100,11 +118,12 @@ abstract class ByteScanner {
             if (b.length >= MAX_TEXT) {
                 throw fail("Token exceeds " + MAX_TEXT + " bytes", 0);
             }
-            b = Arrays.copyOf(b, b.length << 1);
+            b = Arrays.copyOf(b, (int) Math.min(MAX_TEXT,
+                    Math.min((long) b.length << 1, n + limits.maxInputBytes - inputBytes)));
             io = b;
         }
         try {
-            final int r = src.read(b, n, b.length - n);
+            final int r = readInput();
             if (r < 0) {
                 eof = true;
                 return shift == 0 ? -1 : shift;
@@ -123,14 +142,19 @@ abstract class ByteScanner {
     final void drainFully() {
         try {
             while (!eof) {
+                if (inputBytes == limits.maxInputBytes) {
+                    probeInputEnd();
+                    break;
+                }
                 if (n == b.length) {
                     if (b.length >= MAX_ARRAY) {
                         throw fail("Document exceeds the maximum supported size of 2 GiB", 0);
                     }
-                    b = Arrays.copyOf(b, (int) Math.min(MAX_ARRAY, b.length * 2L));
+                    b = Arrays.copyOf(b, (int) Math.min(MAX_ARRAY,
+                            Math.min(b.length * 2L, n + limits.maxInputBytes - inputBytes)));
                     io = b;
                 }
-                final int r = src.read(b, n, b.length - n);
+                final int r = readInput();
                 if (r < 0) {
                     eof = true;
                 } else {
@@ -143,6 +167,34 @@ abstract class ByteScanner {
         src = null;
     }
 
+    /** Restrict read-ahead to the remaining original-byte budget. */
+    private int readInput() throws IOException {
+        final int length = (int) Math.min(b.length - n, limits.maxInputBytes - inputBytes);
+        int read = src.read(b, n, length);
+        if (read == 0) {
+            // Some InputStreams make no progress on bulk reads; do not spin forever.
+            final int one = src.read();
+            if (one < 0) return -1;
+            b[n] = (byte) one;
+            read = 1;
+        }
+        if (read > 0) inputBytes += read;
+        return read;
+    }
+
+    /** One-byte lookahead distinguishes an exact-size stream from an oversized one. */
+    private void probeInputEnd() {
+        try {
+            if (src.read() >= 0) {
+                throw new XmlException("Input exceeds " + limits.maxInputBytes
+                        + " bytes (byte offset " + inputBytes + ")");
+            }
+            eof = true;
+        } catch (IOException e) {
+            throw new XmlException("Error reading XML stream", e);
+        }
+    }
+
     /**
      * Points the scanner at a streaming source, resetting window state. The
      * caller decides how to consume it ({@link #drainFully} or incremental
@@ -150,25 +202,39 @@ abstract class ByteScanner {
      */
     final void beginStream(final InputStream stream) {
         if (io == null) {
-            io = new byte[window];
+            io = new byte[(int) Math.min(window, limits.maxInputBytes)];
         }
         b = io;
         n = 0;
         base = 0;
         eof = false;
         src = stream;
+        inputBytes = 0;
+        elements = 0;
+        lastElementOffset = -1;
     }
 
     /**
      * Drops every reference to caller-supplied data — the document array (or
-     * view) and the stream. Engines call it when an extraction ends, and
-     * again before parking in a pool, so a failed extraction can never leak
-     * the caller's document or stream through pooled scratch state.
+     * view) and the stream. Engines call it from a finally block covering
+     * source preparation and parsing, before any return to the pool.
      */
     final void releaseSource() {
         src = null;
         b = null;
         valA = null;
+        limits = XmlLimits.defaults();
+    }
+
+    /** Drops outlier scratch buffers before either engine is returned to a pool. */
+    final void trimForReuse() {
+        limits = XmlLimits.defaults();
+        if (io != null && io.length > RETAIN) io = null;
+        if (trans != null && trans.length > RETAIN) trans = null;
+        if (cook.length > RETAIN) cook = new byte[256];
+        if (nameBytes != null && nameBytes.length > RETAIN) nameBytes = null;
+        if (nameSpans.length > RETAIN / Integer.BYTES) nameSpans = new int[32];
+        if (attributeSpans != null && attributeSpans.length > RETAIN / Integer.BYTES) attributeSpans = null;
     }
 
     // ------------------------------------------------------------------ encoding detection
@@ -177,6 +243,9 @@ abstract class ByteScanner {
         src = null;
         eof = false;
         base = 0;
+        elements = 0;
+        lastElementOffset = -1;
+        checkInputSize(len);
         int from = 0;
         if (sniff && len >= 2) {
             final int b0 = doc[0] & 0xFF;
@@ -208,6 +277,45 @@ abstract class ByteScanner {
         this.b = doc;
         this.n = len;
         this.scanFrom = from;
+    }
+
+    final void checkInputSize(final long length) {
+        if (length > limits.maxInputBytes) {
+            throw new XmlException("Input exceeds " + limits.maxInputBytes + " bytes (byte offset 0)");
+        }
+    }
+
+    /** Count String.getBytes(UTF_8)'s output before allocating it when bounded. */
+    final void checkStringSize(final String xml) {
+        if (limits.maxInputBytes == Long.MAX_VALUE) return;
+        checkInputSize(xml.length()); // Each UTF-16 code unit contributes at least one byte.
+        long length = 0;
+        for (int i = 0; i < xml.length(); i++) {
+            final char c = xml.charAt(i);
+            if (c < 0x80) length++;
+            else if (c < 0x800) length += 2;
+            else if (Character.isHighSurrogate(c) && i + 1 < xml.length()
+                    && Character.isLowSurrogate(xml.charAt(i + 1))) {
+                length += 4;
+                i++;
+            } else {
+                // Match the JDK encoder's one-byte replacement for an unpaired surrogate.
+                length += Character.isSurrogate(c) ? 1 : 3;
+            }
+            checkInputSize(length);
+        }
+    }
+
+    /** Called once a start tag is identified, before allocating its cursor or draft. */
+    final void checkElement(final int depth, final int offset) {
+        if (limits == XmlLimits.defaults()) return;
+        if (depth > limits.maxDepth) throw fail("Element depth exceeds " + limits.maxDepth, offset);
+        if (limits.maxElements == Long.MAX_VALUE) return;
+        final long absolute = base + offset;
+        if (absolute <= lastElementOffset) return; // Cursor replay over already counted input.
+        if (elements == limits.maxElements) throw fail("Element count exceeds " + limits.maxElements, offset);
+        elements++;
+        lastElementOffset = absolute;
     }
 
     /** Streaming variant of {@link #prepare}: legacy encodings drain the stream first. */
@@ -363,19 +471,22 @@ abstract class ByteScanner {
 
     /**
      * Reads the text content of a leaf element starting just after its start
-     * tag, verifying the end tag against {@code endTag} — the SWAR hash of
-     * the element's name. The value lands in {@link #valA}{@code [}{@link
+     * tag, verifying the end tag against the complete expected name bytes.
+     * The expected name must remain stable across window refills (mapping
+     * names live in its immutable blob; cursors use fully buffered input).
+     * The value lands in {@link #valA}{@code [}{@link
      * #valS}{@code , }{@link #valE}{@code )}, already trimmed; an empty span
      * means the element was blank. Returns the index just past the element's
-     * end tag. The dominant single-run case touches the bytes once and
-     * produces a zero-copy span (anchored in the window across refills);
+     * end tag. The dominant single-run case scans and validates the bytes,
+     * producing a zero-copy span (anchored in the window across refills);
      * entities, CR normalization, CDATA and nested markup take the cooked
      * path.
      */
-    final int readLeafText(final long endTag, int start) {
+    final int readLeafText(final byte[] name, final int off, final int len, int start, final int depth) {
+        textBytes = 0;
         // One fused scan finds the '<' and detects dirtiness ('&' entity or
         // '\r' normalization) on the way, so clean values — the dominant
-        // case — are touched once. The scan resumes where it left off after
+        // case — need no decoding buffer. The scan resumes where it left off after
         // a refill instead of restarting from the value's first byte.
         boolean dirty = false;
         int scan = start;
@@ -389,12 +500,17 @@ abstract class ByteScanner {
                 continue;
             }
             if (lt >= 0 && lt + 2 <= n) break;
+            checkTextSize((lt >= 0 ? lt : n) - start, start);
+            if (src != null && n == b.length && b.length >= MAX_TEXT) {
+                return readLongLeaf(name, off, len, start, depth);
+            }
             final int resume = lt >= 0 ? lt : n;
             final int sh = more(start);           // keep the value span alive
             if (sh < 0) throw fail("Unexpected end of document", n);
             start -= sh;
             scan = resume - sh;
         }
+        checkTextSize(lt - start, start);
         if (b[lt + 1] == '/') {
             int s, e, ret;
             while (true) {
@@ -404,12 +520,16 @@ abstract class ByteScanner {
                     ret = closeAngleOr(e);
                     if (ret >= 0) break;
                 }
+                if (src != null && n == b.length && b.length >= MAX_TEXT) {
+                    return readLongLeaf(name, off, len, start, depth);
+                }
                 final int sh = more(start);       // keep the value span alive too
                 if (sh < 0) throw fail("Malformed end tag", lt);
                 start -= sh;
                 lt -= sh;
             }
-            if (Swar.hash(b, s, e - s) != endTag) throw fail("Mismatched end tag", lt);
+            if (!nameMatches(name, off, len, s, e)) throw fail("Mismatched end tag", lt);
+            validateXmlBytes(start, lt, true);
             final int vs = lstrip(b, start, lt);
             final int ve = rstrip(b, vs, lt);
             if (vs >= ve) {
@@ -427,15 +547,31 @@ abstract class ByteScanner {
             }
             return ret;
         }
-        return readLeafMixed(endTag, start, lt);
+        cookLen = 0;
+        final boolean nonWs = appendPiece(start, lt);
+        endRun(0, nonWs);
+        return readLeafMixed(name, off, len, lt, depth);
+    }
+
+    /** Spill a near-limit value so its closing markup need not fit beside it in the window. */
+    private int readLongLeaf(final byte[] name, final int off, final int len, int start, final int depth) {
+        cookLen = 0;
+        boolean nonWs = false;
+        int lt;
+        while ((lt = Swar.memchr(b, start, n, '<')) < 0) {
+            final int cut = safeCut(start, n);
+            nonWs |= appendPiece(start, cut);
+            final int sh = more(cut);
+            if (sh < 0) throw fail("Unexpected end of document", cut);
+            start = cut - sh;
+        }
+        nonWs |= appendPiece(start, lt);
+        endRun(0, nonWs);
+        return readLeafMixed(name, off, len, lt, depth);
     }
 
     /** Rare leaf shapes: CDATA sections, comments, PIs or child elements. */
-    private int readLeafMixed(final long endTag, final int start, final int firstLt) {
-        cookLen = 0;
-        int mark = cookLen;
-        boolean nonWs = appendPiece(start, firstLt);
-        endRun(mark, nonWs);
+    private int readLeafMixed(final byte[] name, final int off, final int len, final int firstLt, final int depth) {
         int i = firstLt;
         int d = 1;
         while (true) {
@@ -460,10 +596,11 @@ abstract class ByteScanner {
                 }
                 d--;
                 if (d == 0) {
-                    if (Swar.hash(b, s, e - s) != endTag) throw fail("Mismatched end tag", i);
+                    if (!nameMatches(name, off, len, s, e)) throw fail("Mismatched end tag", i);
                     setCookedTrimmed();
                     return nx;
                 }
+                if (!stackNameMatches(d - 1, s, e)) throw fail("Mismatched end tag", i);
                 i = nx;
             } else if (c == '!') {
                 while (n - i < 4) {
@@ -482,6 +619,10 @@ abstract class ByteScanner {
                     checkCdataStart(i);
                     int end;
                     while ((end = cdataEndOr(i + 9)) < 0) {
+                        int contentEnd = n;
+                        if (contentEnd > i + 9 && b[contentEnd - 1] == ']') contentEnd--;
+                        if (contentEnd > i + 9 && b[contentEnd - 1] == ']') contentEnd--;
+                        checkRemainingText(contentEnd - i - 9, i + 9);
                         final int sh = more(i);   // wanted content: anchor the whole section
                         if (sh < 0) throw fail("Unterminated CDATA section", i);
                         i -= sh;
@@ -507,12 +648,16 @@ abstract class ByteScanner {
                     if (sh < 0) throw fail("Unterminated start tag", i);
                     i -= sh;
                 }
-                if (b[gt - 1] != '/') d++;
+                checkElement(depth + d, i);
+                if (b[gt - 1] != '/') {
+                    pushName(d - 1, s, e);
+                    d++;
+                }
                 i = gt + 1;
             }
             // text run up to the next markup, streamed in safe pieces
-            mark = cookLen;
-            nonWs = false;
+            final int mark = cookLen;
+            boolean nonWs = false;
             int next;
             while ((next = Swar.memchr(b, i, n, '<')) < 0) {
                 final int cut = safeCut(i, n);
@@ -542,6 +687,8 @@ abstract class ByteScanner {
      */
     private boolean appendPiece(final int s, final int e) {
         if (s >= e) return false;
+        countText(e - s, s);
+        validateXmlBytes(s, e, true);
         final int from = cookLen;
         decodeText(s, e);
         return !allWs(cook, from, cookLen);
@@ -552,13 +699,23 @@ abstract class ByteScanner {
     }
 
     /**
-     * Picks a piece boundary that never splits an entity reference or a
-     * {@code \r\n} pair across a window refill.
+     * Preserves entity references, CRLF, UTF-8 sequences and possible CDATA
+     * terminators across a window refill.
      */
     private int safeCut(final int s, final int e) {
         if (s >= e) return e;
         int cut = e;
         if (b[cut - 1] == '\r') cut--;
+        // Keep a possible text delimiter and an incomplete UTF-8 sequence intact.
+        if (b[e - 1] == ']') {
+            cut = Math.min(cut, e - 1);
+            if (e - 2 >= s && b[e - 2] == ']') cut = Math.min(cut, e - 2);
+        }
+        int lead = e - 1;
+        while (lead > s && (b[lead] & 0xC0) == 0x80 && e - lead < 4) lead--;
+        final int leadByte = b[lead] & 0xFF;
+        final int width = leadByte >= 0xF0 ? 4 : leadByte >= 0xE0 ? 3 : leadByte >= 0xC0 ? 2 : 1;
+        if (e - lead < width) cut = Math.min(cut, lead);
         final int floor = Math.max(s, e - 11);
         for (int j = cut - 1; j >= floor; j--) {
             final int c = b[j] & 0xFF;
@@ -573,6 +730,8 @@ abstract class ByteScanner {
 
     private void appendCdata(final int s, final int e) {
         if (s >= e) return;
+        countText(e - s, s);
+        validateXmlBytes(s, e, false);
         final int mark = cookLen;
         ensureCook(cookLen + (e - s));
         int j = s;
@@ -638,7 +797,7 @@ abstract class ByteScanner {
                 }
             }
             if (cp < 0x20 && cp != 0x9 && cp != 0xA && cp != 0xD
-                    || (cp >= 0xD800 && cp <= 0xDFFF)) {
+                    || (cp >= 0xD800 && cp <= 0xDFFF) || cp == 0xFFFE || cp == 0xFFFF) {
                 throw fail("Invalid character reference", amp);
             }
             appendCodePoint(cp);
@@ -689,7 +848,56 @@ abstract class ByteScanner {
 
     final void ensureCook(final int min) {
         if (min > MAX_TEXT) throw new XmlException("Text value exceeds " + MAX_TEXT + " bytes");
-        if (cook.length < min) cook = Arrays.copyOf(cook, Math.max(min, cook.length << 1));
+        if (cook.length < min) cook = Arrays.copyOf(cook, Math.min(MAX_TEXT, Math.max(min, cook.length << 1)));
+    }
+
+    final void checkTextSize(final int length, final int offset) {
+        if (length > limits.maxTextBytes) throw fail("Text value exceeds " + limits.maxTextBytes + " bytes", offset);
+    }
+
+    final void validateXmlBytes(final int start, final int end, final boolean characterData) {
+        final int invalid = Utf8.invalidXml(b, start, end, characterData);
+        if (invalid >= 0) throw fail("Invalid UTF-8 or XML character data", invalid);
+    }
+
+    private void countText(final int length, final int offset) {
+        checkRemainingText(length, offset);
+        textBytes += length;
+    }
+
+    private void checkRemainingText(final int length, final int offset) {
+        if (length > limits.maxTextBytes - textBytes) throw fail("Text value exceeds " + limits.maxTextBytes + " bytes", offset);
+    }
+
+    final boolean nameMatches(final byte[] expected, final int off, final int len, final int s, final int e) {
+        return e - s == len && Arrays.equals(expected, off, off + len, b, s, e);
+    }
+
+    /** Buffered input keeps spans; streaming copies active names into one reusable arena. */
+    private void pushName(final int depth, final int s, final int e) {
+        final int at = depth << 1;
+        if (at == nameSpans.length) nameSpans = Arrays.copyOf(nameSpans, at << 1);
+        if (src == null) {
+            nameSpans[at] = s;
+            nameSpans[at + 1] = e;
+            return;
+        }
+        final int start = depth == 0 ? 0 : nameSpans[at - 1];
+        if (e - s > MAX_TEXT - start) throw fail("Open element names exceed " + MAX_TEXT + " bytes", s);
+        final int end = start + e - s;
+        if (nameBytes == null) nameBytes = new byte[Math.max(256, end)];
+        else if (end > nameBytes.length) {
+            nameBytes = Arrays.copyOf(nameBytes, Math.min(MAX_TEXT, Math.max(end, nameBytes.length << 1)));
+        }
+        System.arraycopy(b, s, nameBytes, start, e - s);
+        nameSpans[at] = start;
+        nameSpans[at + 1] = end;
+    }
+
+    private boolean stackNameMatches(final int depth, final int s, final int e) {
+        final int at = depth << 1;
+        final int start = nameSpans[at];
+        return nameMatches(src == null ? b : nameBytes, start, nameSpans[at + 1] - start, s, e);
     }
 
     // ------------------------------------------------------------------ attribute values
@@ -739,15 +947,13 @@ abstract class ByteScanner {
      *
      * <p>By default tags are only counted, not read: a mismatched end tag
      * inside the skipped region goes unnoticed. Under {@link #strictSkip}
-     * every end tag is instead verified against the name hash of the start
-     * tag it closes, {@code outerTag} standing in for the enclosing element
-     * whose start tag the caller already consumed. {@code outerTag} is
-     * ignored when strict skipping is off.
+     * every end tag is verified against the complete start-tag name.
+     * The enclosing name span is copied before the first window refill.
      */
-    final int skipSubtree(int i, final long outerTag) {
+    final int skipSubtree(int i, final int nameStart, final int nameEnd, final int depth) {
         int d = 1;
         if (strictSkip) {
-            skipStack[0] = outerTag;
+            pushName(0, nameStart, nameEnd);
         }
         while (d > 0) {
             int lt;
@@ -764,7 +970,7 @@ abstract class ByteScanner {
             }
             final int c = b[i + 1] & 0xFF;
             if (c == '/') {
-                if (strictSkip) {
+                if (strictSkip || limits.maxNameBytes != Integer.MAX_VALUE) {
                     int s, e, nx;
                     while (true) {
                         s = i + 2;
@@ -777,7 +983,8 @@ abstract class ByteScanner {
                         if (sh < 0) throw fail("Malformed end tag", i);
                         i -= sh;
                     }
-                    if (Swar.hash(b, s, e - s) != skipStack[--d]) throw fail("Mismatched end tag", i);
+                    d--;
+                    if (strictSkip && !stackNameMatches(d, s, e)) throw fail("Mismatched end tag", i);
                     i = nx;
                 } else {
                     int j = i + 2;
@@ -795,18 +1002,20 @@ abstract class ByteScanner {
             } else if (c == '?') {
                 i = skipPi(i);
             } else {
+                int s = i + 1;
+                int e = nameEnd(s);
                 int gt;
-                while ((gt = tagEndOr(i + 1)) < 0) {
+                while ((gt = tagEndOr(e)) < 0) {
                     final int sh = more(i);
                     if (sh < 0) throw fail("Unterminated start tag", i);
                     i -= sh;
+                    s = i + 1;
+                    e = nameEnd(s);
                 }
+                checkElement(depth + d, i);
                 if (b[gt - 1] != '/') {
                     if (strictSkip) {
-                        final int s = i + 1;
-                        final int e = nameEnd(s);
-                        if (d == skipStack.length) skipStack = Arrays.copyOf(skipStack, d << 1);
-                        skipStack[d] = Swar.hash(b, s, e - s);
+                        pushName(d, s, e);
                     }
                     d++;
                 }
@@ -846,15 +1055,18 @@ abstract class ByteScanner {
      * so a terminator straddling a window boundary is still seen.
      */
     private int skipComment(final int i) {
-        int j = Math.min(i + 6, n);
+        int j = i + 4;
         while (true) {
-            final int gt = Swar.memchr(b, j, n, '>');
-            if (gt >= 0) {
-                if (gt >= 2 && b[gt - 1] == '-' && b[gt - 2] == '-') return gt + 1;
-                j = gt + 1;
+            final int dash = Swar.memchr(b, j, n, '-');
+            if (dash >= 0 && dash + 2 < n) {
+                if (b[dash + 1] == '-') {
+                    if (b[dash + 2] != '>') throw fail("Double hyphen in comment", dash);
+                    return dash + 3;
+                }
+                j = dash + 1;
                 continue;
             }
-            final int keep = Math.max(j, n - 2);
+            final int keep = dash >= 0 ? dash : n;
             final int sh = more(keep);
             if (sh < 0) throw fail("Unterminated comment", j);
             j = keep - sh;
@@ -922,34 +1134,114 @@ abstract class ByteScanner {
     final int nameEnd(final int s) {
         int j = s;
         while (j < n) {
-            final int c = b[j] & 0xFF;
+            final int c = b[j] & 0xff;
             if (c == '>' || c == '/' || c == '=' || c <= ' ') break;
             j++;
         }
+        if (j - s > limits.maxNameBytes) throw fail("Name exceeds " + limits.maxNameBytes + " bytes", s);
         return j;
     }
 
     /**
-     * Quote-aware scan for the {@code >} closing a start tag ({@code >} is
-     * legal inside attribute values). Returns {@code -1} when the tag
-     * extends past the window — the caller anchors the tag and refills.
-     * Deliberately a byte loop: real attribute regions are shorter than the
-     * word-scan break-even (measured -4..7% end-to-end when this ran on
-     * {@code memchr3}), and the attribute-less tag exits on the first byte.
+     * Finds the closing {@code >}, checking attribute syntax and duplicate
+     * raw names. The caller supplies the end of the element name and anchors
+     * the entire tag across refills; {@code -1} means more bytes are needed.
+     * Attribute-less tags return immediately without touching scratch arrays.
      */
     final int tagEndOr(int j) {
+        if (j < n && b[j] == '>') return j;
+        int count = 0;
         while (true) {
+            final int beforeSpace = j;
+            while (j < n && xmlSpace(b[j])) j++;
             if (j >= n) return -1;
             final int c = b[j] & 0xFF;
             if (c == '>') return j;
-            if (c == '"' || c == '\'') {
-                final int q = Swar.memchr(b, j + 1, n, c);
-                if (q < 0) return -1;
-                j = q + 1;
+            if (c == '/') {
+                if (j + 1 >= n) return -1;
+                if (b[j + 1] != '>') throw fail("Malformed empty-element tag", j);
+                return j + 1;
+            }
+            if (j == beforeSpace) throw fail("Missing whitespace before attribute", j);
+            if (count == limits.maxAttributesPerElement * 2) {
+                throw fail("Element exceeds " + limits.maxAttributesPerElement + " attributes", j);
+            }
+            final int as = j;
+            final int ae = nameEnd(as);
+            if (ae >= n) return -1;
+            if (ae == as) throw fail("Malformed attribute", as);
+            j = ae;
+            while (j < n && xmlSpace(b[j])) j++;
+            if (j >= n) return -1;
+            if (b[j++] != '=') throw fail("Malformed attribute", as);
+            while (j < n && xmlSpace(b[j])) j++;
+            if (j >= n) return -1;
+            final int quote = b[j++] & 0xFF;
+            if (quote != '"' && quote != '\'') throw fail("Unquoted attribute value", j - 1);
+            final int end = Swar.memchr2(b, j, n, quote, '<');
+            if (end < 0) {
+                checkTextSize(n - j, j);
+                return -1;
+            }
+            if (b[end] == '<') throw fail("Less-than sign in attribute value", end);
+            checkTextSize(end - j, j);
+            if (attributeSpans == null) attributeSpans = new int[16];
+            if (count < 16) {
+                for (int k = 0; k < count; k += 2) {
+                    if (nameMatches(b, attributeSpans[k], attributeSpans[k + 1] - attributeSpans[k], as, ae)) {
+                        throw fail("Duplicate attribute", as);
+                    }
+                }
             } else {
-                j++;
+                checkAttributeDuplicate(as, ae, count);
+            }
+            if (count == attributeSpans.length) attributeSpans = Arrays.copyOf(attributeSpans, count << 1);
+            attributeSpans[count++] = as;
+            attributeSpans[count++] = ae;
+            j = end + 1;
+        }
+    }
+
+    /** Keep the small-tag path allocation-free after its first use. */
+    private void checkAttributeDuplicate(final int start, final int end, final int count) {
+        // Restart at the ninth attribute, including after a refill or a failed parse.
+        // Grow at half occupancy; count is the number of span ints, not attributes.
+        if (count == 16 || count == attributeMask + 1) {
+            attributeMask = (count << 1) - 1;
+            if (attributeTable == null || attributeTable.length <= attributeMask) {
+                attributeTable = new int[attributeMask + 1];
+            } else {
+                Arrays.fill(attributeTable, 0, attributeMask + 1, 0);
+            }
+            for (int k = 0; k < count; k += 2) {
+                int slot = attributeSlot(attributeSpans[k], attributeSpans[k + 1]);
+                while (attributeTable[slot] != 0) slot = (slot + 1) & attributeMask;
+                attributeTable[slot] = k + 1;
             }
         }
+        int slot = attributeSlot(start, end);
+        while (attributeTable[slot] != 0) {
+            final int k = attributeTable[slot] - 1;
+            if (nameMatches(b, attributeSpans[k], attributeSpans[k + 1] - attributeSpans[k], start, end)) {
+                throw fail("Duplicate attribute", start);
+            }
+            slot = (slot + 1) & attributeMask;
+        }
+        attributeTable[slot] = count + 1;
+    }
+
+    private int attributeSlot(final int start, final int end) {
+        long hash = Swar.hash(b, start, end - start);
+        // Unlike mapping selection, this table also mixes the suffix of long names.
+        // Full byte comparison above remains the authority on name equality.
+        for (int i = start + 16; i < end; i++) hash = (hash ^ (b[i] & 0xFF)) * 0x100000001B3L;
+        int folded = (int) (hash ^ (hash >>> 32));
+        folded = (folded ^ (folded >>> 16)) * 0x85EBCA6B;
+        return (folded ^ (folded >>> 13)) & attributeMask;
+    }
+
+    private static boolean xmlSpace(final byte c) {
+        return c == ' ' || c == '\t' || c == '\n' || c == '\r';
     }
 
     /**
@@ -957,7 +1249,7 @@ abstract class ByteScanner {
      * returning the next position, or {@code -1} at the window limit.
      */
     final int closeAngleOr(int j) {
-        while (j < n && (b[j] & 0xFF) <= ' ') j++;
+        while (j < n && xmlSpace(b[j])) j++;
         if (j >= n) return -1;
         if (b[j] != '>') throw fail("Malformed end tag", j);
         return j + 1;

@@ -43,7 +43,7 @@ import java.util.List;
  * <p>After a live child extractor returns, the parent drains whatever the
  * extractor left unread — at skip speed — so the parent always resumes at
  * the next sibling. The scope's end tag is verified against the element name
- * (hash compare); content skipped inside unread subtrees is balance-checked
+ * (complete byte comparison); content skipped inside unread subtrees is balance-checked
  * only.
  */
 final class XmlCursorImpl implements XmlCursor {
@@ -59,12 +59,12 @@ final class XmlCursorImpl implements XmlCursor {
 
     private final XmlCursorEngine eng;
     private final Ctx ctx;
+    private final int depth;
 
     // Start-tag identity: name span (nameS < 0 marks the synthetic root
-    // cursor), attribute region, and the name hash end tags are verified with.
+    // cursor) and attribute region. End tags compare the complete name span.
     private final int nameS;
     private final int nameE;
-    private final long nameHash;
     private final int attrS;
     private final int attrE;
 
@@ -87,21 +87,21 @@ final class XmlCursorImpl implements XmlCursor {
     XmlCursorImpl(final XmlCursorEngine eng, final Ctx ctx) {
         this.eng = eng;
         this.ctx = ctx;
+        this.depth = 0;
         this.nameS = -1;
         this.nameE = -1;
-        this.nameHash = 0;
         this.attrS = 0;
         this.attrE = 0;
     }
 
     /** Element cursor, positioned just after the element's start tag. */
     private XmlCursorImpl(final XmlCursorEngine eng, final Ctx ctx, final int nameS, final int nameE,
-                          final int attrS, final int attrE, final boolean selfClosed) {
+                          final int attrS, final int attrE, final boolean selfClosed, final int depth) {
         this.eng = eng;
         this.ctx = ctx;
+        this.depth = depth;
         this.nameS = nameS;
         this.nameE = nameE;
-        this.nameHash = Swar.hash(eng.b, nameS, nameE - nameS);
         this.attrS = attrS;
         this.attrE = attrE;
         if (selfClosed) {
@@ -120,7 +120,7 @@ final class XmlCursorImpl implements XmlCursor {
         if (q == MISS) return null;
         if (q == LIVE) {
             final XmlCursorImpl child = new XmlCursorImpl(eng, ctx,
-                    eng.hitS, eng.hitE, eng.hitE, eng.hitGt, eng.hitSelfClose);
+                    eng.hitS, eng.hitE, eng.hitE, eng.hitGt, eng.hitSelfClose, depth + 1);
             ctx.owner = child;
             final T result = extractor.extract(child);
             drain(child);
@@ -143,7 +143,7 @@ final class XmlCursorImpl implements XmlCursor {
             final int q = liveLocate(name, null);
             if (q == MISS) break;
             final XmlCursorImpl child = new XmlCursorImpl(eng, ctx,
-                    eng.hitS, eng.hitE, eng.hitE, eng.hitGt, eng.hitSelfClose);
+                    eng.hitS, eng.hitE, eng.hitE, eng.hitGt, eng.hitSelfClose, depth + 1);
             ctx.owner = child;
             results.add(extractor.extract(child));
             drain(child);
@@ -189,6 +189,8 @@ final class XmlCursorImpl implements XmlCursor {
             if (ve < 0) throw eng.fail("Unterminated attribute value", vs);
             j = ve + 1;
             if (nameEq(name, as, ae)) {
+                eng.checkTextSize(ve - vs, vs);
+                eng.validateXmlBytes(vs, ve, false);
                 if (vs >= ve) return null;
                 if (eng.attrDirty(vs, ve)) {
                     eng.cookAttrValue(vs, ve);
@@ -261,7 +263,7 @@ final class XmlCursorImpl implements XmlCursor {
                 final int e = eng.nameEnd(s);
                 final int nx = eng.closeAngleOr(e);
                 if (nx < 0) throw eng.fail("Malformed end tag", lt);
-                if (Swar.hash(b, s, e - s) != nameHash) throw eng.fail("Mismatched end tag", lt);
+                if (!eng.nameMatches(b, nameS, nameE - nameS, s, e)) throw eng.fail("Mismatched end tag", lt);
                 ctx.pos = nx;
                 closed = true;
                 endConsumed = true;
@@ -280,6 +282,7 @@ final class XmlCursorImpl implements XmlCursor {
             if (e == s) throw eng.fail("Invalid markup", lt);
             final int gt = eng.tagEndOr(e);
             if (gt < 0) throw eng.fail("Unterminated start tag", lt);
+            eng.checkElement(depth + 1, lt);
             final boolean selfClose = b[gt - 1] == '/';
             if (nameS < 0) {
                 if (rootElementSeen) throw eng.fail("Multiple root elements", lt);
@@ -293,7 +296,7 @@ final class XmlCursorImpl implements XmlCursor {
                 ctx.pos = gt + 1;
                 return LIVE;
             }
-            final int subEnd = selfClose ? gt + 1 : eng.skipSubtree(gt + 1, 0);
+            final int subEnd = selfClose ? gt + 1 : eng.skipSubtree(gt + 1, s, e, depth + 1);
             addPending(s, e, subEnd);
             ctx.pos = subEnd;
             i = subEnd;
@@ -319,7 +322,9 @@ final class XmlCursorImpl implements XmlCursor {
                 final int e = eng.nameEnd(s);
                 final int nx = eng.closeAngleOr(e);
                 if (nx < 0) throw eng.fail("Malformed end tag", lt);
-                if (Swar.hash(b, s, e - s) != child.nameHash) throw eng.fail("Mismatched end tag", lt);
+                if (!eng.nameMatches(b, child.nameS, child.nameE - child.nameS, s, e)) {
+                    throw eng.fail("Mismatched end tag", lt);
+                }
                 child.endConsumed = true;
                 ctx.pos = nx;
                 return;
@@ -333,7 +338,8 @@ final class XmlCursorImpl implements XmlCursor {
                 if (e == lt + 1) throw eng.fail("Invalid markup", lt);
                 final int gt = eng.tagEndOr(e);
                 if (gt < 0) throw eng.fail("Unterminated start tag", lt);
-                i = b[gt - 1] == '/' ? gt + 1 : eng.skipSubtree(gt + 1, 0);
+                eng.checkElement(child.depth + 1, lt);
+                i = b[gt - 1] == '/' ? gt + 1 : eng.skipSubtree(gt + 1, lt + 1, e, child.depth + 1);
             }
         }
     }
@@ -348,7 +354,7 @@ final class XmlCursorImpl implements XmlCursor {
         final boolean selfClose = eng.b[gt - 1] == '/';
         final Ctx replay = new Ctx();
         replay.pos = gt + 1;
-        final XmlCursorImpl cur = new XmlCursorImpl(eng, replay, s, e, e, gt, selfClose);
+        final XmlCursorImpl cur = new XmlCursorImpl(eng, replay, s, e, e, gt, selfClose, depth + 1);
         replay.owner = cur;
         return cur;
     }
@@ -361,7 +367,7 @@ final class XmlCursorImpl implements XmlCursor {
         if (q == MISS) return null;
         if (q == LIVE) {
             if (eng.hitSelfClose) return null;
-            ctx.pos = eng.readLeafText(Swar.hash(eng.b, eng.hitS, eng.hitE - eng.hitS), ctx.pos);
+            ctx.pos = eng.readLeafText(eng.b, eng.hitS, eng.hitE - eng.hitS, ctx.pos, depth + 1);
             return convert(type);
         }
         final int ns = pending[q << 2];
@@ -369,7 +375,7 @@ final class XmlCursorImpl implements XmlCursor {
         removePending(q);
         final int gt = eng.tagEndOr(ne);
         if (eng.b[gt - 1] == '/') return null;
-        eng.readLeafText(Swar.hash(eng.b, ns, ne - ns), gt + 1);
+        eng.readLeafText(eng.b, ns, ne - ns, gt + 1, depth + 1);
         return convert(type);
     }
 

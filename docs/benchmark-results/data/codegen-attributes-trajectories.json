@@ -1,0 +1,250 @@
+[
+  {
+    "round": 0,
+    "variant": "control",
+    "benchmark": "demo.CodegenBenchmark.dynamic",
+    "resultFile": "round-0-case-0-control.json",
+    "warmup": [
+      470.809,
+      479.883,
+      485.307,
+      499.745,
+      496.052,
+      497.614,
+      490.247,
+      504.03,
+      510.64,
+      494.052
+    ],
+    "measurements": [
+      493.101489714681,
+      508.53904261466863,
+      501.124930891106,
+      511.5235599420149,
+      513.3385136447215
+    ],
+    "score": 505.5255073614384,
+    "min": 493.101489714681,
+    "max": 513.3385136447215,
+    "iterationCvPercent": 1.6545052786336483,
+    "lastTwoVsFirstTwoPercent": 2.3183507963065564,
+    "bytesPerDocument": 208.01360277880667
+  },
+  {
+    "round": 0,
+    "variant": "candidate",
+    "benchmark": "demo.CodegenBenchmark.generated",
+    "resultFile": "round-0-case-0-candidate.json",
+    "warmup": [
+      483.055,
+      520.937,
+      525.218,
+      517.081,
+      523.256,
+      532.373,
+      527.223,
+      524.243,
+      536.839,
+      532.242
+    ],
+    "measurements": [
+      529.2835787581719,
+      526.2675588907252,
+      526.5167241999708,
+      514.7160510961626,
+      516.5879226040855
+    ],
+    "score": 522.6743671098232,
+    "min": 514.7160510961626,
+    "max": 529.2835787581719,
+    "iterationCvPercent": 1.2536303335058845,
+    "lastTwoVsFirstTwoPercent": -2.297109356791216,
+    "bytesPerDocument": 208.01311042738263
+  },
+  {
+    "round": 1,
+    "variant": "candidate",
+    "benchmark": "demo.CodegenBenchmark.generated",
+    "resultFile": "round-1-case-0-candidate.json",
+    "warmup": [
+      484.074,
+      513.154,
+      530.316,
+      528.496,
+      523.919,
+      532.229,
+      532.552,
+      529.727,
+      516.975,
+      518.675
+    ],
+    "measurements": [
+      526.2794890749035,
+      521.7164588194362,
+      532.3249638202279,
+      520.8919345647109,
+      526.549597859204
+    ],
+    "score": 525.5524888276965,
+    "min": 520.8919345647109,
+    "max": 532.3249638202279,
+    "iterationCvPercent": 0.8710455335059117,
+    "lastTwoVsFirstTwoPercent": -0.052902444092339795,
+    "bytesPerDocument": 208.01332141280517
+  },
+  {
+    "round": 1,
+    "variant": "control",
+    "benchmark": "demo.CodegenBenchmark.dynamic",
+    "resultFile": "round-1-case-0-control.json",
+    "warmup": [
+      483.172,
+      500.638,
+      501.583,
+      497.073,
+      501.99,
+      500.246,
+      496.695,
+      515.231,
+      492.905,
+      497.744
+    ],
+    "measurements": [
+      500.34683409835026,
+      501.9018737717855,
+      490.1329080684808,
+      508.53474982024073,
+      506.305824155802
+    ],
+    "score": 501.44443798293184,
+    "min": 490.1329080684808,
+    "max": 508.53474982024073,
+    "iterationCvPercent": 1.42162200557354,
+    "lastTwoVsFirstTwoPercent": 1.2563614207760532,
+    "bytesPerDocument": 208.01365425792423
+  },
+  {
+    "round": 2,
+    "variant": "control",
+    "benchmark": "demo.CodegenBenchmark.dynamic",
+    "resultFile": "round-2-case-0-control.json",
+    "warmup": [
+      479.938,
+      497.18,
+      504.008,
+      504.241,
+      495.284,
+      503.702,
+      498.449,
+      498.336,
+      478.993,
+      497.751
+    ],
+    "measurements": [
+      507.6970358504062,
+      508.02334167454956,
+      510.73189983362727,
+      507.15402569289927,
+      513.6445365895288
+    ],
+    "score": 509.45016792820223,
+    "min": 507.15402569289927,
+    "max": 513.6445365895288,
+    "iterationCvPercent": 0.5341212422800825,
+    "lastTwoVsFirstTwoPercent": 0.4999589325801024,
+    "bytesPerDocument": 208.0134024510552
+  },
+  {
+    "round": 2,
+    "variant": "candidate",
+    "benchmark": "demo.CodegenBenchmark.generated",
+    "resultFile": "round-2-case-0-candidate.json",
+    "warmup": [
+      493.138,
+      498.573,
+      508.377,
+      517.351,
+      516.946,
+      512.304,
+      539.302,
+      526.654,
+      512.219,
+      516.971
+    ],
+    "measurements": [
+      524.480121076333,
+      521.8660075281894,
+      505.90632014836086,
+      492.55038833869173,
+      498.7737124966977
+    ],
+    "score": 508.7153099176545,
+    "min": 492.55038833869173,
+    "max": 524.480121076333,
+    "iterationCvPercent": 2.761667734870179,
+    "lastTwoVsFirstTwoPercent": -5.25849202906824,
+    "bytesPerDocument": 208.0134161076722
+  },
+  {
+    "round": 3,
+    "variant": "candidate",
+    "benchmark": "demo.CodegenBenchmark.generated",
+    "resultFile": "round-3-case-0-candidate.json",
+    "warmup": [
+      475.461,
+      500.011,
+      497.216,
+      504.451,
+      511.157,
+      517.438,
+      514.12,
+      518.52,
+      513.185,
+      513.148
+    ],
+    "measurements": [
+      513.0820596802934,
+      518.616101686615,
+      514.9010152296761,
+      517.2167156056071,
+      508.91590619615044
+    ],
+    "score": 514.5463596796684,
+    "min": 508.91590619615044,
+    "max": 518.616101686615,
+    "iterationCvPercent": 0.7379106183279404,
+    "lastTwoVsFirstTwoPercent": -0.5394542486900411,
+    "bytesPerDocument": 208.0132933027691
+  },
+  {
+    "round": 3,
+    "variant": "control",
+    "benchmark": "demo.CodegenBenchmark.dynamic",
+    "resultFile": "round-3-case-0-control.json",
+    "warmup": [
+      470.743,
+      495.401,
+      501.349,
+      503.32,
+      503.653,
+      503.476,
+      498.205,
+      497.684,
+      505.713,
+      507.343
+    ],
+    "measurements": [
+      499.9331596148398,
+      505.64588763030275,
+      503.3074188817633,
+      500.16706302797974,
+      493.82743149151383
+    ],
+    "score": 500.57619212927983,
+    "min": 493.82743149151383,
+    "max": 505.64588763030275,
+    "iterationCvPercent": 0.8894134831530569,
+    "lastTwoVsFirstTwoPercent": -1.1520280536259864,
+    "bytesPerDocument": 208.01371099552298
+  }
+]

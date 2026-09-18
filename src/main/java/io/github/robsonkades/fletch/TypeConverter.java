@@ -48,7 +48,12 @@ import java.time.Instant;
  */
 final class TypeConverter {
 
-    private TypeConverter() {}
+    private static final int[] POW10 = {
+            1, 10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000
+    };
+
+    private TypeConverter() {
+    }
 
     /**
      * Converts the value bytes {@code a[s, e)} to the requested type.
@@ -70,9 +75,9 @@ final class TypeConverter {
         if (type == String.class) return (T) str(a, s, e);
 
         if (type == Integer.class) return (T) Integer.valueOf(parseInt(a, s, e));
-        if (type == Long.class)    return (T) Long.valueOf(parseLong(a, s, e));
+        if (type == Long.class) return (T) Long.valueOf(parseLong(a, s, e));
         if (type == BigDecimal.class) return (T) parseDecimal(a, s, e);
-        if (type == Double.class)  return (T) Double.valueOf(Double.parseDouble(str(a, s, e)));
+        if (type == Double.class) return (T) Double.valueOf(Double.parseDouble(str(a, s, e)));
         if (type == Boolean.class) return (T) (parseBoolean(a, s, e) ? Boolean.TRUE : Boolean.FALSE);
         if (type == Instant.class) return (T) parseInstant(a, s, e);
 
@@ -189,11 +194,9 @@ final class TypeConverter {
         return fast != null ? fast : Instant.parse(str(a, s, e));
     }
 
-    private static final int[] POW10 = {
-            1, 10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000
-    };
-
-    /** Arithmetic parse of the common ISO-8601 layouts; null routes to Instant.parse. */
+    /**
+     * Arithmetic parse of the common ISO-8601 layouts; null routes to Instant.parse.
+     */
     private static Instant tryInstant(final byte[] a, final int s, final int e) {
         final int len = e - s;
         if (len < 20) return null;
@@ -238,7 +241,7 @@ final class TypeConverter {
             if (p + 6 != e || a[p + 3] != ':') return null;
             final int oh = d2(a, p + 1);
             final int om = d2(a, p + 4);
-            if (oh < 0 || om < 0 || oh > 18 || om > 59) return null;
+            if (oh < 0 || om < 0 || oh > 18 || om > 59 || (oh == 18 && om != 0)) return null;
             offset = (oh * 3600L + om * 60L) * (cz == '-' ? -1 : 1);
         } else {
             return null;
@@ -269,7 +272,9 @@ final class TypeConverter {
         return (m == 4 || m == 6 || m == 9 || m == 11) ? 30 : 31;
     }
 
-    /** Howard Hinnant's days-from-civil algorithm (proleptic Gregorian). */
+    /**
+     * Howard Hinnant's days-from-civil algorithm (proleptic Gregorian).
+     */
     private static long daysFromCivil(int y, final int m, final int d) {
         y -= m <= 2 ? 1 : 0;
         final long era = Math.floorDiv(y, 400);

@@ -78,12 +78,14 @@ final class XmlMappingEngine<T> extends ByteScanner {
 
     // Canonicalization cache for XmlValue.asCanonical(): open-addressed,
     // bounded, lazily allocated so mappings that never canonicalize pay nothing.
-    private static final int CANON_SIZE = 1024;
+    private static final int CANON_INITIAL_SIZE = 16;
+    private static final int CANON_MAX_SIZE = 1024;
     private static final int CANON_MAX_LEN = 64;
     private static final int CANON_PROBES = 8;
     private long[] canonHash;
     private byte[][] canonBytes;
     private String[] canonVal;
+    private int canonCount;
 
     private final Val val = new Val();
 
@@ -111,8 +113,12 @@ final class XmlMappingEngine<T> extends ByteScanner {
      */
     public T extract(final byte[] xml) {
         Objects.requireNonNull(xml, "xml");
-        prepare(xml, xml.length, true);
-        return go();
+        try {
+            prepare(xml, xml.length, true);
+            return run(scanFrom);
+        } finally {
+            clearExtraction();
+        }
     }
 
     /**
@@ -126,9 +132,14 @@ final class XmlMappingEngine<T> extends ByteScanner {
      */
     public T extract(final String xml) {
         Objects.requireNonNull(xml, "xml");
-        final byte[] u = xml.getBytes(StandardCharsets.UTF_8);
-        prepare(u, u.length, false);
-        return go();
+        try {
+            checkStringSize(xml);
+            final byte[] u = xml.getBytes(StandardCharsets.UTF_8);
+            prepare(u, u.length, false);
+            return run(scanFrom);
+        } finally {
+            clearExtraction();
+        }
     }
 
     /**
@@ -144,30 +155,24 @@ final class XmlMappingEngine<T> extends ByteScanner {
      */
     public T extract(final InputStream xml) {
         Objects.requireNonNull(xml, "xml");
-        if (io == null) {
-            io = new byte[window];
+        try {
+            beginStream(xml);
+            while (n < 512 && n < limits.maxInputBytes && more(0) >= 0) {
+                // Fill enough of the window to sniff the prolog.
+            }
+            sniffStream();
+            return run(scanFrom);
+        } finally {
+            clearExtraction();
         }
-        b = io;
-        n = 0;
-        base = 0;
-        eof = false;
-        src = xml;
-        while (n < 512 && more(0) >= 0) {
-            // fill enough of the window to sniff the prolog
-        }
-        sniffStream();
-        return go();
     }
 
     // ------------------------------------------------------------------ fused scan loop
 
-    private T go() {
-        try {
-            return run(scanFrom);
-        } finally {
-            releaseSource();
-            Arrays.fill(drafts, null);
-        }
+    private void clearExtraction() {
+        releaseSource();
+        val.set(null, 0, 0);
+        Arrays.fill(drafts, null);
     }
 
     private T run(int i) {
@@ -212,7 +217,7 @@ final class XmlMappingEngine<T> extends ByteScanner {
                     i -= sh;
                 }
                 final int st = stack[sp];
-                if (sp == 0 || Swar.hash(b, s, e - s) != mapping.stateTag[st]) {
+                if (sp == 0 || !nameMatches(mapping.blob, mapping.stateNameOff[st], mapping.stateNameLen[st], s, e)) {
                     throw fail("Mismatched end tag", i);
                 }
                 final int g = mapping.stateGroup[st];
@@ -238,12 +243,13 @@ final class XmlMappingEngine<T> extends ByteScanner {
                     if (sh < 0) throw fail("Unterminated start tag", i);
                     i -= sh;
                 }
+                checkElement(sp + 1, i);
                 if (sp == 0) rootSeen = true;
                 final long h = Swar.hash(b, s, e - s);
                 final int t = mapping.transition(stack[sp], h, b, s, e - s);
                 final boolean selfClose = b[gt - 1] == '/';
                 if (t < 0) {
-                    i = selfClose ? gt + 1 : skipSubtree(gt + 1, h);
+                    i = selfClose ? gt + 1 : skipSubtree(gt + 1, s, e, sp + 1);
                 } else {
                     final int g = mapping.stateGroup[t];
                     if (g >= 0) beginGroup(g);
@@ -252,7 +258,7 @@ final class XmlMappingEngine<T> extends ByteScanner {
                         if (g >= 0) commitGroup(g);
                         i = gt + 1;
                     } else if (mapping.stateText[t] >= 0) {
-                        i = leaf(t, mapping.stateText[t], gt + 1);
+                        i = leaf(t, mapping.stateText[t], gt + 1, sp + 1);
                     } else {
                         if (++sp == stack.length) stack = Arrays.copyOf(stack, sp << 1);
                         stack[sp] = t;
@@ -293,8 +299,8 @@ final class XmlMappingEngine<T> extends ByteScanner {
      * Reads a matched leaf element's text through the shared scanner and
      * binds it when non-blank, returning the index just past the end tag.
      */
-    private int leaf(final int t, final int f, final int start) {
-        final int nx = readLeafText(mapping.stateTag[t], start);
+    private int leaf(final int t, final int f, final int start, final int depth) {
+        final int nx = readLeafText(mapping.blob, mapping.stateNameOff[t], mapping.stateNameLen[t], start, depth);
         if (valS < valE) bind(f, valA, valS, valE);
         return nx;
     }
@@ -307,7 +313,6 @@ final class XmlMappingEngine<T> extends ByteScanner {
      * window. Stops as soon as every declared attribute has been seen.
      */
     private void bindAttrs(final int t, final int from, final int gt) {
-        final int aBase = mapping.attrBase[t];
         final int cnt = mapping.attrCount[t];
         int remaining = cnt;
         int j = from;
@@ -334,19 +339,17 @@ final class XmlMappingEngine<T> extends ByteScanner {
             if (ve < 0) throw fail("Unterminated attribute value", vs);
             j = ve + 1;
             final long h = Swar.hash(b, as, ae - as);
-            for (int k = aBase; k < aBase + cnt; k++) {
-                if (mapping.attrHash[k] == h && mapping.attrNameLen[k] == ae - as
-                        && Arrays.equals(mapping.blob, mapping.attrNameOff[k], mapping.attrNameOff[k] + (ae - as),
-                                b, as, ae)) {
-                    if (ve > vs) bindAttrValue(mapping.attrField[k], vs, ve);
-                    remaining--;
-                    break;
-                }
+            final int field = mapping.attribute(t, h, b, as, ae - as);
+            if (field >= 0) {
+                if (ve > vs) bindAttrValue(field, vs, ve);
+                remaining--;
             }
         }
     }
 
     private void bindAttrValue(final int f, final int vs, final int ve) {
+        checkTextSize(ve - vs, vs);
+        validateXmlBytes(vs, ve, false);
         if (attrDirty(vs, ve)) {
             cookAttrValue(vs, ve);
             bind(f, cook, 0, cookLen);
@@ -367,27 +370,63 @@ final class XmlMappingEngine<T> extends ByteScanner {
             return new String(a, s, len, StandardCharsets.UTF_8);
         }
         if (canonVal == null) {
-            canonHash = new long[CANON_SIZE];
-            canonBytes = new byte[CANON_SIZE][];
-            canonVal = new String[CANON_SIZE];
+            canonHash = new long[CANON_INITIAL_SIZE];
+            canonBytes = new byte[CANON_INITIAL_SIZE][];
+            canonVal = new String[CANON_INITIAL_SIZE];
         }
-        final long h = Swar.hash(a, s, len);
-        int idx = (int) h & (CANON_SIZE - 1);
-        for (int probe = 0; probe < CANON_PROBES; probe++) {
-            final String hit = canonVal[idx];
-            if (hit == null) {
-                canonHash[idx] = h;
-                canonBytes[idx] = Arrays.copyOfRange(a, s, e);
-                canonVal[idx] = new String(a, s, len, StandardCharsets.UTF_8);
-                return canonVal[idx];
+        // Mix the fingerprint locally so short values use more than their first byte.
+        final long h = Long.rotateRight(Swar.hash(a, s, len) * 0x9E3779B97F4A7C15L, 32);
+        while (true) {
+            final int size = canonVal.length;
+            final int mask = size - 1;
+            int idx = (int) h & mask;
+            for (int probe = 0; probe < CANON_PROBES; probe++) {
+                final String hit = canonVal[idx];
+                if (hit == null) {
+                    if (size < CANON_MAX_SIZE && canonCount >= size / 2) break;
+                    canonHash[idx] = h;
+                    canonBytes[idx] = Arrays.copyOfRange(a, s, e);
+                    canonVal[idx] = new String(a, s, len, StandardCharsets.UTF_8);
+                    canonCount++;
+                    return canonVal[idx];
+                }
+                if (canonHash[idx] == h && canonBytes[idx].length == len
+                        && Arrays.equals(canonBytes[idx], 0, len, a, s, e)) {
+                    return hit;
+                }
+                idx = (idx + 1) & mask;
             }
-            if (canonHash[idx] == h && canonBytes[idx].length == len
-                    && Arrays.equals(canonBytes[idx], 0, len, a, s, e)) {
-                return hit;
-            }
-            idx = (idx + 1) & (CANON_SIZE - 1);
+            if (size == CANON_MAX_SIZE) return new String(a, s, len, StandardCharsets.UTF_8);
+            growCanonicalCache();
         }
-        return new String(a, s, len, StandardCharsets.UTF_8);
+    }
+
+    private void growCanonicalCache() {
+        final long[] oldHash = canonHash;
+        final byte[][] oldBytes = canonBytes;
+        final String[] oldVal = canonVal;
+        final int oldMask = oldVal.length - 1;
+        final int size = oldVal.length << 1;
+        final long[] hashes = new long[size];
+        final byte[][] bytes = new byte[size][];
+        final String[] values = new String[size];
+        // Below the maximum size, occupancy never exceeds one half. Start
+        // after a hole to preserve cluster order, including wraparound;
+        // doubling then cannot increase an existing entry's probe distance.
+        int start = 0;
+        while (oldVal[start] != null) start++;
+        for (int offset = 1; offset <= oldVal.length; offset++) {
+            final int from = (start + offset) & oldMask;
+            if (oldVal[from] == null) continue;
+            int to = (int) oldHash[from] & (size - 1);
+            while (values[to] != null) to = (to + 1) & (size - 1);
+            hashes[to] = oldHash[from];
+            bytes[to] = oldBytes[from];
+            values[to] = oldVal[from];
+        }
+        canonHash = hashes;
+        canonBytes = bytes;
+        canonVal = values;
     }
 
     // ------------------------------------------------------------------ value flyweight
