@@ -4,7 +4,7 @@ name: Release
 #   1. synchronizes the core, generator and consumer versions
 #   2. builds and runs the full reactor test suite
 #   3. commits the version bump, tags it (v<version>) and pushes
-#   4. deploys the signed artifacts to Maven Central (central-publishing-maven-plugin)
+#   4. publishes signed artifacts to Maven Central and waits for publication to complete
 #   5. creates the GitHub Release with jars, prepared notes and generated notes
 #
 # Required repository secrets:
@@ -76,7 +76,7 @@ jobs:
           git tag -a "v$VERSION" -m "Release $VERSION"
           git push origin HEAD "v$VERSION"
 
-      - name: Deploy to Maven Central
+      - name: Publish to Maven Central and wait for completion
         run: mvn -B -ntp deploy -DskipTests
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
