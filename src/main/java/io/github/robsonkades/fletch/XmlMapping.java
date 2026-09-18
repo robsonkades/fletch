@@ -93,7 +93,8 @@ import java.util.function.Supplier;
  * <p>A compiled mapping is immutable — define it as a {@code static final}
  * constant and share it across threads. Running it through
  * {@link Xml#extract(byte[], XmlMapping)} draws a reusable engine from an
- * internal pool. Callbacks must be safe to invoke
+ * internal pool. For a batch on one worker thread, {@link #openSession()} keeps
+ * a dedicated engine across documents. Callbacks must be safe to invoke
  * concurrently with separate drafts when sharing a mapping across workers.
  *
  * <h2>Semantics and limits</h2>
@@ -171,6 +172,34 @@ public final class XmlMapping<T> {
      */
     XmlMappingEngine<T> newEngine() {
         return new XmlMappingEngine<>(this);
+    }
+
+    /**
+     * Opens a reusable session with default resource limits. Create, use and
+     * close it on the worker thread that processes the documents.
+     *
+     * @return a new session owned by the caller; close it after the batch
+     * @see #openSession(XmlLimits)
+     */
+    public XmlMappingSession<T> openSession() {
+        return openSession(XmlLimits.defaults());
+    }
+
+    /**
+     * Opens a reusable session with fixed resource limits applied independently
+     * to every document. The session owns a dedicated engine outside the pool.
+     *
+     * <p>Use one session per worker thread, preferably in a try-with-resources
+     * block. A session rejects calls from other threads and recursive extraction
+     * or closing from its callbacks. This mapping may still be shared, provided
+     * its callbacks are safe to invoke concurrently with separate drafts.
+     *
+     * @param limits immutable resource limits for each extraction
+     * @return a new session owned by the caller; close it after the batch
+     * @throws NullPointerException if limits is null
+     */
+    public XmlMappingSession<T> openSession(final XmlLimits limits) {
+        return new XmlMappingSession<>(this, Objects.requireNonNull(limits, "limits"));
     }
 
     T extract(final byte[] xml) { return extract(xml, XmlLimits.defaults()); }
