@@ -16,6 +16,8 @@
 package io.github.robsonkades.fletch;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * Declarative, order-tolerant XML cursor for streaming extraction.
@@ -51,7 +53,8 @@ import java.util.List;
  *
  * <h2>Thread safety</h2>
  * <p>A cursor instance is bound to one parse call and must not be shared
- * across threads. {@link XmlExtractor} constants are safe to share.
+ * across threads. {@link XmlExtractor} constants can be shared when their
+ * callbacks, including custom converters, are safe to invoke concurrently.
  */
 public interface XmlCursor {
 
@@ -96,10 +99,17 @@ public interface XmlCursor {
      *
      * <p>Returns {@code null} when the element is absent or its text is empty
      * — including for {@code String}. Supported types: {@code String},
-     * {@code Integer}, {@code Long}, {@code BigDecimal}, {@code Double},
+     * {@code Byte}, {@code Short}, {@code Integer}, {@code Long},
+     * {@code Float}, {@code Double}, {@code BigInteger}, {@code BigDecimal},
      * {@code Boolean} ({@code true}/{@code false}/{@code 1}/{@code 0}),
-     * {@code Instant} (ISO-8601), and any {@code Enum} (matched by constant
-     * name).
+     * {@code Character} (one non-surrogate UTF-16 code unit), {@code UUID},
+     * {@code Instant}, {@code LocalDate}, {@code LocalTime}, {@code LocalDateTime},
+     * {@code OffsetTime}, {@code OffsetDateTime}, {@code ZonedDateTime},
+     * {@code Duration}, {@code Period} (the corresponding JDK ISO parsers),
+     * and any {@code Enum} (matched by constant name). Primitive class tokens
+     * are aliases for their wrappers; absence still returns null, so unboxing
+     * an absent result throws {@link NullPointerException}. Floating-point
+     * conversion follows the JDK, including NaN, infinities and overflow.
      *
      * <p>Surrounding whitespace is trimmed; CDATA sections, entity references
      * and text interleaved with child elements are assembled transparently.
@@ -112,6 +122,26 @@ public interface XmlCursor {
      * @throws XmlException on stream errors or for unsupported target types
      */
     <T> T value(String name, Class<T> type);
+
+    /**
+     * Reads a child's text with an application conversion. The function receives
+     * the same decoded, trimmed text as {@code value(name, String.class)}. It is
+     * not called for an absent, empty or blank element. The function may return
+     * null and any exception propagates unchanged. Navigation retains the usual
+     * ordering and one-occurrence-per-read contract, even if conversion fails.
+     *
+     * @param <T> result type
+     * @param name direct child tag name
+     * @param converter non-null conversion, for example {@code UUID::fromString}
+     * @return converted result, or null when absent or empty
+     * @throws NullPointerException if converter is null, before navigating
+     * @throws XmlException if parsing or a resource limit fails
+     */
+    default <T> T valueWith(final String name, final Function<? super String, ? extends T> converter) {
+        Objects.requireNonNull(converter, "converter");
+        final String text = value(name, String.class);
+        return text == null ? null : converter.apply(text);
+    }
 
     /**
      * Reads the text of the first direct child whose tag name matches any of
@@ -133,6 +163,24 @@ public interface XmlCursor {
     <T> T firstOf(Class<T> type, String... names);
 
     /**
+     * Converts the first matching alternative in document order, using the same
+     * text and null rules as {@link #valueWith}. A blank first match or a null
+     * conversion result does not cause a search for another alternative.
+     *
+     * @param <T> result type
+     * @param converter non-null application conversion
+     * @param names accepted direct child names
+     * @return the first match's converted result, or null when absent or empty
+     * @throws NullPointerException if converter is null, before navigating
+     * @throws XmlException if parsing or a resource limit fails
+     */
+    default <T> T firstOfWith(final Function<? super String, ? extends T> converter, final String... names) {
+        Objects.requireNonNull(converter, "converter");
+        final String text = firstOf(String.class, names);
+        return text == null ? null : converter.apply(text);
+    }
+
+    /**
      * Reads an attribute of the current element, converting it to the requested
      * type. Attributes are snapshotted when the cursor enters the element, so
      * this may be called before or after navigating to children. Returns
@@ -145,6 +193,26 @@ public interface XmlCursor {
      *         absent or empty
      */
     <T> T attribute(String name, Class<T> type);
+
+    /**
+     * Converts an attribute using decoded text with XML whitespace normalization,
+     * without trimming, just like {@code attribute(name, String.class)}. Missing
+     * or empty attributes return null without invoking the function; whitespace
+     * alone is a value. Functions may return null; exceptions propagate unchanged.
+     * Attributes remain readable after child navigation.
+     *
+     * @param <T> result type
+     * @param name attribute name
+     * @param converter non-null application conversion
+     * @return converted result, or null when absent or empty
+     * @throws NullPointerException if converter is null
+     * @throws XmlException if parsing or a resource limit fails
+     */
+    default <T> T attributeWith(final String name, final Function<? super String, ? extends T> converter) {
+        Objects.requireNonNull(converter, "converter");
+        final String text = attribute(name, String.class);
+        return text == null ? null : converter.apply(text);
+    }
 
     /**
      * Returns the tag name of the element the cursor is positioned at.

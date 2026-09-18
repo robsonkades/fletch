@@ -157,8 +157,8 @@ class TypeConverterTest {
     @DisplayName("unsupported target types fail fast with XmlException")
     void rejectsUnsupportedTypes() {
         XmlException e = assertThrows(XmlException.class,
-                () -> convert("2026-01-15", java.time.LocalDate.class));
+                () -> convert("value", Object.class));
 
-        assertTrue(e.getMessage().contains("java.time.LocalDate"));
+        assertTrue(e.getMessage().contains("java.lang.Object"));
     }
 }

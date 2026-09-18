@@ -16,8 +16,19 @@
 package io.github.robsonkades.fletch;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Period;
+import java.time.ZonedDateTime;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Fast, allocation-minimal conversion of raw XML value bytes to Java types.
@@ -26,9 +37,9 @@ import java.time.Instant;
  * {@link XmlCursor#firstOf} and {@link XmlCursor#attribute} convert through
  * {@link #convert}, and the mapping engine's {@link XmlValue} accessors
  * delegate to the same parsers. Numeric, boolean and temporal targets are
- * parsed directly from the value bytes — no intermediate {@code String}
- * exists unless the target type is {@code String} itself or a rare form
- * falls back to the JDK parser for an authoritative result or error.
+ * parsed directly from the value bytes where a byte parser exists. Floating
+ * point, additional temporal types, big integers, UUIDs and enums use the JDK's
+ * text parsers; uncommon decimal and instant forms also delegate to the JDK.
  *
  * <p>An empty span uniformly converts to {@code null} — including for
  * {@code String} — per the {@link XmlCursor} contract.
@@ -63,13 +74,11 @@ final class TypeConverter {
      * @param s    the start of the value span (inclusive)
      * @param e    the end of the value span (exclusive); an empty span
      *             converts to {@code null}
-     * @param type one of {@code String}, {@code Integer}, {@code Long},
-     *             {@code BigDecimal}, {@code Double}, {@code Boolean},
-     *             {@code Instant}, or any {@code Enum} class
+     * @param type a target supported by {@link XmlCursor#value(String, Class)}
      * @return the converted value, or {@code null} for an empty span
      * @throws XmlException for unsupported target types or invalid boolean text
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings("unchecked")
     static <T> T convert(final byte[] a, final int s, final int e, final Class<T> type) {
         if (s >= e) return null;
         if (type == String.class) return (T) str(a, s, e);
@@ -80,11 +89,69 @@ final class TypeConverter {
         if (type == Double.class) return (T) Double.valueOf(Double.parseDouble(str(a, s, e)));
         if (type == Boolean.class) return (T) (parseBoolean(a, s, e) ? Boolean.TRUE : Boolean.FALSE);
         if (type == Instant.class) return (T) parseInstant(a, s, e);
+        if (type == Byte.class || type == byte.class) return (T) Byte.valueOf(toByte(parseInt(a, s, e)));
+        if (type == Short.class || type == short.class) return (T) Short.valueOf(toShort(parseInt(a, s, e)));
+        if (type == int.class) return (T) Integer.valueOf(parseInt(a, s, e));
+        if (type == long.class) return (T) Long.valueOf(parseLong(a, s, e));
+        if (type == double.class) return (T) Double.valueOf(Double.parseDouble(str(a, s, e)));
+        if (type == boolean.class) return (T) Boolean.valueOf(parseBoolean(a, s, e));
 
-        // Enum: last resort — rare in extraction hot paths
-        if (type.isEnum()) return (T) Enum.valueOf((Class<Enum>) type, str(a, s, e));
+        return convertText(str(a, s, e), type);
+    }
 
+    /** Default-method bridge: preserves existing XmlValue implementations and byte accessors. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static <T> T convert(final XmlValue value, final Class<T> type) {
+        Objects.requireNonNull(type, "type");
+        if (type == String.class) return (T) value.asString();
+        if (type == Integer.class || type == int.class) return (T) Integer.valueOf(value.asInt());
+        if (type == Long.class || type == long.class) return (T) Long.valueOf(value.asLong());
+        if (type == BigDecimal.class) return (T) value.asDecimal();
+        if (type == Double.class || type == double.class) return (T) Double.valueOf(value.asDouble());
+        if (type == Boolean.class || type == boolean.class) return (T) Boolean.valueOf(value.asBoolean());
+        if (type == Instant.class) return (T) value.asInstant();
+        if (type == Byte.class || type == byte.class) return (T) Byte.valueOf(toByte(value.asInt()));
+        if (type == Short.class || type == short.class) return (T) Short.valueOf(toShort(value.asInt()));
+        if (type.isEnum()) return (T) value.asEnum((Class) type);
+        return convertText(value.asString(), type);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static <T> T convertText(final String text, final Class<T> type) {
+        Objects.requireNonNull(type, "type");
+        if (type == Float.class || type == float.class) return (T) Float.valueOf(text);
+        if (type == BigInteger.class) return (T) new BigInteger(text);
+        if (type == Character.class || type == char.class) {
+            if (text.length() != 1 || Character.isSurrogate(text.charAt(0))) {
+                throw new IllegalArgumentException("Expected one non-surrogate UTF-16 character: " + text);
+            }
+            return (T) Character.valueOf(text.charAt(0));
+        }
+        if (type == LocalDate.class) return (T) LocalDate.parse(text);
+        if (type == LocalTime.class) return (T) LocalTime.parse(text);
+        if (type == LocalDateTime.class) return (T) LocalDateTime.parse(text);
+        if (type == OffsetTime.class) return (T) OffsetTime.parse(text);
+        if (type == OffsetDateTime.class) return (T) OffsetDateTime.parse(text);
+        if (type == ZonedDateTime.class) return (T) ZonedDateTime.parse(text);
+        if (type == Duration.class) return (T) Duration.parse(text);
+        if (type == Period.class) return (T) Period.parse(text);
+        if (type == UUID.class) return (T) UUID.fromString(text);
+        if (type.isEnum()) return (T) Enum.valueOf((Class<Enum>) type, text);
         throw new XmlException("Unsupported target type for conversion: " + type.getName());
+    }
+
+    private static byte toByte(final int value) {
+        if (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) {
+            throw new NumberFormatException("Value out of range for byte: " + value);
+        }
+        return (byte) value;
+    }
+
+    private static short toShort(final int value) {
+        if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) {
+            throw new NumberFormatException("Value out of range for short: " + value);
+        }
+        return (short) value;
     }
 
     /**

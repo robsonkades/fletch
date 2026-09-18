@@ -177,7 +177,7 @@ cursor and a push-style mapping:
 | `XmlBinding<D>` / `XmlValue` | A per-path binding and the lazily-decoded value it receives |
 | `XmlException` | Parse, resource-limit and I/O failures; conversion exceptions retain their Java type |
 
-The cursor offers six operations:
+The cursor offers these operations:
 
 | Method | Purpose |
 |---|---|
@@ -186,20 +186,54 @@ The cursor offers six operations:
 | `value(name, type)` | Read a child's text converted to `type`; `null` if absent or empty |
 | `firstOf(type, names...)` | Read whichever of several alternative elements is present (`xsd:choice`) |
 | `attribute(name, type)` | Read an attribute of the current element; `null` if absent or empty |
+| `valueWith(name, converter)` | Read a child's text using your conversion function |
+| `firstOfWith(converter, names...)` | Convert the first matching alternative in document order |
+| `attributeWith(name, converter)` | Read an attribute using your conversion function |
 | `skip()` | Discard the current element and its whole subtree |
 
 ### Supported value types
 
 | Type | Format |
 |---|---|
-| `String` | as-is, surrounding whitespace trimmed |
-| `Integer`, `Long`, `Double`, `BigDecimal` | standard Java number syntax |
+| `String` | decoded text; element text is trimmed, attributes are not trimmed |
+| `Byte`, `Short`, `Integer`, `Long`, `BigInteger` | signed decimal integers; bounded types reject overflow |
+| `Float`, `Double`, `BigDecimal` | Java number syntax; floating-point types also accept NaN and infinities |
 | `Boolean` | `true` / `false` (case-insensitive), `1` / `0` |
+| `Character` | one non-surrogate UTF-16 character; supplementary characters require `String` |
 | `Instant` | ISO-8601, e.g. `2026-01-15T10:30:00Z` |
+| `LocalDate`, `LocalTime`, `LocalDateTime` | ISO local date/time, without a timezone |
+| `OffsetTime`, `OffsetDateTime`, `ZonedDateTime` | ISO time/date-time with an offset or zone, following the JDK parser |
+| `Duration`, `Period` | ISO duration (`PT2H30M`) or calendar period (`P1Y2M`) |
+| `UUID` | `UUID.fromString`, e.g. `123e4567-e89b-12d3-a456-426614174000` |
 | any `enum` | matched by constant name |
 
 Absent elements, empty text and empty attributes uniformly convert to `null` — including
 for `String`.
+
+Primitive class tokens (`int.class`, `boolean.class`, etc.) are aliases for their
+wrapper classes. Results still can be `null`; unboxing an absent value throws.
+Mappings can request any built-in type with `value.as(LocalDate.class)` while
+retaining the existing `asInt()`, `asDecimal()` and other specialized accessors.
+
+For a custom format or a domain type, pass a reusable `Function`:
+
+```java
+DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/uuuu", Locale.ROOT)
+        .withResolverStyle(ResolverStyle.STRICT);
+Function<String, LocalDate> readDate = text -> LocalDate.parse(text, dateFormat);
+
+LocalDate date = cursor.valueWith("date", readDate);
+// The same function in a mapping:
+XmlMapping<LocalDate> mapping = Xml.mapping(() -> new LocalDate[1])
+        .text("/order/date", (draft, value) -> draft[0] = value.convert(readDate))
+        .build(draft -> draft[0]);
+```
+
+Converters receive decoded text, run only for present, non-empty values, and may
+return `null`. Their exceptions propagate unchanged. See the
+[conversion guide](docs/value-conversions.md) for complete examples and contracts.
+These additional types and custom conversion methods are unreleased; Maven Central
+1.3.0 contains the previous set of conversions.
 
 ### Declarative mappings
 

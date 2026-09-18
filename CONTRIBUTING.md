@@ -33,6 +33,7 @@ First off, **thank you** for considering a contribution to Fletch! Your support 
 - Target Java 17 (`maven.compiler.release` in `pom.xml`).
 - Document every public type and method with Javadoc, including `{@link ...}` tags and code examples when appropriate.
 - Keep behavioral contracts explicit: absence is `null` / empty list, parse failures use `XmlException`, conversion errors retain their Java exception type, and reads tolerate children in any order.
+- Custom value converters receive already-decoded text and are not invoked for absent or empty values. Preserve element trimming, attribute normalization without trimming, and propagation of application exceptions. See [value conversions](docs/value-conversions.md).
 - If you modify `pom.xml`, ensure file structure and indentation remain consistent.
 
 ## Pull Request Checklist
