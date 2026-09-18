@@ -78,12 +78,14 @@ final class XmlMappingEngine<T> extends ByteScanner {
 
     // Canonicalization cache for XmlValue.asCanonical(): open-addressed,
     // bounded, lazily allocated so mappings that never canonicalize pay nothing.
-    private static final int CANON_SIZE = 1024;
+    private static final int CANON_INITIAL_SIZE = 16;
+    private static final int CANON_MAX_SIZE = 1024;
     private static final int CANON_MAX_LEN = 64;
     private static final int CANON_PROBES = 8;
     private long[] canonHash;
     private byte[][] canonBytes;
     private String[] canonVal;
+    private int canonCount;
 
     private final Val val = new Val();
 
@@ -368,27 +370,63 @@ final class XmlMappingEngine<T> extends ByteScanner {
             return new String(a, s, len, StandardCharsets.UTF_8);
         }
         if (canonVal == null) {
-            canonHash = new long[CANON_SIZE];
-            canonBytes = new byte[CANON_SIZE][];
-            canonVal = new String[CANON_SIZE];
+            canonHash = new long[CANON_INITIAL_SIZE];
+            canonBytes = new byte[CANON_INITIAL_SIZE][];
+            canonVal = new String[CANON_INITIAL_SIZE];
         }
-        final long h = Swar.hash(a, s, len);
-        int idx = (int) h & (CANON_SIZE - 1);
-        for (int probe = 0; probe < CANON_PROBES; probe++) {
-            final String hit = canonVal[idx];
-            if (hit == null) {
-                canonHash[idx] = h;
-                canonBytes[idx] = Arrays.copyOfRange(a, s, e);
-                canonVal[idx] = new String(a, s, len, StandardCharsets.UTF_8);
-                return canonVal[idx];
+        // Mix the fingerprint locally so short values use more than their first byte.
+        final long h = Long.rotateRight(Swar.hash(a, s, len) * 0x9E3779B97F4A7C15L, 32);
+        while (true) {
+            final int size = canonVal.length;
+            final int mask = size - 1;
+            int idx = (int) h & mask;
+            for (int probe = 0; probe < CANON_PROBES; probe++) {
+                final String hit = canonVal[idx];
+                if (hit == null) {
+                    if (size < CANON_MAX_SIZE && canonCount >= size / 2) break;
+                    canonHash[idx] = h;
+                    canonBytes[idx] = Arrays.copyOfRange(a, s, e);
+                    canonVal[idx] = new String(a, s, len, StandardCharsets.UTF_8);
+                    canonCount++;
+                    return canonVal[idx];
+                }
+                if (canonHash[idx] == h && canonBytes[idx].length == len
+                        && Arrays.equals(canonBytes[idx], 0, len, a, s, e)) {
+                    return hit;
+                }
+                idx = (idx + 1) & mask;
             }
-            if (canonHash[idx] == h && canonBytes[idx].length == len
-                    && Arrays.equals(canonBytes[idx], 0, len, a, s, e)) {
-                return hit;
-            }
-            idx = (idx + 1) & (CANON_SIZE - 1);
+            if (size == CANON_MAX_SIZE) return new String(a, s, len, StandardCharsets.UTF_8);
+            growCanonicalCache();
         }
-        return new String(a, s, len, StandardCharsets.UTF_8);
+    }
+
+    private void growCanonicalCache() {
+        final long[] oldHash = canonHash;
+        final byte[][] oldBytes = canonBytes;
+        final String[] oldVal = canonVal;
+        final int oldMask = oldVal.length - 1;
+        final int size = oldVal.length << 1;
+        final long[] hashes = new long[size];
+        final byte[][] bytes = new byte[size][];
+        final String[] values = new String[size];
+        // Below the maximum size, occupancy never exceeds one half. Start
+        // after a hole to preserve cluster order, including wraparound;
+        // doubling then cannot increase an existing entry's probe distance.
+        int start = 0;
+        while (oldVal[start] != null) start++;
+        for (int offset = 1; offset <= oldVal.length; offset++) {
+            final int from = (start + offset) & oldMask;
+            if (oldVal[from] == null) continue;
+            int to = (int) oldHash[from] & (size - 1);
+            while (values[to] != null) to = (to + 1) & (size - 1);
+            hashes[to] = oldHash[from];
+            bytes[to] = oldBytes[from];
+            values[to] = oldVal[from];
+        }
+        canonHash = hashes;
+        canonBytes = bytes;
+        canonVal = values;
     }
 
     // ------------------------------------------------------------------ value flyweight

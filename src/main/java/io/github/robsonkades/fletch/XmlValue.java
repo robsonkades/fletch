@@ -58,13 +58,15 @@ public interface XmlValue {
     /**
      * Decodes the value as a {@code String}, deduplicated through the
      * engine's canonicalization cache: repeated occurrences of the same
-     * bytes return the same instance for the lifetime of the engine.
+     * cached bytes return the same instance for the lifetime of the engine.
      *
      * <p>Intended for low-cardinality fields — state codes, units, currency
      * and status codes — where it removes recurring {@code String} churn
      * across large document batches. The cache is bounded (values up to 64
-     * bytes, a fixed number of slots); anything beyond it falls back to a
-     * fresh {@code String}, so correctness never depends on cache hits.
+     * bytes, initially 16 slots growing to at most 1,024); an oversized value
+     * or an exhausted probe window falls back to a fresh {@code String}, so
+     * correctness never depends on cache hits. Growth preserves cached
+     * instances. The cache belongs to one engine and is reused across documents.
      *
      * @return the decoded text, canonicalized per engine
      */
