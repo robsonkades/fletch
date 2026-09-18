@@ -57,9 +57,16 @@ version. Preserve local benchmark evidence before using `clean`.
 
 Publication is a separate operation: after the preparation is merged, a maintainer
 can dispatch the **Release** workflow on `master` with that version. It signs and
-publishes the core to Maven Central, then creates the GitHub release with the
-prepared notes followed by generated PR notes. The optional generator and example
-remain source-built tools and are not deployed by that workflow.
+publishes the core to Maven Central and waits for Central to report `PUBLISHED`.
+It then creates the GitHub release with the prepared notes followed by generated
+PR notes. The optional generator and example remain source-built tools and are
+not deployed by that workflow.
+
+The publishing plugin waits up to 30 minutes for publication to complete. A failure
+or timeout stops the workflow before GitHub release creation. Since the version tag
+is pushed before publication, inspect the existing deployment in the Central Portal
+and the existing tag before retrying. The workflow rejects a version whose tag
+already exists. See the [plugin's publication wait options](https://central.sonatype.org/publish/publish-portal-maven/#wait-for-publishing).
 
 ---
 
