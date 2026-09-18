@@ -33,4 +33,4 @@ jobs:
 
       # gpg.skip: artifact signing only happens in the release workflow
       - name: Build and test
-        run: mvn -B -ntp verify -Dgpg.skip=true
+        run: mvn -B -ntp -f codegen/pom.xml verify -Dgpg.skip=true

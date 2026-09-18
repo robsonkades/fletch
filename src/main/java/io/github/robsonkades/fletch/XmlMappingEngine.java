@@ -311,7 +311,6 @@ final class XmlMappingEngine<T> extends ByteScanner {
      * window. Stops as soon as every declared attribute has been seen.
      */
     private void bindAttrs(final int t, final int from, final int gt) {
-        final int aBase = mapping.attrBase[t];
         final int cnt = mapping.attrCount[t];
         int remaining = cnt;
         int j = from;
@@ -338,14 +337,10 @@ final class XmlMappingEngine<T> extends ByteScanner {
             if (ve < 0) throw fail("Unterminated attribute value", vs);
             j = ve + 1;
             final long h = Swar.hash(b, as, ae - as);
-            for (int k = aBase; k < aBase + cnt; k++) {
-                if (mapping.attrHash[k] == h && mapping.attrNameLen[k] == ae - as
-                        && Arrays.equals(mapping.blob, mapping.attrNameOff[k], mapping.attrNameOff[k] + (ae - as),
-                                b, as, ae)) {
-                    if (ve > vs) bindAttrValue(mapping.attrField[k], vs, ve);
-                    remaining--;
-                    break;
-                }
+            final int field = mapping.attribute(t, h, b, as, ae - as);
+            if (field >= 0) {
+                if (ve > vs) bindAttrValue(field, vs, ve);
+                remaining--;
             }
         }
     }

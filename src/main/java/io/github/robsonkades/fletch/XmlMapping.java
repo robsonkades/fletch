@@ -147,6 +147,37 @@ public final class XmlMapping<T> {
     final long[] groupReset;
 
     private final AtomicReferenceArray<XmlMappingEngine<T>> pool = new AtomicReferenceArray<>(8);
+    private final XmlMappingCode generated;
+
+    XmlMapping(final XmlMapping<T> source, final XmlMappingCode generated) {
+        this.generated = generated;
+        rootDraft = source.rootDraft;
+        finisher = source.finisher;
+        bindings = source.bindings;
+        onceMask = source.onceMask;
+        requiredMask = source.requiredMask;
+        strictSkip = source.strictSkip;
+        transBase = source.transBase;
+        transCount = source.transCount;
+        transHash = source.transHash;
+        transTarget = source.transTarget;
+        transNameOff = source.transNameOff;
+        transNameLen = source.transNameLen;
+        stateNameOff = source.stateNameOff;
+        stateNameLen = source.stateNameLen;
+        stateText = source.stateText;
+        stateGroup = source.stateGroup;
+        attrBase = source.attrBase;
+        attrCount = source.attrCount;
+        attrHash = source.attrHash;
+        attrField = source.attrField;
+        attrNameOff = source.attrNameOff;
+        attrNameLen = source.attrNameLen;
+        blob = source.blob;
+        groupDraft = source.groupDraft;
+        groupCommit = source.groupCommit;
+        groupReset = source.groupReset;
+    }
 
     /**
      * Starts a mapping definition.
@@ -282,12 +313,25 @@ public final class XmlMapping<T> {
      * a collision can never misroute. Returns the target state or -1.
      */
     int transition(final int state, final long h, final byte[] b, final int off, final int len) {
+        if (generated != null) return generated.transition(state, h, b, off, len);
         int k = transBase[state];
         final int end = k + transCount[state];
         for (; k < end; k++) {
             if (transHash[k] == h && transNameLen[k] == len
                     && java.util.Arrays.equals(blob, transNameOff[k], transNameOff[k] + len, b, off, off + len)) {
                 return transTarget[k];
+            }
+        }
+        return -1;
+    }
+
+    int attribute(final int state, final long h, final byte[] b, final int off, final int len) {
+        if (generated != null) return generated.attribute(state, h, b, off, len);
+        final int end = attrBase[state] + attrCount[state];
+        for (int k = attrBase[state]; k < end; k++) {
+            if (attrHash[k] == h && attrNameLen[k] == len
+                    && java.util.Arrays.equals(blob, attrNameOff[k], attrNameOff[k] + len, b, off, off + len)) {
+                return attrField[k];
             }
         }
         return -1;
@@ -683,6 +727,7 @@ public final class XmlMapping<T> {
 
     @SuppressWarnings("unchecked")
     private XmlMapping(final Spec spec, final Function<?, T> finish) {
+        this.generated = null;
         this.rootDraft = (Supplier<Object>) spec.rootDraft;
         this.finisher = (Function<Object, T>) finish;
         this.bindings = spec.fields.toArray(new XmlBinding[0]);
