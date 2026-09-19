@@ -432,6 +432,11 @@ Fletch is designed for high-throughput extraction of small-to-medium documents
 - prefer the `byte[]` overload when the document is already in memory — it is
   scanned in place with zero copying.
 
+For the unreleased conversion and presence APIs, see the
+[measured performance](docs/benchmark-results/value-api.md) and
+[optimization investigation](docs/benchmark-results/value-api-improvements.md),
+including allocation costs, uncertainty and reproduction instructions.
+
 ## Contributing
 
 Bug reports, feature requests and pull requests are welcome — see

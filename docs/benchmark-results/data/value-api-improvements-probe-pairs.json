@@ -1,0 +1,3036 @@
+{
+  "schedule": {
+    "startedUtc": "2026-09-19T00:41:16.9691477Z",
+    "java": "openjdk version \"17.0.20.1\" 2026-08-18\r\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\r\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+    "os": "Microsoft Windows 10.0.26200",
+    "processors": 24,
+    "seed": 20260919,
+    "rounds": 4,
+    "forksPerInvocation": 1,
+    "threads": [
+      1
+    ],
+    "warmupIterations": 10,
+    "measurementIterations": 5,
+    "iterationSeconds": 1,
+    "jvmArguments": "-Xms256m -Xmx256m",
+    "affinityMask": 340,
+    "effectiveRunnerAffinity": 340,
+    "artifacts": [
+      {
+        "path": "C:\\git\\fletch\\target\\value-api-improvements\\probe-artifacts\\candidate-benchmarks.jar",
+        "sha256": "392EC5C6467132ECBBD8EC9D9EABFC763ABFA1274CA696375FA6205012B7ABC2",
+        "variant": "candidate"
+      },
+      {
+        "path": "C:\\git\\fletch\\target\\value-api-improvements\\probe-artifacts\\published-benchmarks.jar",
+        "sha256": "AFD8061284080871BBF178DA710F5F791107087346CBAE29126B384720DAEAA3",
+        "variant": "control"
+      }
+    ],
+    "schedule": [
+      {
+        "round": 0,
+        "caseIndex": 1,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "50"
+          }
+        }
+      },
+      {
+        "round": 0,
+        "caseIndex": 1,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "50"
+          }
+        }
+      },
+      {
+        "round": 0,
+        "caseIndex": 0,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 0,
+        "caseIndex": 0,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 0,
+        "caseIndex": 4,
+        "variant": "control",
+        "case": {
+          "benchmark": "ExtractionBenchmark.plan",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 0,
+        "caseIndex": 4,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ExtractionBenchmark.plan",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 0,
+        "caseIndex": 2,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.nativeInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 0,
+        "caseIndex": 2,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.nativeInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 0,
+        "caseIndex": 3,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ExtractionBenchmark.cursorDocOrder",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 0,
+        "caseIndex": 3,
+        "variant": "control",
+        "case": {
+          "benchmark": "ExtractionBenchmark.cursorDocOrder",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 1,
+        "caseIndex": 2,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.nativeInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 1,
+        "caseIndex": 2,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.nativeInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 1,
+        "caseIndex": 3,
+        "variant": "control",
+        "case": {
+          "benchmark": "ExtractionBenchmark.cursorDocOrder",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 1,
+        "caseIndex": 3,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ExtractionBenchmark.cursorDocOrder",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 1,
+        "caseIndex": 4,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ExtractionBenchmark.plan",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 1,
+        "caseIndex": 4,
+        "variant": "control",
+        "case": {
+          "benchmark": "ExtractionBenchmark.plan",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 1,
+        "caseIndex": 0,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 1,
+        "caseIndex": 0,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 1,
+        "caseIndex": 1,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "50"
+          }
+        }
+      },
+      {
+        "round": 1,
+        "caseIndex": 1,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "50"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "caseIndex": 4,
+        "variant": "control",
+        "case": {
+          "benchmark": "ExtractionBenchmark.plan",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "caseIndex": 4,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ExtractionBenchmark.plan",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "caseIndex": 3,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ExtractionBenchmark.cursorDocOrder",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "caseIndex": 3,
+        "variant": "control",
+        "case": {
+          "benchmark": "ExtractionBenchmark.cursorDocOrder",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "caseIndex": 2,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.nativeInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "caseIndex": 2,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.nativeInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "caseIndex": 1,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "50"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "caseIndex": 1,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "50"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "caseIndex": 0,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "caseIndex": 0,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 3,
+        "caseIndex": 3,
+        "variant": "control",
+        "case": {
+          "benchmark": "ExtractionBenchmark.cursorDocOrder",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 3,
+        "caseIndex": 3,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ExtractionBenchmark.cursorDocOrder",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 3,
+        "caseIndex": 2,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.nativeInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 3,
+        "caseIndex": 2,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.nativeInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 3,
+        "caseIndex": 0,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 3,
+        "caseIndex": 0,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "100"
+          }
+        }
+      },
+      {
+        "round": 3,
+        "caseIndex": 1,
+        "variant": "control",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "50"
+          }
+        }
+      },
+      {
+        "round": 3,
+        "caseIndex": 1,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ValueApiBenchmark.existsThenInteger",
+          "params": {
+            "presentPercent": "50"
+          }
+        }
+      },
+      {
+        "round": 3,
+        "caseIndex": 4,
+        "variant": "candidate",
+        "case": {
+          "benchmark": "ExtractionBenchmark.plan",
+          "params": {
+            "dets": "50"
+          }
+        }
+      },
+      {
+        "round": 3,
+        "caseIndex": 4,
+        "variant": "control",
+        "case": {
+          "benchmark": "ExtractionBenchmark.plan",
+          "params": {
+            "dets": "50"
+          }
+        }
+      }
+    ]
+  },
+  "summary": [
+    {
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "candidateBenchmark": "ValueApiBenchmark.existsThenInteger",
+      "params": {
+        "presentPercent": "100"
+      },
+      "threads": 1,
+      "pairs": 4,
+      "controlScore": 9187.7497663479,
+      "candidateScore": 9490.638419598057,
+      "unit": "ops/ms",
+      "changePercent": 3.1953773751960624,
+      "lower95Percent": -7.513497287130521,
+      "upper95Percent": 15.144216715281678,
+      "pairChangesPercent": [
+        -6.097808945863791,
+        10.639132530828954,
+        5.417567307215898,
+        3.5484247220810783
+      ],
+      "controlBytes": 224.00063978153042,
+      "candidateBytes": 224.00063143097276
+    },
+    {
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "candidateBenchmark": "ValueApiBenchmark.existsThenInteger",
+      "params": {
+        "presentPercent": "50"
+      },
+      "threads": 1,
+      "pairs": 4,
+      "controlScore": 9819.93058903222,
+      "candidateScore": 9766.848821108857,
+      "unit": "ops/ms",
+      "changePercent": -0.5369758511412415,
+      "lower95Percent": -9.821537362082633,
+      "upper95Percent": 9.70350218275724,
+      "pairChangesPercent": [
+        0.6945662714470613,
+        -6.711740087107964,
+        7.708496546009891,
+        -3.269452230268155
+      ],
+      "controlBytes": 256.0006004553567,
+      "candidateBytes": 256.0006053517959
+    },
+    {
+      "benchmark": "ValueApiBenchmark.nativeInteger",
+      "candidateBenchmark": "ValueApiBenchmark.nativeInteger",
+      "params": {
+        "presentPercent": "100"
+      },
+      "threads": 1,
+      "pairs": 4,
+      "controlScore": 10131.424814297312,
+      "candidateScore": 10074.73615322115,
+      "unit": "ops/ms",
+      "changePercent": -0.6676866354663913,
+      "lower95Percent": -5.287672299206781,
+      "upper95Percent": 4.177657944597923,
+      "pairChangesPercent": [
+        -3.655300741718104,
+        3.241516267452993,
+        -2.128249964363882,
+        0.005214600755043541
+      ],
+      "controlBytes": 224.00058314881568,
+      "candidateBytes": 224.00058665407664
+    },
+    {
+      "benchmark": "ExtractionBenchmark.cursorDocOrder",
+      "candidateBenchmark": "ExtractionBenchmark.cursorDocOrder",
+      "params": {
+        "dets": "50"
+      },
+      "threads": 1,
+      "pairs": 4,
+      "controlScore": 29.66987786392474,
+      "candidateScore": 29.796678984495948,
+      "unit": "ops/ms",
+      "changePercent": 0.3809984380384046,
+      "lower95Percent": -6.219671106983727,
+      "upper95Percent": 7.446251963057948,
+      "pairChangesPercent": [
+        2.015051890599673,
+        -0.07361490443350549,
+        -5.12986755539605,
+        4.9861732097362665
+      ],
+      "controlBytes": 32608.199023110545,
+      "candidateBytes": 32408.201042171084
+    },
+    {
+      "benchmark": "ExtractionBenchmark.plan",
+      "candidateBenchmark": "ExtractionBenchmark.plan",
+      "params": {
+        "dets": "50"
+      },
+      "threads": 1,
+      "pairs": 4,
+      "controlScore": 26.93535227812187,
+      "candidateScore": 27.21693368172462,
+      "unit": "ops/ms",
+      "changePercent": 1.0162788973590908,
+      "lower95Percent": -1.97632928635183,
+      "upper95Percent": 4.100249745577611,
+      "pairChangesPercent": [
+        1.9605661387512852,
+        2.298202924049453,
+        -1.7799971807762605,
+        1.640146191578884
+      ],
+      "controlBytes": 14208.21884950594,
+      "candidateBytes": 14208.217017731244
+    }
+  ],
+  "completed": [
+    {
+      "round": 0,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:41:17.0001603Z",
+      "endedUtc": "2026-09-19T00:41:32.8767782Z",
+      "resultFile": "round-0-case-1-candidate.json",
+      "score": 10246.64673267741,
+      "unit": "ops/ms",
+      "bytesPerOperation": 256.00057514673904
+    },
+    {
+      "round": 0,
+      "caseIndex": 1,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:41:32.8906068Z",
+      "endedUtc": "2026-09-19T00:41:48.5770246Z",
+      "resultFile": "round-0-case-1-control.json",
+      "score": 10175.967891906941,
+      "unit": "ops/ms",
+      "bytesPerOperation": 256.00057654848155
+    },
+    {
+      "round": 0,
+      "caseIndex": 0,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:41:48.5784623Z",
+      "endedUtc": "2026-09-19T00:42:04.2083224Z",
+      "resultFile": "round-0-case-0-control.json",
+      "score": 9070.223303097062,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00064811827178
+    },
+    {
+      "round": 0,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:42:04.209515Z",
+      "endedUtc": "2026-09-19T00:42:19.8386719Z",
+      "resultFile": "round-0-case-0-candidate.json",
+      "score": 8517.138415110987,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00069112348766
+    },
+    {
+      "round": 0,
+      "caseIndex": 4,
+      "variant": "control",
+      "benchmark": "ExtractionBenchmark.plan",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:42:19.8398592Z",
+      "endedUtc": "2026-09-19T00:42:35.4591415Z",
+      "resultFile": "round-0-case-4-control.json",
+      "score": 28.061786315213887,
+      "unit": "ops/ms",
+      "bytesPerOperation": 14208.211164524162
+    },
+    {
+      "round": 0,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "benchmark": "ExtractionBenchmark.plan",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:42:35.4602063Z",
+      "endedUtc": "2026-09-19T00:42:51.1442254Z",
+      "resultFile": "round-0-case-4-candidate.json",
+      "score": 28.611956195638715,
+      "unit": "ops/ms",
+      "bytesPerOperation": 14208.20686890409
+    },
+    {
+      "round": 0,
+      "caseIndex": 2,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.nativeInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:42:51.1454331Z",
+      "endedUtc": "2026-09-19T00:43:06.7688576Z",
+      "resultFile": "round-0-case-2-control.json",
+      "score": 9482.255132855544,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00062240595722
+    },
+    {
+      "round": 0,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.nativeInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:43:06.769815Z",
+      "endedUtc": "2026-09-19T00:43:22.434411Z",
+      "resultFile": "round-0-case-2-candidate.json",
+      "score": 9135.650190652672,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00064393081706
+    },
+    {
+      "round": 0,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "benchmark": "ExtractionBenchmark.cursorDocOrder",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:43:22.4367313Z",
+      "endedUtc": "2026-09-19T00:43:38.1474714Z",
+      "resultFile": "round-0-case-3-candidate.json",
+      "score": 30.444138713191393,
+      "unit": "ops/ms",
+      "bytesPerOperation": 32408.199493845932
+    },
+    {
+      "round": 0,
+      "caseIndex": 3,
+      "variant": "control",
+      "benchmark": "ExtractionBenchmark.cursorDocOrder",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:43:38.1486103Z",
+      "endedUtc": "2026-09-19T00:43:53.8368767Z",
+      "resultFile": "round-0-case-3-control.json",
+      "score": 29.84279098915668,
+      "unit": "ops/ms",
+      "bytesPerOperation": 33208.19844778172
+    },
+    {
+      "round": 1,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.nativeInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:43:53.8377813Z",
+      "endedUtc": "2026-09-19T00:44:09.5267045Z",
+      "resultFile": "round-1-case-2-candidate.json",
+      "score": 10849.04791542792,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.0005444665222
+    },
+    {
+      "round": 1,
+      "caseIndex": 2,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.nativeInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:44:09.5276979Z",
+      "endedUtc": "2026-09-19T00:44:25.280887Z",
+      "resultFile": "round-1-case-2-control.json",
+      "score": 10508.415904434072,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00056370210365
+    },
+    {
+      "round": 1,
+      "caseIndex": 3,
+      "variant": "control",
+      "benchmark": "ExtractionBenchmark.cursorDocOrder",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:44:25.2820176Z",
+      "endedUtc": "2026-09-19T00:44:41.0269357Z",
+      "resultFile": "round-1-case-3-control.json",
+      "score": 29.46477856721065,
+      "unit": "ops/ms",
+      "bytesPerOperation": 32408.200546721277
+    },
+    {
+      "round": 1,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "benchmark": "ExtractionBenchmark.cursorDocOrder",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:44:41.0278867Z",
+      "endedUtc": "2026-09-19T00:44:56.8865325Z",
+      "resultFile": "round-1-case-3-candidate.json",
+      "score": 29.443088098626855,
+      "unit": "ops/ms",
+      "bytesPerOperation": 32408.200083323143
+    },
+    {
+      "round": 1,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "benchmark": "ExtractionBenchmark.plan",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:44:56.8875482Z",
+      "endedUtc": "2026-09-19T00:45:12.6603832Z",
+      "resultFile": "round-1-case-4-candidate.json",
+      "score": 27.962628428906648,
+      "unit": "ops/ms",
+      "bytesPerOperation": 14208.211512771924
+    },
+    {
+      "round": 1,
+      "caseIndex": 4,
+      "variant": "control",
+      "benchmark": "ExtractionBenchmark.plan",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:45:12.6614321Z",
+      "endedUtc": "2026-09-19T00:45:28.4343829Z",
+      "resultFile": "round-1-case-4-control.json",
+      "score": 27.334427809711666,
+      "unit": "ops/ms",
+      "bytesPerOperation": 14208.21495918571
+    },
+    {
+      "round": 1,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:45:28.4354239Z",
+      "endedUtc": "2026-09-19T00:45:44.1370651Z",
+      "resultFile": "round-1-case-0-candidate.json",
+      "score": 9502.330952461587,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00063608802392
+    },
+    {
+      "round": 1,
+      "caseIndex": 0,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:45:44.1380181Z",
+      "endedUtc": "2026-09-19T00:45:59.9190625Z",
+      "resultFile": "round-1-case-0-control.json",
+      "score": 8588.580491458406,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.0006779937591
+    },
+    {
+      "round": 1,
+      "caseIndex": 1,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:45:59.9200115Z",
+      "endedUtc": "2026-09-19T00:46:15.6511461Z",
+      "resultFile": "round-1-case-1-control.json",
+      "score": 9374.123954122768,
+      "unit": "ops/ms",
+      "bytesPerOperation": 256.00062317499584
+    },
+    {
+      "round": 1,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:46:15.6520511Z",
+      "endedUtc": "2026-09-19T00:46:31.3652624Z",
+      "resultFile": "round-1-case-1-candidate.json",
+      "score": 8744.95711887872,
+      "unit": "ops/ms",
+      "bytesPerOperation": 256.00067186301715
+    },
+    {
+      "round": 2,
+      "caseIndex": 4,
+      "variant": "control",
+      "benchmark": "ExtractionBenchmark.plan",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:46:31.3664495Z",
+      "endedUtc": "2026-09-19T00:46:47.1762934Z",
+      "resultFile": "round-2-case-4-control.json",
+      "score": 26.624106305953184,
+      "unit": "ops/ms",
+      "bytesPerOperation": 14208.22112848178
+    },
+    {
+      "round": 2,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "benchmark": "ExtractionBenchmark.plan",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:46:47.1774404Z",
+      "endedUtc": "2026-09-19T00:47:02.946692Z",
+      "resultFile": "round-2-case-4-candidate.json",
+      "score": 26.150197964300343,
+      "unit": "ops/ms",
+      "bytesPerOperation": 14208.224251283129
+    },
+    {
+      "round": 2,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "benchmark": "ExtractionBenchmark.cursorDocOrder",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:47:02.9476571Z",
+      "endedUtc": "2026-09-19T00:47:18.7588364Z",
+      "resultFile": "round-2-case-3-candidate.json",
+      "score": 28.442549742036533,
+      "unit": "ops/ms",
+      "bytesPerOperation": 32408.20679095047
+    },
+    {
+      "round": 2,
+      "caseIndex": 3,
+      "variant": "control",
+      "benchmark": "ExtractionBenchmark.cursorDocOrder",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:47:18.7609183Z",
+      "endedUtc": "2026-09-19T00:47:34.5825788Z",
+      "resultFile": "round-2-case-3-control.json",
+      "score": 29.980510208146438,
+      "unit": "ops/ms",
+      "bytesPerOperation": 32408.195803706833
+    },
+    {
+      "round": 2,
+      "caseIndex": 2,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.nativeInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:47:34.5834943Z",
+      "endedUtc": "2026-09-19T00:47:50.2007645Z",
+      "resultFile": "round-2-case-2-control.json",
+      "score": 10398.697801660246,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00056745555185
+    },
+    {
+      "round": 2,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.nativeInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:47:50.2016972Z",
+      "endedUtc": "2026-09-19T00:48:05.8781249Z",
+      "resultFile": "round-2-case-2-candidate.json",
+      "score": 10177.387519402104,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00057773280687
+    },
+    {
+      "round": 2,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:48:05.8791265Z",
+      "endedUtc": "2026-09-19T00:48:21.528944Z",
+      "resultFile": "round-2-case-1-candidate.json",
+      "score": 9725.125468665517,
+      "unit": "ops/ms",
+      "bytesPerOperation": 256.0006073837183
+    },
+    {
+      "round": 2,
+      "caseIndex": 1,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:48:21.5300355Z",
+      "endedUtc": "2026-09-19T00:48:37.2233374Z",
+      "resultFile": "round-2-case-1-control.json",
+      "score": 9029.116346927403,
+      "unit": "ops/ms",
+      "bytesPerOperation": 256.0006535186472
+    },
+    {
+      "round": 2,
+      "caseIndex": 0,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:48:37.2244849Z",
+      "endedUtc": "2026-09-19T00:48:52.8882307Z",
+      "resultFile": "round-2-case-0-control.json",
+      "score": 9277.883045646258,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00063360723556
+    },
+    {
+      "round": 2,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:48:52.8900832Z",
+      "endedUtc": "2026-09-19T00:49:08.5132673Z",
+      "resultFile": "round-2-case-0-candidate.json",
+      "score": 9780.518604328916,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00060129792254
+    },
+    {
+      "round": 3,
+      "caseIndex": 3,
+      "variant": "control",
+      "benchmark": "ExtractionBenchmark.cursorDocOrder",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:49:08.5144025Z",
+      "endedUtc": "2026-09-19T00:49:24.1922284Z",
+      "resultFile": "round-3-case-3-control.json",
+      "score": 29.391431691185186,
+      "unit": "ops/ms",
+      "bytesPerOperation": 32408.20129423237
+    },
+    {
+      "round": 3,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "benchmark": "ExtractionBenchmark.cursorDocOrder",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:49:24.1932274Z",
+      "endedUtc": "2026-09-19T00:49:39.8594151Z",
+      "resultFile": "round-3-case-3-candidate.json",
+      "score": 30.856939384129,
+      "unit": "ops/ms",
+      "bytesPerOperation": 32408.1978005648
+    },
+    {
+      "round": 3,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.nativeInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:49:39.8605201Z",
+      "endedUtc": "2026-09-19T00:49:55.5259778Z",
+      "resultFile": "round-3-case-2-candidate.json",
+      "score": 10136.858987401909,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00058048616046
+    },
+    {
+      "round": 3,
+      "caseIndex": 2,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.nativeInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:49:55.5268967Z",
+      "endedUtc": "2026-09-19T00:50:11.2679471Z",
+      "resultFile": "round-3-case-2-control.json",
+      "score": 10136.330418239386,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00057903164992
+    },
+    {
+      "round": 3,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:50:11.2691255Z",
+      "endedUtc": "2026-09-19T00:50:26.9388904Z",
+      "resultFile": "round-3-case-0-candidate.json",
+      "score": 10162.565706490743,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.00059721445686
+    },
+    {
+      "round": 3,
+      "caseIndex": 0,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:50:26.9400204Z",
+      "endedUtc": "2026-09-19T00:50:42.5606862Z",
+      "resultFile": "round-3-case-0-control.json",
+      "score": 9814.312225189879,
+      "unit": "ops/ms",
+      "bytesPerOperation": 224.0005994068553
+    },
+    {
+      "round": 3,
+      "caseIndex": 1,
+      "variant": "control",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:50:42.5616737Z",
+      "endedUtc": "2026-09-19T00:50:58.290759Z",
+      "resultFile": "round-3-case-1-control.json",
+      "score": 10700.514163171762,
+      "unit": "ops/ms",
+      "bytesPerOperation": 256.00054857930223
+    },
+    {
+      "round": 3,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "benchmark": "ValueApiBenchmark.existsThenInteger",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:50:58.2918882Z",
+      "endedUtc": "2026-09-19T00:51:14.0345766Z",
+      "resultFile": "round-3-case-1-candidate.json",
+      "score": 10350.665964213782,
+      "unit": "ops/ms",
+      "bytesPerOperation": 256.00056701370914
+    },
+    {
+      "round": 3,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "benchmark": "ExtractionBenchmark.plan",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:51:14.0357412Z",
+      "endedUtc": "2026-09-19T00:51:29.9006968Z",
+      "resultFile": "round-3-case-4-candidate.json",
+      "score": 26.14295213805276,
+      "unit": "ops/ms",
+      "bytesPerOperation": 14208.225437965837
+    },
+    {
+      "round": 3,
+      "caseIndex": 4,
+      "variant": "control",
+      "benchmark": "ExtractionBenchmark.plan",
+      "threads": 1,
+      "startedUtc": "2026-09-19T00:51:29.9021194Z",
+      "endedUtc": "2026-09-19T00:51:45.8057822Z",
+      "resultFile": "round-3-case-4-control.json",
+      "score": 25.721088681608727,
+      "unit": "ops/ms",
+      "bytesPerOperation": 14208.228145832109
+    }
+  ],
+  "trajectories": [
+    {
+      "round": 0,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "warmupScores": [
+        9299.317,
+        9940.254,
+        9828.109,
+        9805.9,
+        9870.976,
+        10095.221,
+        10356.274,
+        10255.284,
+        10298.395,
+        10230.907
+      ],
+      "measurementScores": [
+        10307.711687651916,
+        10368.458099157808,
+        10270.229230171692,
+        10154.916476818771,
+        10131.918169586857
+      ],
+      "allocationBytes": [
+        256.00056775567276,
+        256.0005674709647,
+        256.00058208597386,
+        256.0005775141814,
+        256.0005809069025
+      ],
+      "gcCounts": [
+        17.0,
+        16.0,
+        17.0,
+        16.0,
+        17.0
+      ],
+      "gcTimeMs": [
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -1.8830138483988956,
+      "jsonSha256": "500EEEC3725EAD911FED0DDC7B4D826181F8A7FFFC158EE681E9B19A9001477A",
+      "logSha256": "4E701B36196E5BEFF057443D22DC1C796E3529A7EB2505748B43158928A358FA"
+    },
+    {
+      "round": 0,
+      "caseIndex": 1,
+      "variant": "control",
+      "warmupScores": [
+        9633.529,
+        10318.592,
+        10244.887,
+        10346.355,
+        10259.665,
+        10146.154,
+        10366.126,
+        10194.511,
+        10167.535,
+        10138.193
+      ],
+      "measurementScores": [
+        9824.96200091787,
+        10217.569286715237,
+        9981.655566608295,
+        10314.450300865145,
+        10541.202304428158
+      ],
+      "allocationBytes": [
+        256.0005932979072,
+        256.00057600541214,
+        256.0005861389992,
+        256.00057593659625,
+        256.0005513634931
+      ],
+      "gcCounts": [
+        16.0,
+        17.0,
+        16.0,
+        17.0,
+        17.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        6.0,
+        6.0,
+        5.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 4.056979160920249,
+      "jsonSha256": "A615227C2A8D128FD47C1E74F5CDD6EDD8A4CAB9DB4945C030F1D5CE62BC85A6",
+      "logSha256": "19F74CA6D759B733FFC81B17924FED53F7E2ECAB20BDC312D346796175ECBF3B"
+    },
+    {
+      "round": 0,
+      "caseIndex": 0,
+      "variant": "control",
+      "warmupScores": [
+        8879.529,
+        9333.431,
+        9193.904,
+        9110.283,
+        9044.039,
+        8880.198,
+        8544.396,
+        8861.304,
+        8993.212,
+        9043.483
+      ],
+      "measurementScores": [
+        8985.677539819213,
+        9028.376058569174,
+        9012.895114131708,
+        9052.434882254336,
+        9271.732920710872
+      ],
+      "allocationBytes": [
+        224.00065520620143,
+        224.00065297414935,
+        224.0006533992776,
+        224.00064891953474,
+        224.00063009219562
+      ],
+      "gcCounts": [
+        13.0,
+        13.0,
+        12.0,
+        13.0,
+        13.0
+      ],
+      "gcTimeMs": [
+        3.0,
+        5.0,
+        4.0,
+        4.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 1.7215126117120283,
+      "jsonSha256": "5AB5C58C472B986E66E701A820D6AD8423104BA18E8A9C9C81E03677B44A60AB",
+      "logSha256": "309C9CA947A72B62834DEDFCAA696BA35B68EE0D62978ED89048F5E39364963B"
+    },
+    {
+      "round": 0,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "warmupScores": [
+        7987.599,
+        8466.84,
+        8453.034,
+        8425.384,
+        8407.036,
+        8491.895,
+        8458.286,
+        8472.131,
+        8480.414,
+        8131.093
+      ],
+      "measurementScores": [
+        8466.10702232687,
+        8460.915188215271,
+        8550.279691511283,
+        8652.60276708819,
+        8455.787406413325
+      ],
+      "allocationBytes": [
+        224.0006934321389,
+        224.00069451986536,
+        224.00069043849834,
+        224.00068518694798,
+        224.00069203998748
+      ],
+      "gcCounts": [
+        12.0,
+        13.0,
+        12.0,
+        12.0,
+        12.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        4.0,
+        4.0,
+        3.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 1.0714699886576584,
+      "jsonSha256": "49A54AACBE53DE3CFDBE858582657EA1BE92C8DB6CC3B6FA21738ABB726A80AD",
+      "logSha256": "B09EA207B4B90EBD1396087B87955451BDCE8973BF6BDDBB0D3186590024642F"
+    },
+    {
+      "round": 0,
+      "caseIndex": 4,
+      "variant": "control",
+      "warmupScores": [
+        26.049,
+        27.679,
+        27.899,
+        28.264,
+        27.016,
+        28.1,
+        28.37,
+        27.26,
+        28.088,
+        28.6
+      ],
+      "measurementScores": [
+        27.900005749330756,
+        27.962266326299908,
+        28.263837060083482,
+        28.131818118304146,
+        28.051004322051156
+      ],
+      "allocationBytes": [
+        14208.21030345801,
+        14208.21294840646,
+        14208.209755754206,
+        14208.211452494146,
+        14208.21136250798
+      ],
+      "gcCounts": [
+        3.0,
+        2.0,
+        3.0,
+        2.0,
+        3.0
+      ],
+      "gcTimeMs": [
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.5738226406019731,
+      "jsonSha256": "7B425D5F656FF7BB6749573E1934FBFFCFB91D4C839AA0A37E4A74CB4982F002",
+      "logSha256": "CD7E1C4615F78C3F826361714157CACB73D702A740DF6474330378B5E679B7E5"
+    },
+    {
+      "round": 0,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "warmupScores": [
+        26.929,
+        28.723,
+        28.773,
+        28.422,
+        28.837,
+        27.533,
+        28.582,
+        28.508,
+        28.493,
+        28.549
+      ],
+      "measurementScores": [
+        28.615741125613102,
+        29.114681080173273,
+        28.904043065228883,
+        27.6472042811017,
+        28.778111426076595
+      ],
+      "allocationBytes": [
+        14208.208107824994,
+        14208.203670163688,
+        14208.205659075224,
+        14208.21254591491,
+        14208.204361541626
+      ],
+      "gcCounts": [
+        2.0,
+        3.0,
+        3.0,
+        2.0,
+        3.0
+      ],
+      "gcTimeMs": [
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        2.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -2.260691068490517,
+      "jsonSha256": "7CDDD04A0100082A154CC0A0C02943B1C793CF095E18AD05DF3EF0245E9BD22A",
+      "logSha256": "4054A1918E74F100E093F1F08446352FF4BDC54B9A1FDE4722C527F685D98DBE"
+    },
+    {
+      "round": 0,
+      "caseIndex": 2,
+      "variant": "control",
+      "warmupScores": [
+        8924.267,
+        9547.741,
+        9533.516,
+        9502.057,
+        9396.318,
+        9519.0,
+        9517.691,
+        9551.378,
+        9520.537,
+        9463.17
+      ],
+      "measurementScores": [
+        9520.19094909732,
+        9336.436548249643,
+        9520.007535438239,
+        9525.500463137743,
+        9509.140168354774
+      ],
+      "allocationBytes": [
+        224.00061736603755,
+        224.00063586240492,
+        224.00062066552348,
+        224.0006220444233,
+        224.00061609139686
+      ],
+      "gcCounts": [
+        14.0,
+        13.0,
+        14.0,
+        13.0,
+        13.0
+      ],
+      "gcTimeMs": [
+        3.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.9440348448872982,
+      "jsonSha256": "60AC91ACDDBB9B8ADDA8D316399E68DF3A5B629306665C40243082CBA655378D",
+      "logSha256": "46BE9D0C1C45E08CE46088C3249B9D2C7FD922559925613977888A86E858439B"
+    },
+    {
+      "round": 0,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "warmupScores": [
+        8588.481,
+        9090.159,
+        9170.057,
+        9077.899,
+        9053.627,
+        9216.394,
+        9174.034,
+        9090.393,
+        9117.019,
+        9093.837
+      ],
+      "measurementScores": [
+        9360.659206018048,
+        9045.844023627249,
+        9163.475037222646,
+        8932.771238389078,
+        9175.501448006342
+      ],
+      "allocationBytes": [
+        224.00062770883747,
+        224.00064765079887,
+        224.00064566111482,
+        224.0006575530839,
+        224.00064108025035
+      ],
+      "gcCounts": [
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        5.0,
+        5.0,
+        3.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -1.6202455161040796,
+      "jsonSha256": "AA0459CF9BDA0086A51EB59AD6F7D7E56EB96E3D9008BEACC621B89D32110E59",
+      "logSha256": "CB55117F74C2BC47637BC1171B3891CF3E3B117DFE480ED8D84A5C9F2B0EEDFA"
+    },
+    {
+      "round": 0,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "warmupScores": [
+        28.438,
+        29.535,
+        30.211,
+        29.261,
+        30.244,
+        30.065,
+        29.739,
+        30.348,
+        30.268,
+        30.24
+      ],
+      "measurementScores": [
+        30.58090350005104,
+        30.214906856454316,
+        30.64214696644141,
+        30.18442622541764,
+        30.598310017592564
+      ],
+      "allocationBytes": [
+        32408.192967687624,
+        32408.220058804312,
+        32408.193940971658,
+        32408.197076912904,
+        32408.193424853147
+      ],
+      "gcCounts": [
+        6.0,
+        6.0,
+        6.0,
+        7.0,
+        6.0
+      ],
+      "gcTimeMs": [
+        2.0,
+        2.0,
+        1.0,
+        3.0,
+        1.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -0.021504958020102105,
+      "jsonSha256": "578B62B27A946B2048476F80B061BF4B865864F9D1D63C5B85E892F96B8CADC1",
+      "logSha256": "25B55ED3B2D096B8AA75795263339BFD8950E376D2902111371F40D71A85FE0E"
+    },
+    {
+      "round": 0,
+      "caseIndex": 3,
+      "variant": "control",
+      "warmupScores": [
+        27.436,
+        30.543,
+        30.174,
+        29.999,
+        30.221,
+        29.931,
+        29.88,
+        30.126,
+        30.425,
+        30.616
+      ],
+      "measurementScores": [
+        30.335758060465544,
+        30.481863529945432,
+        30.372952975000867,
+        28.820040958577184,
+        29.203339421794357
+      ],
+      "allocationBytes": [
+        33208.195872222954,
+        33208.194504275176,
+        33208.195409836066,
+        33208.203572770435,
+        33208.20287980393
+      ],
+      "gcCounts": [
+        7.0,
+        6.0,
+        6.0,
+        7.0,
+        6.0
+      ],
+      "gcTimeMs": [
+        2.0,
+        2.0,
+        1.0,
+        4.0,
+        2.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -4.594459857141143,
+      "jsonSha256": "8A55062CF3AA1D96F315C15ED288CE858D4230F2EAFADF5CE614B72DF8A589C2",
+      "logSha256": "1D82BDCB4B86A8815DB3DBB1FEA0444D371FED0D031D44E951248152F095E63F"
+    },
+    {
+      "round": 1,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "warmupScores": [
+        9734.382,
+        10621.12,
+        10944.752,
+        10751.075,
+        10843.449,
+        10864.688,
+        10843.898,
+        10791.36,
+        10313.974,
+        10871.065
+      ],
+      "measurementScores": [
+        10928.247020386427,
+        10861.307719764158,
+        10790.083575454632,
+        10830.400423277897,
+        10835.200838256484
+      ],
+      "allocationBytes": [
+        224.00054102936102,
+        224.00054462192736,
+        224.00054759448707,
+        224.00054436181475,
+        224.00054472502092
+      ],
+      "gcCounts": [
+        15.0,
+        16.0,
+        15.0,
+        15.0,
+        16.0
+      ],
+      "gcTimeMs": [
+        6.0,
+        7.0,
+        4.0,
+        5.0,
+        5.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -0.5688665055087139,
+      "jsonSha256": "70F71F77D758DE9AECF3B6B17CB8CA81F1DD3F63D00E63A46980B480B1F073F6",
+      "logSha256": "BC9407C2A6412164F12ECDE98C29C84DF9CAF82533B5CC69E66A6AA18E0C6F42"
+    },
+    {
+      "round": 1,
+      "caseIndex": 2,
+      "variant": "control",
+      "warmupScores": [
+        9804.979,
+        10506.469,
+        10360.62,
+        10389.515,
+        10506.409,
+        10377.986,
+        10493.227,
+        10570.635,
+        10425.709,
+        10127.685
+      ],
+      "measurementScores": [
+        10477.883872668765,
+        10514.416693307838,
+        10537.795002728622,
+        10488.764773633668,
+        10523.21917983147
+      ],
+      "allocationBytes": [
+        224.00056127783753,
+        224.00056243208468,
+        224.00056498755083,
+        224.00056781902808,
+        224.00056199401698
+      ],
+      "gcCounts": [
+        15.0,
+        14.0,
+        15.0,
+        15.0,
+        15.0
+      ],
+      "gcTimeMs": [
+        6.0,
+        4.0,
+        6.0,
+        4.0,
+        5.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.09376479450966535,
+      "jsonSha256": "E1584AEBC1AA4C1891356E50816868DAC74B9FF500A2E3B241F0357F46E21622",
+      "logSha256": "DA685D265BA3B38E9F85F29AA30EC02AE5A06E94A92A989DD036020E30D460CA"
+    },
+    {
+      "round": 1,
+      "caseIndex": 3,
+      "variant": "control",
+      "warmupScores": [
+        27.035,
+        29.307,
+        29.493,
+        29.485,
+        29.476,
+        29.45,
+        29.326,
+        28.93,
+        29.568,
+        28.023
+      ],
+      "measurementScores": [
+        29.46759538577234,
+        29.48903314723688,
+        29.394843066745135,
+        29.44135115940276,
+        29.531070076896142
+      ],
+      "allocationBytes": [
+        32408.198873410463,
+        32408.201032144905,
+        32408.20027854207,
+        32408.201842319155,
+        32408.200707189764
+      ],
+      "gcCounts": [
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0
+      ],
+      "gcTimeMs": [
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.026786985081472814,
+      "jsonSha256": "28FBDF59D3A97D54AC01CE5FE2EDD33CC1B1D7DFF7AB3810DDB0A0C99683897A",
+      "logSha256": "2A3CA7A18899C59877892FD9942392CDEC68F3EF4507481E7D2D59BE8FB3B591"
+    },
+    {
+      "round": 1,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "warmupScores": [
+        26.99,
+        29.265,
+        29.534,
+        29.396,
+        29.475,
+        29.472,
+        29.879,
+        29.413,
+        29.533,
+        29.405
+      ],
+      "measurementScores": [
+        29.4924253898534,
+        28.327512192063363,
+        29.924364209082498,
+        29.698413603829415,
+        29.772725098305603
+      ],
+      "allocationBytes": [
+        32408.199271122405,
+        32408.206772134334,
+        32408.195467515005,
+        32408.199401258033,
+        32408.199504585926
+      ],
+      "gcCounts": [
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0
+      ],
+      "gcTimeMs": [
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 2.855764273143513,
+      "jsonSha256": "8785C492D089AFBCB22CC04FCBD9006797B0CB7AC0BEA7B915AE5FD368BC7309",
+      "logSha256": "4FBDD8B104A773C60D47BF2CF4A653036F4D91EDAA59DA1FEB19BED40771A7BC"
+    },
+    {
+      "round": 1,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "warmupScores": [
+        25.886,
+        28.211,
+        28.306,
+        28.667,
+        27.638,
+        28.534,
+        28.233,
+        28.511,
+        27.171,
+        28.728
+      ],
+      "measurementScores": [
+        28.190711326620484,
+        27.671005920928497,
+        28.04673858802132,
+        27.839461491976763,
+        28.065224816986163
+      ],
+      "allocationBytes": [
+        14208.209527157673,
+        14208.214349937061,
+        14208.211662760139,
+        14208.210601514502,
+        14208.211422490245
+      ],
+      "gcCounts": [
+        2.0,
+        3.0,
+        2.0,
+        3.0,
+        2.0
+      ],
+      "gcTimeMs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.07692040905853403,
+      "jsonSha256": "A8BFF9D41E2539B43607D33058AE7F932F27C6DB7F74AD51989BDE0FEEB2B0E5",
+      "logSha256": "775B6936F633C47B8BC1E34B9B71150BA265A0480F0DA17DDCFA1A80EB111E1A"
+    },
+    {
+      "round": 1,
+      "caseIndex": 4,
+      "variant": "control",
+      "warmupScores": [
+        26.593,
+        28.715,
+        28.278,
+        27.526,
+        29.188,
+        28.025,
+        27.56,
+        28.667,
+        28.945,
+        26.4
+      ],
+      "measurementScores": [
+        26.56219138127689,
+        27.70219904379457,
+        26.508816473519033,
+        28.838755737838714,
+        27.06017641212911
+      ],
+      "allocationBytes": [
+        14208.21896469378,
+        14208.212077002456,
+        14208.22164373373,
+        14208.202500343454,
+        14208.219610155127
+      ],
+      "gcCounts": [
+        2.0,
+        3.0,
+        2.0,
+        3.0,
+        2.0
+      ],
+      "gcTimeMs": [
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 3.0121811230024553,
+      "jsonSha256": "807EA8DF6231C964E68418642229C62DA1C715BF89CD435AAC6A41D842FC9E24",
+      "logSha256": "C5602DEBCD6F04268AA5FF5D17C3124343D9349DFA2B450710CAA98CDC8AB701"
+    },
+    {
+      "round": 1,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "warmupScores": [
+        8828.135,
+        9749.607,
+        9548.384,
+        9621.748,
+        9591.943,
+        9528.719,
+        9602.84,
+        9325.973,
+        9527.323,
+        9884.774
+      ],
+      "measurementScores": [
+        9519.577097701676,
+        9219.64396182589,
+        9411.77052922833,
+        9563.646688661236,
+        9797.016484890806
+      ],
+      "allocationBytes": [
+        224.0006139279232,
+        224.00071870635395,
+        224.00062642987984,
+        224.00061344823828,
+        224.00060792772433
+      ],
+      "gcCounts": [
+        13.0,
+        14.0,
+        13.0,
+        13.0,
+        14.0
+      ],
+      "gcTimeMs": [
+        5.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 3.31626438500503,
+      "jsonSha256": "4BAA57E295B37792A71FAFF41FEE12F03733B0F46EC028BCA8F61F802E7E8AC3",
+      "logSha256": "888535038D0A0B06D8D5712F7E6A8738203C8A04F63034C5DDEDD4B701404B4D"
+    },
+    {
+      "round": 1,
+      "caseIndex": 0,
+      "variant": "control",
+      "warmupScores": [
+        8712.25,
+        9386.673,
+        8693.291,
+        9297.313,
+        8620.139,
+        8635.446,
+        8903.21,
+        8781.498,
+        8129.085,
+        8691.643
+      ],
+      "measurementScores": [
+        8681.915231319268,
+        8431.357209393247,
+        8601.367856073255,
+        8748.894749709627,
+        8479.367410796638
+      ],
+      "allocationBytes": [
+        224.00068484509057,
+        224.00068243394534,
+        224.00066929088678,
+        224.00065441761464,
+        224.00069898125827
+      ],
+      "gcCounts": [
+        13.0,
+        12.0,
+        12.0,
+        13.0,
+        12.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.6719329701091681,
+      "jsonSha256": "3993F7C7CE9FE87742AD193447777A33FDA0DC57D19EBDC7B9C25917A98FA460",
+      "logSha256": "9ADD7A565D5FD32A9E50EAB95C3F43B0394F17474D8FE6813E66EB3FF07960C8"
+    },
+    {
+      "round": 1,
+      "caseIndex": 1,
+      "variant": "control",
+      "warmupScores": [
+        9287.847,
+        9453.449,
+        9498.079,
+        9289.78,
+        9218.762,
+        9605.23,
+        9930.02,
+        9766.973,
+        10223.822,
+        9764.491
+      ],
+      "measurementScores": [
+        9351.85487996483,
+        9408.555507539295,
+        9423.931698428401,
+        9256.468039536687,
+        9429.809645144624
+      ],
+      "allocationBytes": [
+        256.00062819189145,
+        256.00062041332404,
+        256.0006179774407,
+        256.0006272301057,
+        256.00062206221725
+      ],
+      "gcCounts": [
+        15.0,
+        15.0,
+        16.0,
+        15.0,
+        15.0
+      ],
+      "gcTimeMs": [
+        5.0,
+        4.0,
+        6.0,
+        4.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -0.39515501682304555,
+      "jsonSha256": "D0251A1B1E2A14D5D5E89401C08C8DF2A0092580D4EBD1CB137167B02D4AC4E0",
+      "logSha256": "C81BBE87707A5F95B5D00F67E5CD7146321D92375245DC70617CB5CAC701DE36"
+    },
+    {
+      "round": 1,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "warmupScores": [
+        8245.281,
+        8888.947,
+        8637.944,
+        8619.577,
+        8370.209,
+        8368.409,
+        8908.556,
+        8846.128,
+        8850.229,
+        8789.863
+      ],
+      "measurementScores": [
+        8731.796162078936,
+        8763.341693347651,
+        9009.787096521175,
+        8667.122963960872,
+        8552.73767848497
+      ],
+      "allocationBytes": [
+        256.0006745345768,
+        256.00067230047205,
+        256.0006567783326,
+        256.0006678429084,
+        256.00068785879597
+      ],
+      "gcCounts": [
+        14.0,
+        14.0,
+        15.0,
+        14.0,
+        14.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        7.0,
+        4.0,
+        4.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -1.5734498079154058,
+      "jsonSha256": "266F2033CEB157BDEF5D75219C1D82DD55433B40AC79022BACEB0655C4C3FFEE",
+      "logSha256": "162D9712887F39ADBE99866C64EF2BC5F0708217EC63E66BE7032747B131C599"
+    },
+    {
+      "round": 2,
+      "caseIndex": 4,
+      "variant": "control",
+      "warmupScores": [
+        26.01,
+        27.915,
+        28.134,
+        27.382,
+        28.085,
+        28.493,
+        27.314,
+        28.136,
+        28.184,
+        28.002
+      ],
+      "measurementScores": [
+        27.163275930172393,
+        27.07778354732603,
+        26.459104745490347,
+        26.068362769896908,
+        26.352004536880216
+      ],
+      "allocationBytes": [
+        14208.216616994985,
+        14208.21753412658,
+        14208.221742689188,
+        14208.224647567076,
+        14208.225101031083
+      ],
+      "gcCounts": [
+        3.0,
+        2.0,
+        3.0,
+        2.0,
+        2.0
+      ],
+      "gcTimeMs": [
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -3.356667786838874,
+      "jsonSha256": "5C5479A169720A12166D858C4844FC76463F713F36299BF6C90D088C3BB11383",
+      "logSha256": "E05CEA10F6D3A9CF079ADFFDCC265CE84C59270E9792174848727309C6512E5A"
+    },
+    {
+      "round": 2,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "warmupScores": [
+        25.717,
+        27.224,
+        26.439,
+        25.792,
+        25.724,
+        26.036,
+        25.916,
+        26.116,
+        26.201,
+        26.151
+      ],
+      "measurementScores": [
+        26.554747618568374,
+        26.408035261370884,
+        25.989378176537397,
+        26.04451986356951,
+        25.754308901455556
+      ],
+      "allocationBytes": [
+        14208.222106283074,
+        14208.223296242179,
+        14208.227385448858,
+        14208.223850969614,
+        14208.224617471922
+      ],
+      "gcCounts": [
+        2.0,
+        3.0,
+        2.0,
+        2.0,
+        3.0
+      ],
+      "gcTimeMs": [
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -2.197683074080048,
+      "jsonSha256": "CBAB8DBEA62A322D302A2B18093546717705FFED318EA6FAFFB486BFB50262A2",
+      "logSha256": "FF1ABE105F993ECE26A533C2BE209FFB79CA216107E96A658ED964FD1F8A9A65"
+    },
+    {
+      "round": 2,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "warmupScores": [
+        25.145,
+        28.374,
+        28.04,
+        29.366,
+        28.301,
+        28.91,
+        27.92,
+        28.335,
+        28.283,
+        28.636
+      ],
+      "measurementScores": [
+        28.64677560721861,
+        29.259171818534927,
+        27.100092502580523,
+        27.753979123495153,
+        29.452729658353455
+      ],
+      "allocationBytes": [
+        32408.205907756088,
+        32408.200964359174,
+        32408.21948075861,
+        32408.21055622647,
+        32408.19704565203
+      ],
+      "gcCounts": [
+        6.0,
+        6.0,
+        6.0,
+        5.0,
+        7.0
+      ],
+      "gcTimeMs": [
+        2.0,
+        2.0,
+        5.0,
+        6.0,
+        2.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -1.207542014231766,
+      "jsonSha256": "9706B52E81AEFB4ADC27C14687B549115B8537E46A8D5E0AD4644297181DB737",
+      "logSha256": "6C0C0CF4A7C75E3130AFCEC2915A14D94390F1FFB4D44359B5732F0C0A31DFD9"
+    },
+    {
+      "round": 2,
+      "caseIndex": 3,
+      "variant": "control",
+      "warmupScores": [
+        26.177,
+        27.216,
+        27.498,
+        29.115,
+        28.34,
+        28.259,
+        29.353,
+        29.047,
+        28.616,
+        30.468
+      ],
+      "measurementScores": [
+        30.07945555633237,
+        29.781090939934728,
+        29.91995576149704,
+        30.083090113818823,
+        30.038958669149228
+      ],
+      "allocationBytes": [
+        32408.195384211907,
+        32408.19784232365,
+        32408.196420920805,
+        32408.19377526539,
+        32408.195595812413
+      ],
+      "gcCounts": [
+        6.0,
+        6.0,
+        6.0,
+        7.0,
+        6.0
+      ],
+      "gcTimeMs": [
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.4368524880026925,
+      "jsonSha256": "6DC11C64369CD11FC194BBC5F658D085E66272CA6EA769995A34BE5DCBDBECB4",
+      "logSha256": "B0DC666B1E149D10208473EA1E836196D7D2F20C1A7FA86895EC0CF3516C563A"
+    },
+    {
+      "round": 2,
+      "caseIndex": 2,
+      "variant": "control",
+      "warmupScores": [
+        9497.33,
+        10297.665,
+        10437.765,
+        10509.33,
+        10438.42,
+        10483.568,
+        10471.483,
+        10376.149,
+        10509.204,
+        10391.166
+      ],
+      "measurementScores": [
+        10445.040936087646,
+        10446.83174605697,
+        10524.222337275358,
+        10574.64900800254,
+        10002.744980878713
+      ],
+      "allocationBytes": [
+        224.0005595604845,
+        224.0005666498605,
+        224.00056580894397,
+        224.00055839767748,
+        224.0005868607927
+      ],
+      "gcCounts": [
+        15.0,
+        15.0,
+        15.0,
+        15.0,
+        14.0
+      ],
+      "gcTimeMs": [
+        5.0,
+        4.0,
+        4.0,
+        5.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -1.5052680917978956,
+      "jsonSha256": "B2776C8C00D8707CCD8D262F4EB9174C613A48A8C59C7B7927B26FA7AE54382C",
+      "logSha256": "78F720BD059491F26BF995E7DCC2B58F6AF9CB6E6852DA33CA361A7DC4FE1559"
+    },
+    {
+      "round": 2,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "warmupScores": [
+        9782.329,
+        10480.522,
+        10416.711,
+        10205.44,
+        10277.444,
+        10155.349,
+        10201.64,
+        10367.034,
+        10270.896,
+        10064.515
+      ],
+      "measurementScores": [
+        9999.682134606843,
+        10252.486969913629,
+        10193.640367455611,
+        10227.569877881018,
+        10213.558247153416
+      ],
+      "allocationBytes": [
+        224.0005865442613,
+        224.00057052070986,
+        224.00057083074267,
+        224.0005792663281,
+        224.00058150199231
+      ],
+      "gcCounts": [
+        14.0,
+        14.0,
+        15.0,
+        14.0,
+        15.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        4.0,
+        4.0,
+        5.0,
+        5.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.9330310226956628,
+      "jsonSha256": "2BBD752C9D1A04BEFB5BA5DB811A5A5239CBA5C31DD4931AD492066B212CA5E8",
+      "logSha256": "4C078C64379CB8B8A7FC04FDE5024EB9872C3192539A865AE07627EE42752250"
+    },
+    {
+      "round": 2,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "warmupScores": [
+        9186.979,
+        9999.989,
+        9872.613,
+        9236.658,
+        9757.338,
+        9716.77,
+        9783.712,
+        9696.126,
+        9695.627,
+        9715.195
+      ],
+      "measurementScores": [
+        9674.054387802742,
+        10012.925597441426,
+        9447.494691853644,
+        9820.977138586755,
+        9670.175527643021
+      ],
+      "allocationBytes": [
+        256.0006184222327,
+        256.0005820645756,
+        256.00061813977464,
+        256.0006024914975,
+        256.00061580051124
+      ],
+      "gcCounts": [
+        15.0,
+        17.0,
+        15.0,
+        16.0,
+        16.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        5.0,
+        4.0,
+        5.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -0.9947047193686887,
+      "jsonSha256": "A105ED2A15FB9B8B991A2D1C1300F2A5C31165ECF77FB15B4F9DAFEB8A86553D",
+      "logSha256": "9330F31AE6AC169F8B09666EF7AB37B593CA09767C69F202E2C8FCDD22F1EDD9"
+    },
+    {
+      "round": 2,
+      "caseIndex": 1,
+      "variant": "control",
+      "warmupScores": [
+        8469.435,
+        9013.76,
+        9085.228,
+        9081.54,
+        9065.386,
+        9136.342,
+        9023.607,
+        8934.795,
+        9091.926,
+        8986.468
+      ],
+      "measurementScores": [
+        9067.79697783913,
+        8991.09250380017,
+        9054.601684921345,
+        9032.118140106311,
+        8999.972427970062
+      ],
+      "allocationBytes": [
+        256.00065156405276,
+        256.0006561307048,
+        256.0006379867124,
+        256.00066628603713,
+        256.0006556257288
+      ],
+      "gcCounts": [
+        15.0,
+        15.0,
+        14.0,
+        15.0,
+        14.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        5.0,
+        4.0,
+        4.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -0.14839735073506333,
+      "jsonSha256": "9A56F05448E304B6AB8C2C9CE8D3462EF2FD393F20EBA001EFBA56DA942FA710",
+      "logSha256": "B12BCE5CF4F5F1546434607C7F17EF5D24A01544C23C9B630EDBB01E18C1CB33"
+    },
+    {
+      "round": 2,
+      "caseIndex": 0,
+      "variant": "control",
+      "warmupScores": [
+        8842.466,
+        9181.376,
+        8992.976,
+        9298.524,
+        8440.339,
+        9361.525,
+        9308.094,
+        9333.634,
+        9394.369,
+        9164.967
+      ],
+      "measurementScores": [
+        9120.150909035663,
+        9196.95110739987,
+        9013.343083470292,
+        9466.954148754197,
+        9592.015979571277
+      ],
+      "allocationBytes": [
+        224.00065103476842,
+        224.00063202167397,
+        224.00064869670288,
+        224.0006219760848,
+        224.00061430694768
+      ],
+      "gcCounts": [
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        14.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        4.0,
+        4.0,
+        3.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 4.05013910619858,
+      "jsonSha256": "FFFE40837C9ECEEA7447C1DEE4DF28AA8C73915EA8E5CBE93AB642C0751E8FFC",
+      "logSha256": "264311CEEED1CB3F712706AB9FDFB90A0607CEDD6C86C4EA4350E780F0A342BA"
+    },
+    {
+      "round": 2,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "warmupScores": [
+        9227.096,
+        9754.175,
+        9455.076,
+        9018.61,
+        9470.721,
+        9828.667,
+        9754.618,
+        9736.447,
+        9586.697,
+        9742.496
+      ],
+      "measurementScores": [
+        9755.439904929723,
+        9749.182489185912,
+        9796.318950760275,
+        9777.888324431646,
+        9823.763352337024
+      ],
+      "allocationBytes": [
+        224.0006032649387,
+        224.00060355243266,
+        224.0005978634852,
+        224.00060463710147,
+        224.00059717165482
+      ],
+      "gcCounts": [
+        14.0,
+        14.0,
+        14.0,
+        14.0,
+        14.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        4.0,
+        3.0,
+        4.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.4974681421277216,
+      "jsonSha256": "EC12A826D2F12EF1BF71050E935CC45B009F5276805DDE0EFD30D263C202CA59",
+      "logSha256": "BC554FFCF3D6F02BFE5571878DE977A3AB2829D573F2B52FA73072BDA228CBC8"
+    },
+    {
+      "round": 3,
+      "caseIndex": 3,
+      "variant": "control",
+      "warmupScores": [
+        27.625,
+        29.758,
+        30.144,
+        30.021,
+        29.316,
+        30.0,
+        29.634,
+        30.07,
+        29.786,
+        29.386
+      ],
+      "measurementScores": [
+        28.96114832016928,
+        29.519249455865,
+        29.584463007584258,
+        29.66181082855378,
+        29.230486843753617
+      ],
+      "allocationBytes": [
+        32408.20365624466,
+        32408.199785465273,
+        32408.20123577675,
+        32408.19971182522,
+        32408.20208184993
+      ],
+      "gcCounts": [
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0
+      ],
+      "gcTimeMs": [
+        2.0,
+        1.0,
+        2.0,
+        2.0,
+        2.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.704338397031079,
+      "jsonSha256": "1097341E4DC03C917B3788216DF91B5C0188C19F23812C69948275996D2A3E04",
+      "logSha256": "63ED133868C6DBE634777882C52DC7F2CF0E2AC712C4742B763EEC7C4322B4F0"
+    },
+    {
+      "round": 3,
+      "caseIndex": 3,
+      "variant": "candidate",
+      "warmupScores": [
+        29.245,
+        30.839,
+        30.916,
+        31.241,
+        31.23,
+        31.152,
+        31.023,
+        31.166,
+        30.921,
+        31.18
+      ],
+      "measurementScores": [
+        29.91954890526266,
+        31.29734244370496,
+        31.343054974788092,
+        31.21974955766965,
+        30.50500103921962
+      ],
+      "allocationBytes": [
+        32408.198296513176,
+        32408.188202601996,
+        32408.189002346673,
+        32408.189887533055,
+        32408.223613829094
+      ],
+      "gcCounts": [
+        6.0,
+        6.0,
+        7.0,
+        6.0,
+        6.0
+      ],
+      "gcTimeMs": [
+        2.0,
+        2.0,
+        2.0,
+        1.0,
+        2.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.8296063990355096,
+      "jsonSha256": "AC52EC6425F1F0F761A541DCD0E987681DEAC8E67AFFFA644AD70A97F307A4B2",
+      "logSha256": "95A1BBA8C247C90B6E034D1809FACD28CB97A0A46C52A178AD83DE8BBEC3F6B4"
+    },
+    {
+      "round": 3,
+      "caseIndex": 2,
+      "variant": "candidate",
+      "warmupScores": [
+        9540.373,
+        10157.474,
+        10187.261,
+        10140.577,
+        10204.438,
+        10105.857,
+        10115.092,
+        10396.561,
+        10249.553,
+        10231.427
+      ],
+      "measurementScores": [
+        10162.955849370752,
+        10293.162042421998,
+        10180.525216192342,
+        10014.804539927069,
+        10032.84728909739
+      ],
+      "allocationBytes": [
+        224.00057892911713,
+        224.00057210512682,
+        224.0005774334001,
+        224.0005853030869,
+        224.00058866007146
+      ],
+      "gcCounts": [
+        15.0,
+        14.0,
+        15.0,
+        14.0,
+        14.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        4.0,
+        5.0,
+        4.0,
+        6.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -1.9967916929740315,
+      "jsonSha256": "48F09EF487659C330194BDF36AE46B24B71A6BBED232DE344ECCA7B385AD58AA",
+      "logSha256": "430E108D46192EB82EC252A04BB0AF8C431C4339B9D48E5C8CDC8305C48FCDD7"
+    },
+    {
+      "round": 3,
+      "caseIndex": 2,
+      "variant": "control",
+      "warmupScores": [
+        9501.506,
+        9859.995,
+        10200.109,
+        10084.568,
+        10159.537,
+        10184.293,
+        10161.416,
+        10236.227,
+        10112.834,
+        10251.778
+      ],
+      "measurementScores": [
+        10223.496399026682,
+        10163.261983757982,
+        10272.675779711495,
+        10089.416771256614,
+        9932.801157444153
+      ],
+      "allocationBytes": [
+        224.00057554245842,
+        224.00058283093503,
+        224.0005703418212,
+        224.00057872963572,
+        224.0005877133993
+      ],
+      "gcCounts": [
+        15.0,
+        14.0,
+        15.0,
+        14.0,
+        15.0
+      ],
+      "gcTimeMs": [
+        4.0,
+        5.0,
+        5.0,
+        4.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -1.7881236792982702,
+      "jsonSha256": "8D58128A6C43A30D0873D14F3048FC33475EC6B47B2CA24B21448DBFED0B35D1",
+      "logSha256": "259552D490AA625D0BFAA203A9726FC4854762934C3555E3F1790D0636AD080F"
+    },
+    {
+      "round": 3,
+      "caseIndex": 0,
+      "variant": "candidate",
+      "warmupScores": [
+        9479.48,
+        10126.233,
+        10029.268,
+        9905.445,
+        10151.145,
+        10053.417,
+        10205.357,
+        9431.523,
+        10155.173,
+        10055.644
+      ],
+      "measurementScores": [
+        10162.955902044892,
+        10165.26825735541,
+        10210.03387296544,
+        10133.973084749618,
+        10140.597415338356
+      ],
+      "allocationBytes": [
+        224.00066818608826,
+        224.0005778634662,
+        224.0005753648281,
+        224.00057963256742,
+        224.00058502533426
+      ],
+      "gcCounts": [
+        15.0,
+        14.0,
+        15.0,
+        14.0,
+        15.0
+      ],
+      "gcTimeMs": [
+        5.0,
+        4.0,
+        5.0,
+        4.0,
+        4.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -0.2639367752520383,
+      "jsonSha256": "77911055AF16CEA4073A68690C22D17D1501A099CFE72594EFBD3BC6C6479314",
+      "logSha256": "9C182C29BDC2AD36C40490B4A6A0D4572F8D78A4BD5193EF4544E05D095EAAF0"
+    },
+    {
+      "round": 3,
+      "caseIndex": 0,
+      "variant": "control",
+      "warmupScores": [
+        9372.946,
+        9930.437,
+        9208.919,
+        9856.824,
+        9909.739,
+        10029.984,
+        10057.824,
+        9936.12,
+        9932.263,
+        10002.455
+      ],
+      "measurementScores": [
+        9809.428037017417,
+        9784.41184501497,
+        9671.043991663193,
+        9788.245265085105,
+        10018.431987168706
+      ],
+      "allocationBytes": [
+        224.00059885774183,
+        224.00059636291058,
+        224.00061029967176,
+        224.0006057006595,
+        224.00058581329264
+      ],
+      "gcCounts": [
+        14.0,
+        14.0,
+        14.0,
+        14.0,
+        14.0
+      ],
+      "gcTimeMs": [
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 1.0862463483566343,
+      "jsonSha256": "27604AE770631824102AF3DBD481F1DBBB1C1F25924E952ECD02EC1C299A051F",
+      "logSha256": "88B22EA0D0543F7B23AF905EB51B6669B4A1A2888DCA71DFC1F49699FD7BC772"
+    },
+    {
+      "round": 3,
+      "caseIndex": 1,
+      "variant": "control",
+      "warmupScores": [
+        9687.608,
+        10377.538,
+        10659.961,
+        10500.745,
+        10628.724,
+        10965.101,
+        10538.703,
+        10736.269,
+        10554.879,
+        10545.247
+      ],
+      "measurementScores": [
+        10745.353141609066,
+        10830.508730176683,
+        10819.1397903657,
+        10799.769366790853,
+        10307.799786916508
+      ],
+      "allocationBytes": [
+        256.0005469058992,
+        256.0005430368622,
+        256.00053987085266,
+        256.0005538497829,
+        256.0005592331142
+      ],
+      "gcCounts": [
+        18.0,
+        17.0,
+        18.0,
+        17.0,
+        17.0
+      ],
+      "gcTimeMs": [
+        6.0,
+        6.0,
+        5.0,
+        5.0,
+        6.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -2.170447330731029,
+      "jsonSha256": "B5700A0F712A323092F6F94A6817C4C1413351B20DFF3E8F146A038BA96197A8",
+      "logSha256": "74F7FD2871CD77486036586AFD148F531AA6EADCB292072405200647F41234BF"
+    },
+    {
+      "round": 3,
+      "caseIndex": 1,
+      "variant": "candidate",
+      "warmupScores": [
+        9504.284,
+        10080.609,
+        10373.491,
+        10233.759,
+        10348.484,
+        10343.152,
+        10149.624,
+        10305.464,
+        10316.505,
+        10419.514
+      ],
+      "measurementScores": [
+        10427.90730915273,
+        10357.680710700888,
+        10366.540761366952,
+        10273.479097702042,
+        10327.721942146298
+      ],
+      "allocationBytes": [
+        256.00055954739,
+        256.00056154901137,
+        256.0005654710122,
+        256.00057812646867,
+        256.0005703746634
+      ],
+      "gcCounts": [
+        18.0,
+        16.0,
+        17.0,
+        17.0,
+        17.0
+      ],
+      "gcTimeMs": [
+        5.0,
+        6.0,
+        6.0,
+        5.0,
+        5.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -0.887090515934208,
+      "jsonSha256": "9AB3EB64474EB4C6941E802470BBB93F523AB7063348CFD5FC05565618CA922A",
+      "logSha256": "7889E9085BF7A6E55C965D0289C4710B774B45139FB89728A7A588F97E01EC85"
+    },
+    {
+      "round": 3,
+      "caseIndex": 4,
+      "variant": "candidate",
+      "warmupScores": [
+        26.136,
+        28.09,
+        28.885,
+        28.678,
+        28.626,
+        28.496,
+        28.145,
+        27.517,
+        26.243,
+        27.206
+      ],
+      "measurementScores": [
+        26.543241582986674,
+        26.208226593860953,
+        26.275693346385182,
+        25.92124856878534,
+        25.766350598245637
+      ],
+      "allocationBytes": [
+        14208.222222222223,
+        14208.221322737569,
+        14208.2250755287,
+        14208.229760986893,
+        14208.228808353808
+      ],
+      "gcCounts": [
+        2.0,
+        2.0,
+        3.0,
+        2.0,
+        2.0
+      ],
+      "gcTimeMs": [
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": -2.016757156881499,
+      "jsonSha256": "814D8AF34054315A726FC01F906ED1D417A97F78DBEED9FAA288388FF6EF8027",
+      "logSha256": "946FA75354121D043695EA35E5AC1A382A4894DD981E701CF8291A22AD88927A"
+    },
+    {
+      "round": 3,
+      "caseIndex": 4,
+      "variant": "control",
+      "warmupScores": [
+        24.974,
+        26.863,
+        25.84,
+        25.529,
+        26.097,
+        26.438,
+        26.162,
+        26.34,
+        25.682,
+        26.098
+      ],
+      "measurementScores": [
+        25.780914413966528,
+        25.40707144729066,
+        26.05638817623384,
+        25.63461634084162,
+        25.726453029711003
+      ],
+      "allocationBytes": [
+        14208.22849256249,
+        14208.233661347866,
+        14208.22748959884,
+        14208.224377457405,
+        14208.226708193948
+      ],
+      "gcCounts": [
+        2.0,
+        2.0,
+        3.0,
+        2.0,
+        3.0
+      ],
+      "gcTimeMs": [
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lastTwoVersusFirstTwoDriftPercent": 0.33813307240604384,
+      "jsonSha256": "9E6A8DD8E2B3D3DE1727745F9F6FED642E34F4DF7F4EF83594FB8F9EB446C2B7",
+      "logSha256": "6B2CD2DE550E9E258AA73846E24AF619B6BE8A45D9E493AFCA0234ECDD195996"
+    }
+  ],
+  "forksWithAbsoluteDriftOverFivePercent": 0
+}

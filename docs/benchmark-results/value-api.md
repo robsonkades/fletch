@@ -7,6 +7,11 @@ These measurements do not establish performance neutrality: NF-e mapping with
 pairs. The cursor comparisons were inconclusive. No runtime optimization was
 made as part of this measurement.
 
+The [follow-up investigation](value-api-improvements.md) repeats the mapping
+comparison with longer warmup and evaluates two isolated optimization
+prototypes. Its mapping estimate is inconclusive; the original measurements
+below remain unchanged and do not establish the cause of the observed loss.
+
 ## Existing extraction paths
 
 Both jars run the same `ExtractionBenchmark` and return the same NF-e records.
