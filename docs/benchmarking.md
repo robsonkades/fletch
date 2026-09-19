@@ -22,6 +22,16 @@ java -jar target/benchmarks.jar 'CorpusBenchmark.mapping$' -p shape=UNICODE -p f
 Its bare Woodstox loop scans events without constructing the same result. Do not
 present that loop as an equivalent deserialization comparison.
 
+`ValueApiBenchmark` compares typed reads, custom conversions, `exists` followed
+by a read, and lazy fallback against equivalent explicit code. One operation
+extracts one small document and returns its converted value and trailing sibling.
+Each thread rotates through 64 byte arrays with distinct values; `presentPercent`
+selects 50% or 100% populated values. Integer values exceed the boxing cache.
+Inputs contain no empty elements: structural presence and nonempty text are
+different contracts. Fixture and callback construction are outside timing.
+`ValueApiBenchmarkTest` checks every result over two rotations at 0%, 50%, and
+100% presence, including preservation of the trailing sibling.
+
 `CorpusBenchmark` returns the same complete result from pooled mappings, mapping
 sessions and the cursor API:
 an ID and an ordered list of all selected values. Each worker rotates through 16

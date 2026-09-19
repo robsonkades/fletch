@@ -1,0 +1,7 @@
+[
+  {"benchmark":"ValueApiBenchmark.nativeInteger","candidateBenchmark":"ValueApiBenchmark.customInteger","params":{"presentPercent":"100"}},
+  {"benchmark":"ValueApiBenchmark.nativeInteger","candidateBenchmark":"ValueApiBenchmark.existsThenInteger","params":{"presentPercent":"100"}},
+  {"benchmark":"ValueApiBenchmark.nativeInteger","candidateBenchmark":"ValueApiBenchmark.existsThenInteger","params":{"presentPercent":"50"}},
+  {"benchmark":"ValueApiBenchmark.manualIntegerFallback","candidateBenchmark":"ValueApiBenchmark.customIntegerFallback","params":{"presentPercent":"50"}},
+  {"benchmark":"ValueApiBenchmark.manualDate","candidateBenchmark":"ValueApiBenchmark.typedDate","params":{"presentPercent":"100"}}
+]
