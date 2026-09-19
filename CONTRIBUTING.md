@@ -133,6 +133,14 @@ existing tag and Central deployment before retrying. The workflow rejects a vers
 whose tag already exists; do not blindly rerun or replace a release tag. After
 success, verify the published artifacts and update the documented release status.
 
+The Central publishing plugin is pinned to `0.11.0`, which supports deployment
+`warnings` returned by the Portal API ([release notes](https://central.sonatype.org/publish/publish-portal-maven/#0110)).
+Older versions can fail while reading deployment status after uploading the bundle,
+even when Central completes publication. If the version is already published,
+finish the skipped GitHub release using the existing tag and the core, source and
+Javadoc jars downloaded from Maven Central. Do not deploy that version again or
+recreate its tag.
+
 ## Reporting security issues
 
 For a security vulnerability, email `robsonkades@outlook.com` with a minimal
