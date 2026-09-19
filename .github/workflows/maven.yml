@@ -39,5 +39,7 @@ jobs:
       - name: Verify release version synchronization
         if: matrix.java == 17
         run: |
-          bash scripts/set-release-version.sh 0.0.0-ci
+          mvn -B -ntp -f codegen/pom.xml \
+            org.codehaus.mojo:versions-maven-plugin:2.22.0:set \
+            -DprocessAllModules=true -DnewVersion=0.0.0-ci -DgenerateBackupPoms=false
           mvn -B -ntp -f codegen/pom.xml verify -Dgpg.skip=true

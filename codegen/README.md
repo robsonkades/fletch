@@ -1,15 +1,19 @@
 # Build-time mapping codegen (experimental)
 
+The [project guide](../README.md#optional-code-generation) describes the public
+mapping API. This guide covers the optional generator's build integration.
+
 Codegen specializes element transitions and attribute lookup for a mapping defined
 with the existing DSL. It emits ordinary Java 17 source in your application's
 package. The scanner, validation, value conversion, callbacks, groups, limits and
 sessions continue to use the Fletch engine.
 
-This is a local prototype, not a published artifact. The normal core build remains
-`mvn verify -Dgpg.skip=true`. Build the core, generator and executable example together:
+The generator is built from source and is not published by the core's release
+workflow. Commands run from the repository root. Build the core, generator and
+executable example together:
 
 ```sh
-mvn -f codegen/pom.xml verify -Dgpg.skip=true
+mvn -B -ntp -f codegen/pom.xml verify '-Dgpg.skip=true'
 ```
 
 ## Define, generate, compile
@@ -43,6 +47,14 @@ java -cp 'target/fletch-1.3.0.jar;codegen/generator/target/fletch-codegen-1.3.0.
 
 Use `:` instead of `;` as the classpath separator on Linux/macOS. The build tool
 requires a JDK; the generated application's runtime does not require a compiler.
+If the local POM version has changed, substitute it in jar names. The equivalent
+Bash command on Linux/macOS is:
+
+```sh
+java -cp 'target/fletch-1.3.0.jar:codegen/generator/target/fletch-codegen-1.3.0.jar:codegen/example/target/classes' \
+  io.github.robsonkades.fletch.XmlCodegen 'demo.Definitions#order' \
+  demo.generated.OrderCode codegen/example/target/generated-sources/fletch
+```
 
 The [example POM](example/pom.xml) automates three steps in this order:
 
@@ -57,14 +69,24 @@ The generator dependency has `provided` scope in the example; it is only a build
 
 ## Use the generated mapping
 
-Create and retain the generated mapping once:
+Create and retain the generated mapping once. This complete `GeneratedExample.java`
+uses the definition and generated class from the built example module:
 
 ```java
-private static final XmlMapping<Definitions.Order> ORDER =
-        demo.generated.OrderCode.mapping(Definitions.order());
+import demo.Definitions;
+import demo.generated.OrderCode;
+import io.github.robsonkades.fletch.Xml;
+import io.github.robsonkades.fletch.XmlMapping;
 
-// byte[], String and InputStream all retain the usual Xml.extract contract.
-Definitions.Order order = Xml.extract(input, ORDER);
+public class GeneratedExample {
+    static final XmlMapping<Definitions.Order> ORDER =
+            OrderCode.mapping(Definitions.order());
+
+    public static void main(String[] args) {
+        System.out.println(Xml.extract(
+                "<order id='42'><total>12.30</total></order>", ORDER));
+    }
+}
 ```
 
 `ORDER.openSession()` and `ORDER.openSession(limits)` work as usual. Mappings can be
@@ -105,32 +127,25 @@ This phase does not generate direct field writes, remove callback dispatch or re
 the parser. The DSL still constructs mapping tables at startup; generated name bytes
 and classes add footprint. No startup, memory or universal throughput gain is promised.
 
-## Verification and measurements
+## Verification
 
 The reactor runs the core suite, compilation/differential tests for generated code
 and executable example tests on Java 17/21/25 in CI. Coverage includes hash collisions,
 shuffled fields, groups, encodings, malformed input, limits, session recovery/ownership
 and concurrent use.
 
+## Benchmarks
+
 Build the optional JMH harness:
 
 ```sh
-mvn -f codegen/pom.xml -Pbenchmarks package -DskipTests -Dgpg.skip=true
-java -jar codegen/example/target/benchmarks.jar 'demo.CodegenBenchmark.*' -prof gc
+mvn -B -ntp -f codegen/pom.xml -Pbenchmarks package '-DskipTests' '-Dgpg.skip=true'
+java -jar codegen/example/target/benchmarks.jar 'demo.CodegenBenchmark.*' -p scenario=ATTRIBUTES_48 -wi 3 -i 5 -w 1s -r 1s -f 2 -t 1 -prof gc -rf json -rff codegen/example/target/lookup-results.json
 ```
 
 Fixtures rotate 16 prebuilt documents with shuffled fields and different values. Both
 variants return and validate the complete result. Generation and compilation happen
 before JMH, and the generator is excluded from the benchmark jar.
-
-After the shared scanner's duplicate-attribute optimization, a direct comparison
-of generated lookup and the DSL used four Java 21 pairs with 48 selected attributes:
-**+2.70%** generated throughput, descriptive 95% interval **[-0.58%, +6.08%]**,
-and approximately **208 B/document** for both routes. This did not establish
-superiority or equivalence within ±5%. One generated fork drifted down 5.26%
-during measurement and remains included. The retained generator is optional;
-measure your own mapping before adopting it. See the
-[results and archived data](../docs/benchmark-results/README.md#optional-codegen).
 
 The example also includes a [NF-e mapping](example/src/main/java/demo/NfeDefinition.java)
 with dates, decimals, alternative fields and repeated item groups. Its benchmark
@@ -139,14 +154,10 @@ for 50 items. An independent DOM oracle verifies the complete output before timi
 DOM is not needed by the generated application's runtime.
 
 ```sh
-java -jar codegen/example/target/benchmarks.jar 'demo.NfeCodegenBenchmark.*' -p items=1,50 -prof gc
+java -jar codegen/example/target/benchmarks.jar 'demo.NfeCodegenBenchmark.*' -p items=1,50 -wi 3 -i 5 -w 1s -r 1s -f 2 -t 1 -prof gc -rf json -rff codegen/example/target/nfe-results.json
 ```
 
-In the [NF-e comparison](../docs/benchmark-results/README.md#optional-codegen),
-four Java 21 pairs per size gave **+0.17%** for the original XML (descriptive 95%
-interval **[-2.76%, +3.19%]**) and **+3.19%** for 50 synthetic items
-(**[+2.11%, +4.27%]**). Allocation remained approximately **1,192 / 14,208 B/document**
-for both routes. Neither case reached the predeclared 5% practical threshold.
-The generated consumer needs only `java.base` at runtime. These measurements do
-not represent a user's production document distribution or establish a general
-reason to prefer generated mappings.
+Select scenarios that represent your mapping and retain raw outputs for every
+comparison. Follow the project's [measurement guidance](../README.md#performance-and-benchmarks)
+for independent forks, warmup, uncertainty and allocation. The included workloads
+do not establish a general reason to prefer generated mappings.
