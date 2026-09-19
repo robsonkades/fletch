@@ -5,7 +5,7 @@ name: Release
 #   2. builds and runs the full reactor test suite
 #   3. commits the version bump, tags it (v<version>) and pushes
 #   4. publishes signed artifacts to Maven Central and waits for publication to complete
-#   5. creates the GitHub Release with jars, prepared notes and generated notes
+#   5. creates the GitHub Release with jars and generated release notes
 #
 # Required repository secrets:
 #   CENTRAL_USERNAME       - Sonatype Central Portal token username
@@ -59,7 +59,10 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
       - name: Set release version
-        run: bash scripts/set-release-version.sh "$VERSION"
+        run: |
+          mvn -B -ntp -f codegen/pom.xml \
+            org.codehaus.mojo:versions-maven-plugin:2.22.0:set \
+            -DprocessAllModules=true "-DnewVersion=$VERSION" -DgenerateBackupPoms=false
 
       - name: Build and test
         run: mvn -B -ntp -f codegen/pom.xml verify -Dgpg.skip=true
@@ -87,14 +90,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          notes=()
-          if [[ -f "docs/releases/$VERSION.md" ]]; then
-            notes=(--notes-file "docs/releases/$VERSION.md")
-          fi
           gh release create "v$VERSION" \
             "target/fletch-$VERSION.jar" \
             "target/fletch-$VERSION-sources.jar" \
             "target/fletch-$VERSION-javadoc.jar" \
             --title "v$VERSION" \
-            "${notes[@]}" \
             --generate-notes
