@@ -11,6 +11,8 @@ The [follow-up investigation](value-api-improvements.md) repeats the mapping
 comparison with longer warmup and evaluates two isolated optimization
 prototypes. Its mapping estimate is inconclusive; the original measurements
 below remain unchanged and do not establish the cause of the observed loss.
+A later [LocalDate optimization](local-date.md) changes the cursor's ordinary
+date path; the date results below describe the earlier runtime.
 
 ## Existing extraction paths
 

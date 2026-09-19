@@ -78,6 +78,7 @@ public class ValueApiBenchmark {
 
     private byte[][] integers;
     private byte[][] dates;
+    private byte[][] extendedDates;
     private int position;
 
     @Setup
@@ -87,10 +88,12 @@ public class ValueApiBenchmark {
         }
         integers = new byte[VARIANTS][];
         dates = new byte[VARIANTS][];
+        extendedDates = new byte[VARIANTS][];
         for (int i = 0; i < VARIANTS; i++) {
             final boolean present = ((i * 37) & (VARIANTS - 1)) < VARIANTS * presentPercent / 100;
             integers[i] = document(i, present ? Integer.toString(1000 + i * 31) : null);
             dates[i] = document(i, present ? LocalDate.of(2026, 9, 1).plusDays(i).toString() : null);
+            extendedDates[i] = document(i, present ? LocalDate.of(12026, 9, 1).plusDays(i).toString() : null);
         }
         position = 0;
     }
@@ -139,5 +142,10 @@ public class ValueApiBenchmark {
     @Benchmark
     public Read<LocalDate> typedDate() {
         return Xml.extract(dates[next()], TYPED_DATE);
+    }
+
+    @Benchmark
+    public Read<LocalDate> typedExtendedDate() {
+        return Xml.extract(extendedDates[next()], TYPED_DATE);
     }
 }

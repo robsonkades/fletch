@@ -433,8 +433,8 @@ Fletch is designed for high-throughput extraction of small-to-medium documents
   scanned in place with zero copying.
 
 For the unreleased conversion and presence APIs, see the
-[measured performance](docs/benchmark-results/value-api.md) and
-[optimization investigation](docs/benchmark-results/value-api-improvements.md),
+[LocalDate optimization](docs/benchmark-results/local-date.md) and
+[initial API measurements](docs/benchmark-results/value-api.md),
 including allocation costs, uncertainty and reproduction instructions.
 
 ## Contributing

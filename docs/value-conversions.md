@@ -165,7 +165,14 @@ inside its binding callback.
 
 Existing byte parsers for integer, boolean, common decimal and common instant
 values remain in use; `as(Class)` delegates to specialized accessors where
-available. Additional temporal targets, floating-point values, big integers,
+available. Cursor `value`, `attribute` and `firstOf` also read valid ASCII
+`LocalDate` values in `uuuu-MM-dd` form (years 0000–9999) directly from bytes.
+Other date forms and invalid dates retain the JDK parser. Mapping
+`as(LocalDate.class)` continues to use decoded text. See the
+[LocalDate measurements](benchmark-results/local-date.md) for the measured
+benefit and its limits.
+
+Other additional temporal targets, floating-point values, big integers,
 UUIDs, characters, enums and custom functions parse a decoded String. A custom
 function therefore pays for String decoding. For arithmetic on a native numeric
 value, existing mapping callbacks can still use `value.asInt()` directly.

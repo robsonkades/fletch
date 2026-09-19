@@ -9,6 +9,9 @@ prototypes were reverted; the library implementation is unchanged. The
 measurements identify costs and uncertainty without establishing a worthwhile
 runtime change for the workloads tested.
 
+A later [LocalDate experiment](local-date.md) evaluates a separate targeted
+parser optimization. The two prototypes and results below remain historical.
+
 ## Rechecking the mapping regression signal
 
 The [first study](value-api.md) found -6.65% throughput for mapping 50-item

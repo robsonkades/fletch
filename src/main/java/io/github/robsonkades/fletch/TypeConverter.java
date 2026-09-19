@@ -38,7 +38,7 @@ import java.util.UUID;
  * {@link #convert}, and the mapping engine's {@link XmlValue} accessors
  * delegate to the same parsers. Numeric, boolean and temporal targets are
  * parsed directly from the value bytes where a byte parser exists. Floating
- * point, additional temporal types, big integers, UUIDs and enums use the JDK's
+ * point, most additional temporal types, big integers, UUIDs and enums use the JDK's
  * text parsers; uncommon decimal and instant forms also delegate to the JDK.
  *
  * <p>An empty span uniformly converts to {@code null} — including for
@@ -95,6 +95,7 @@ final class TypeConverter {
         if (type == long.class) return (T) Long.valueOf(parseLong(a, s, e));
         if (type == double.class) return (T) Double.valueOf(Double.parseDouble(str(a, s, e)));
         if (type == boolean.class) return (T) Boolean.valueOf(parseBoolean(a, s, e));
+        if (type == LocalDate.class) return (T) parseLocalDate(a, s, e);
 
         return convertText(str(a, s, e), type);
     }
@@ -152,6 +153,20 @@ final class TypeConverter {
             throw new NumberFormatException("Value out of range for short: " + value);
         }
         return (short) value;
+    }
+
+    /** Parses ordinary ISO dates directly; other forms and errors retain the JDK parser. */
+    private static LocalDate parseLocalDate(final byte[] a, final int s, final int e) {
+        if (e - s == 10 && a[s + 4] == '-' && a[s + 7] == '-') {
+            final int year = d4(a, s);
+            final int month = d2(a, s + 5);
+            final int day = d2(a, s + 8);
+            if (year >= 0 && month >= 1 && month <= 12
+                    && day >= 1 && day <= daysInMonth(year, month)) {
+                return LocalDate.of(year, month, day);
+            }
+        }
+        return LocalDate.parse(str(a, s, e));
     }
 
     /**

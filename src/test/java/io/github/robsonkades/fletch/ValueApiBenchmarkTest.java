@@ -29,6 +29,7 @@ class ValueApiBenchmarkTest {
         final IntFunction<Integer> number = i -> present(i, presentPercent) ? Integer.valueOf(1000 + i * 31) : null;
         final IntFunction<Integer> fallback = i -> present(i, presentPercent) ? Integer.valueOf(1000 + i * 31) : -1;
         final IntFunction<LocalDate> date = i -> present(i, presentPercent) ? LocalDate.of(2026, 9, 1).plusDays(i) : null;
+        final IntFunction<LocalDate> extendedDate = i -> present(i, presentPercent) ? LocalDate.of(12026, 9, 1).plusDays(i) : null;
         assertRotation(benchmark, benchmark::nativeInteger, number);
         assertRotation(benchmark, benchmark::customInteger, number);
         assertRotation(benchmark, benchmark::existsThenInteger, number);
@@ -36,6 +37,7 @@ class ValueApiBenchmarkTest {
         assertRotation(benchmark, benchmark::customIntegerFallback, fallback);
         assertRotation(benchmark, benchmark::manualDate, date);
         assertRotation(benchmark, benchmark::typedDate, date);
+        assertRotation(benchmark, benchmark::typedExtendedDate, extendedDate);
     }
 
     private static boolean present(final int index, final int percent) {
