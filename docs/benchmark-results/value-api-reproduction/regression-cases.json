@@ -1,0 +1,5 @@
+[
+  {"benchmark":"ExtractionBenchmark.cursorDocOrder","params":{"dets":"1"}},
+  {"benchmark":"ExtractionBenchmark.cursorDocOrder","params":{"dets":"50"}},
+  {"benchmark":"ExtractionBenchmark.plan","params":{"dets":"50"}}
+]

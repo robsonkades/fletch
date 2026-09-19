@@ -1,6 +1,10 @@
 # Recorded performance results
 
-These local studies informed the implementation. They compare the named variants
+The [value API study](value-api.md) compares the new conversions, presence checks
+and fallback with release 1.3.0 and explicit alternatives on Java 17. It records
+an observed mapping throughput loss and inconclusive cursor comparisons.
+
+The historical studies below informed the implementation. They compare the named variants
 at their recorded checkpoints, not the entire change against release 1.2.0.
 The final delivery checks rebuild and test the code; they do not repeat these
 completed studies or turn their estimates into production guarantees.

@@ -17,14 +17,17 @@ package io.github.robsonkades.fletch;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * A lazily-decoded XML text or attribute value handed to an {@link XmlBinding}.
  *
  * <p>The instance is a <em>flyweight view</em> over the parse buffer owned by
  * the {@link XmlMappingEngine}: no {@code String} or boxed object exists until an
- * accessor that needs one is called, and the numeric/temporal accessors parse
- * the underlying bytes directly without materialising text at all.
+ * accessor that needs one is called. Integer, boolean, common decimal and common
+ * instant forms parse the underlying bytes directly. Additional types and custom
+ * text conversions materialise a String only when requested.
  *
  * <p><b>Lifecycle</b>: the value is only valid for the duration of the
  * {@link XmlBinding#bind} call that receives it. Bindings must extract what
@@ -54,6 +57,46 @@ public interface XmlValue {
      * @return the decoded text, never empty
      */
     String asString();
+
+    /**
+     * Converts to any built-in target supported by
+     * {@link XmlCursor#value(String, Class)}, including primitive class tokens.
+     * Existing typed accessors are used where available, preserving their byte
+     * parsers; additional JDK targets parse decoded text.
+     *
+     * <pre>{@code
+     * .text("/order/date", (draft, value) -> draft.date = value.as(LocalDate.class))
+     * }</pre>
+     *
+     * @param <T> target type
+     * @param type non-null target class
+     * @return the converted value
+     * @throws NullPointerException if type is null
+     * @throws XmlException if the target type is unsupported or a boolean is invalid
+     * @throws IllegalArgumentException if a number, UUID, character or enum is invalid
+     * @throws java.time.format.DateTimeParseException if a temporal value is invalid
+     */
+    default <T> T as(final Class<T> type) {
+        return TypeConverter.convert(this, type);
+    }
+
+    /**
+     * Applies a custom function to this value's decoded text. The function runs
+     * immediately, may return null, and any exception propagates unchanged.
+     * Text has the same entity decoding and whitespace handling as
+     * {@link #asString()}: element text is trimmed, attribute whitespace is
+     * normalized without trimming. Missing or empty values never reach a binding.
+     * Reused functions must be safe for concurrent calls if the mapping is shared.
+     * The String may be retained; the {@code XmlValue} itself may not.
+     *
+     * @param <T> result type
+     * @param converter non-null application conversion, for example {@code URI::create}
+     * @return the converter's result, possibly null
+     * @throws NullPointerException if converter is null
+     */
+    default <T> T convert(final Function<? super String, ? extends T> converter) {
+        return Objects.requireNonNull(converter, "converter").apply(asString());
+    }
 
     /**
      * Decodes the value as a {@code String}, deduplicated through the

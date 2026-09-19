@@ -16,20 +16,27 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -91,6 +98,40 @@ public class XmlCodegenTest {
                     new Item("二", 3, "X", List.of("<ok>"))), new BigDecimal("12.30"));
             assertEquals(expected, source.extract(definition, xml));
             assertEquals(expected, source.extract(compiled.mapping, xml));
+        }
+    }
+
+    @ParameterizedTest @EnumSource(Source.class)
+    void generatedMappingsPreserveAdditionalTypesAndCustomConversionFailures(final Source source) throws Exception {
+        final var formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu", Locale.ROOT)
+                .withResolverStyle(ResolverStyle.STRICT);
+        final var failure = new IllegalArgumentException("custom date rejected");
+        final Function<String, LocalDate> converter = text -> {
+            if (text.equals("bad")) throw failure;
+            return LocalDate.parse(text, formatter);
+        };
+        final var definition = Xml.mapping(() -> new Object[4])
+                .attr("/r@id", (d, v) -> d[0] = v.as(UUID.class))
+                .text("/r/date", (d, v) -> d[1] = v.as(LocalDate.class))
+                .text("/r/local", (d, v) -> d[2] = v.convert(converter))
+                .text("/r/count", (d, v) -> d[3] = v.as(BigInteger.class))
+                .build(d -> d);
+        final String xml = "<r id='123e4567-e89b-12d3-a456-426614174000'>"
+                + "<local>18/09/2026</local><date>2026-09-19</date>"
+                + "<count>999999999999999999999999999</count></r>";
+        final Object[] expected = {UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
+                LocalDate.of(2026, 9, 19), LocalDate.of(2026, 9, 18),
+                new BigInteger("999999999999999999999999999")};
+        try (var compiled = compile(definition)) {
+            assertArrayEquals(expected, source.extract(compiled.mapping, xml));
+            assertSame(failure, assertThrows(IllegalArgumentException.class,
+                    () -> source.extract(compiled.mapping, xml.replace("18/09/2026", "bad"))));
+            assertArrayEquals(expected, source.extract(compiled.mapping, xml));
+            try (var session = compiled.mapping.openSession()) {
+                assertSame(failure, assertThrows(IllegalArgumentException.class,
+                        () -> session.extract(xml.replace("18/09/2026", "bad"))));
+                assertArrayEquals(expected, session.extract(xml));
+            }
         }
     }
 

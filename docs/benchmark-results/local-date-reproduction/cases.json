@@ -1,0 +1,7 @@
+[
+  {"benchmark":"ValueApiBenchmark.typedDate","params":{"presentPercent":"100"}},
+  {"benchmark":"ValueApiBenchmark.typedExtendedDate","params":{"presentPercent":"100"}},
+  {"benchmark":"ValueApiBenchmark.nativeInteger","params":{"presentPercent":"100"}},
+  {"benchmark":"ExtractionBenchmark.cursorDocOrder","params":{"dets":"50"}},
+  {"benchmark":"ExtractionBenchmark.plan","params":{"dets":"50"}}
+]

@@ -32,7 +32,8 @@
  *       mapping session owned by one worker thread;</li>
  *   <li>{@link io.github.robsonkades.fletch.XmlBinding} and
  *       {@link io.github.robsonkades.fletch.XmlValue} — the per-path binding
- *       and the lazily-decoded value it receives;</li>
+ *       and the lazily-decoded value it receives, including built-in targets
+ *       via {@code as(Class)} and custom text conversions via {@code convert(Function)};</li>
  *   <li>{@link io.github.robsonkades.fletch.XmlLimits} — immutable resource
  *       limits shared by both extraction styles;</li>
  *   <li>{@link io.github.robsonkades.fletch.XmlException} — parse, resource-limit
