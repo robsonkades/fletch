@@ -109,7 +109,8 @@ Maven operation directly.
 ### Publication
 
 After preparation is merged, a maintainer dispatches **Release** on `master` with
-the intended version. Accepted version syntax is `major.minor.patch`, optionally
+the intended version. The release job skips dispatches for other refs. Accepted
+version syntax is `major.minor.patch`, optionally
 followed by a suffix such as `-RC1`. The workflow:
 
 1. Validates the version and rejects an existing `v<version>` tag.
@@ -126,6 +127,12 @@ this workflow. A build or merge alone does not publish a release.
 Repository secrets required by the workflow are `CENTRAL_USERNAME`,
 `CENTRAL_PASSWORD`, `MAVEN_GPG_PRIVATE_KEY` and `MAVEN_GPG_PASSPHRASE`. Credentials
 belong in repository secrets, not source files or command output.
+
+The source-level branch check supplements repository permissions. If release and
+signing authority is narrower than repository write access, the repository owner
+must bind the release job to a protected GitHub environment with the appropriate
+reviewers and allowed branches, and restrict signing/publishing secrets to it.
+Maintain branch protection for `master` and review changes to release workflows.
 
 The publication plugin waits up to 30 minutes. A failure stops the workflow before
 GitHub release creation. Because the tag is pushed before publication, inspect the

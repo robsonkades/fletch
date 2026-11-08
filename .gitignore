@@ -4,6 +4,24 @@ target/
 !**/src/test/**/target/
 .kotlin
 
+### Local credentials and signing material ###
+.env
+.env.*
+!.env.example
+!.env.sample
+.secrets/
+*.key
+*-key.pem
+private-key*.pem
+private-key*.asc
+*.p12
+*.pfx
+*.jks
+*.keystore
+secring.gpg
+id_rsa
+id_ed25519
+
 ### IntelliJ IDEA ###
 .idea/modules.xml
 .idea/jarRepositories.xml

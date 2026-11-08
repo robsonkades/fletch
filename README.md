@@ -619,6 +619,12 @@ mapping supports at most 64 bindings. A streaming start tag or anchored CDATA
 section must fit the token window. These limits are not a total heap budget or an
 I/O deadline; transcoding and application results can use more memory.
 
+For untrusted numeric fields, choose a small `maxTextBytes` budget or use a custom
+converter that rejects excessive digits before constructing a `BigInteger` or
+`BigDecimal`. Arbitrary-precision conversion can require substantially more CPU
+than scanning the same text; the default 16 MiB text ceiling is not a conversion
+time budget. Bound application concurrency and execution time separately.
+
 An invalid builder value throws `IllegalArgumentException`. A null configuration
 throws `NullPointerException`. Exceeding a configured extraction budget throws
 `XmlException` with a diagnostic identifying the limit and location. Earlier
@@ -824,6 +830,17 @@ Compare current typed and application-parsed dates:
 ```sh
 java -jar target/benchmarks.jar '.*ValueApiBenchmark.(typedDate|manualDate)' -p presentPercent=100 -wi 3 -i 5 -w 1s -r 1s -f 2 -t 1 -prof gc -rf json -rff target/date-results.json
 ```
+
+Check bounded input growth for fragmented tokens and cursor replay:
+
+```sh
+java -jar target/benchmarks.jar '.*XmlTokenCostBenchmark.streamingToken' -p token=start -p size=2048,4096,8192 -p chunk=1,65536 -wi 3 -i 5 -w 1s -r 1s -f 2 -t 1 -prof gc -rf json -rff target/token-cost-results.json
+java -jar target/benchmarks.jar '.*XmlTokenCostBenchmark.cursor.*' -p size=128,512,2048 -wi 3 -i 5 -w 1s -r 1s -f 2 -t 1 -prof gc -rf json -rff target/cursor-replay-results.json
+```
+
+The token workload also accepts `end`, `name`, `attribute` and `cdata`. Each
+fixture verifies its result before measurement. The buffered stream and
+document-order cursor cases provide controls for the same extraction result.
 
 Other included workloads cover extraction, concurrent mappings and attribute
 validation. The [codegen guide](codegen/README.md#benchmarks) covers its separate

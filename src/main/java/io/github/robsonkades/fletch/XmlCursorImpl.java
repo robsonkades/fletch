@@ -29,7 +29,7 @@ import java.util.Objects;
  * <p>The document is fully buffered, so a sibling scanned past on the way to
  * a later request does not need to be materialised: it is crossed at skip
  * speed (tag balance only) and remembered as four {@code int}s — name span
- * and subtree span — in the scope's {@link #pending} array. A later request
+ * and links in document order — in the scope's {@link #pending} buffer. A later request
  * for it is served by <em>re-scanning</em> those bytes through a replay
  * cursor. Reads that follow document order record nothing and never re-scan;
  * that is the flat, allocation-free fast path.
@@ -69,9 +69,8 @@ final class XmlCursorImpl implements XmlCursor {
     private final int attrS;
     private final int attrE;
 
-    /** Skipped-sibling spans, quads of (nameS, nameE, subtreeS, subtreeE). */
-    private int[] pending;
-    private int pendingN;
+    /** Allocated only when a request scans past a sibling. */
+    private PendingSpans pending;
 
     /** Logical exhaustion: misses and {@link #skip} stop serving requests. */
     private boolean closed;
@@ -153,11 +152,18 @@ final class XmlCursorImpl implements XmlCursor {
     @Override
     public <T> List<T> children(final String name, final XmlExtractor<T> extractor) {
         final List<T> results = new ArrayList<>();
-        for (int q = 0; q < pendingN; ) {
+        for (int q = pending == null ? -1 : pending.head; q >= 0; ) {
+            final PendingSpans spans = pending;
+            final int next = spans.next(q);
             if (pendingMatches(q, name, null)) {
-                results.add(extractor.extract(replayCursor(q)));
+                final XmlCursorImpl child = replayCursor(q);
+                final int version = spans.version;
+                results.add(extractor.extract(child));
+                // A callback can itself consume or discard this parent's pending
+                // siblings. Do not follow a link to a removed/reused slot then.
+                q = pending == spans && version == spans.version ? next : pending == null ? -1 : pending.head;
             } else {
-                q++;
+                q = next;
             }
         }
         while (true) {
@@ -234,7 +240,6 @@ final class XmlCursorImpl implements XmlCursor {
     @Override
     public void skip() {
         pending = null;
-        pendingN = 0;
         closed = true;
     }
 
@@ -248,8 +253,10 @@ final class XmlCursorImpl implements XmlCursor {
      * stashed on the engine, or {@link #MISS}.
      */
     private int locate(final String one, final String[] any) {
-        for (int q = 0; q < pendingN; q++) {
-            if (pendingMatches(q, one, any)) return q;
+        if (pending != null) {
+            for (int q = pending.head; q >= 0; q = pending.next(q)) {
+                if (pendingMatches(q, one, any)) return q;
+            }
         }
         return liveLocate(one, any);
     }
@@ -318,7 +325,8 @@ final class XmlCursorImpl implements XmlCursor {
                 return LIVE;
             }
             final int subEnd = selfClose ? gt + 1 : eng.skipSubtree(gt + 1, s, e, depth + 1);
-            addPending(s, e, subEnd);
+            if (pending == null) pending = new PendingSpans();
+            pending.add(s, e);
             ctx.pos = subEnd;
             i = subEnd;
         }
@@ -367,9 +375,8 @@ final class XmlCursorImpl implements XmlCursor {
 
     /** Builds a cursor replaying a buffered sibling, on its own context. */
     private XmlCursorImpl replayCursor(final int q) {
-        final int subS = pending[(q << 2) + 2];
-        removePending(q);
-        final int s = subS + 1;
+        final int s = pending.spans[q << 2];
+        pending.remove(q);
         final int e = eng.nameEnd(s);
         final int gt = eng.tagEndOr(e);
         final boolean selfClose = eng.b[gt - 1] == '/';
@@ -391,9 +398,9 @@ final class XmlCursorImpl implements XmlCursor {
             ctx.pos = eng.readLeafText(eng.b, eng.hitS, eng.hitE - eng.hitS, ctx.pos, depth + 1);
             return convert(type);
         }
-        final int ns = pending[q << 2];
-        final int ne = pending[(q << 2) + 1];
-        removePending(q);
+        final int ns = pending.spans[q << 2];
+        final int ne = pending.spans[(q << 2) + 1];
+        pending.remove(q);
         final int gt = eng.tagEndOr(ne);
         if (eng.b[gt - 1] == '/') return null;
         eng.readLeafText(eng.b, ns, ne - ns, gt + 1, depth + 1);
@@ -408,27 +415,57 @@ final class XmlCursorImpl implements XmlCursor {
     // Pending spans and name matching
     // -------------------------------------------------------------------------
 
-    private void addPending(final int nameStart, final int nameEnd, final int subtreeEnd) {
-        if (pending == null) {
-            pending = new int[16];
-        } else if (pendingN << 2 == pending.length) {
-            pending = Arrays.copyOf(pending, pending.length << 1);
-        }
-        final int at = pendingN << 2;
-        pending[at] = nameStart;
-        pending[at + 1] = nameEnd;
-        pending[at + 2] = nameStart - 1;   // the '<' of the start tag
-        pending[at + 3] = subtreeEnd;
-        pendingN++;
-    }
+    /** Array-backed links avoid copying all later siblings on every replay. */
+    private static final class PendingSpans {
+        // Quads of (nameS, nameE, previous, next); -1 ends a chain.
+        private int[] spans = new int[16];
+        private int used;
+        private int head = -1;
+        private int tail = -1;
+        private int free = -1;
+        private int version;
 
-    private void removePending(final int q) {
-        System.arraycopy(pending, (q + 1) << 2, pending, q << 2, (pendingN - q - 1) << 2);
-        pendingN--;
+        int next(final int q) {
+            return spans[(q << 2) + 3];
+        }
+
+        void add(final int nameStart, final int nameEnd) {
+            final int q;
+            if (free >= 0) {
+                q = free;
+                free = next(q);
+            } else {
+                if (used << 2 == spans.length) spans = Arrays.copyOf(spans, spans.length << 1);
+                q = used++;
+            }
+            final int at = q << 2;
+            spans[at] = nameStart;
+            spans[at + 1] = nameEnd;
+            spans[at + 2] = tail;
+            spans[at + 3] = -1;
+            if (tail < 0) head = q;
+            else spans[(tail << 2) + 3] = q;
+            tail = q;
+            version++;
+        }
+
+        /** Unlink in constant time; reuse slots to bound storage by peak pending siblings. */
+        void remove(final int q) {
+            final int at = q << 2;
+            final int previous = spans[at + 2];
+            final int next = spans[at + 3];
+            if (previous < 0) head = next;
+            else spans[(previous << 2) + 3] = next;
+            if (next < 0) tail = previous;
+            else spans[(next << 2) + 2] = previous;
+            spans[at + 3] = free;
+            free = q;
+            version++;
+        }
     }
 
     private boolean pendingMatches(final int q, final String one, final String[] any) {
-        return matches(one, any, pending[q << 2], pending[(q << 2) + 1]);
+        return matches(one, any, pending.spans[q << 2], pending.spans[(q << 2) + 1]);
     }
 
     private boolean matches(final String one, final String[] any, final int s, final int e) {

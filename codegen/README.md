@@ -111,6 +111,9 @@ application runs without the generator or the `java.compiler` module.
 - The factory executes application code during the build. Keep its layout deterministic
   and independent of environment variables, external services and time. Extraction
   callbacks and draft suppliers are retained, not executed by the generator.
+- Run only trusted factories. Keep the output root and its ancestor directories under
+  the build principal's control, with write access limited to trusted maintainers;
+  this includes directories reached through symbolic links.
 - Associating the generated program checks a SHA-256 layout fingerprint once and
   creates a mapping with its own pool. A stale or incompatible layout throws
   `IllegalArgumentException` with a request to regenerate. Callback captures and options

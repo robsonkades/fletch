@@ -61,6 +61,25 @@ abstract class ByteScanner {
     private int[] attributeTable;
     private int attributeMask;
 
+    // Anchored token scans resume after a short read. Absolute keys survive window
+    // compaction; saved tag spans are shifted only when their window moves.
+    private long scannedNameStart = -1;
+    private long scannedNameEnd;
+    private boolean scannedNameComplete;
+    private long closingStart = -1;
+    private long closingScan;
+    private long tagStart = -1;
+    private long tagBase;
+    private int tagScan, tagState, tagCount;
+    private int tagAttrStart, tagAttrEnd, tagValueStart, tagQuote;
+    private boolean tagSpace;
+
+    private static final int TAG_SPACE = 0;
+    private static final int TAG_NAME = 1;
+    private static final int TAG_EQUALS = 2;
+    private static final int TAG_QUOTE = 3;
+    private static final int TAG_VALUE = 4;
+
     // Document view being scanned (caller bytes, the window, or a transcode buffer).
     byte[] b;
     int n;
@@ -201,6 +220,7 @@ abstract class ByteScanner {
      * {@link #more} refills).
      */
     final void beginStream(final InputStream stream) {
+        resetTokenScans();
         if (io == null) {
             io = new byte[(int) Math.min(window, limits.maxInputBytes)];
         }
@@ -220,6 +240,7 @@ abstract class ByteScanner {
      * source preparation and parsing, before any return to the pool.
      */
     final void releaseSource() {
+        resetTokenScans();
         src = null;
         b = null;
         valA = null;
@@ -240,6 +261,7 @@ abstract class ByteScanner {
     // ------------------------------------------------------------------ encoding detection
 
     final void prepare(final byte[] doc, final int len, final boolean sniff) {
+        resetTokenScans();
         src = null;
         eof = false;
         base = 0;
@@ -617,15 +639,18 @@ abstract class ByteScanner {
                         i -= sh;
                     }
                     checkCdataStart(i);
+                    int scan = i + 9;
                     int end;
-                    while ((end = cdataEndOr(i + 9)) < 0) {
+                    while ((end = cdataEndOr(scan)) < 0) {
                         int contentEnd = n;
                         if (contentEnd > i + 9 && b[contentEnd - 1] == ']') contentEnd--;
                         if (contentEnd > i + 9 && b[contentEnd - 1] == ']') contentEnd--;
                         checkRemainingText(contentEnd - i - 9, i + 9);
+                        final int resume = Math.max(i + 9, n - 2);
                         final int sh = more(i);   // wanted content: anchor the whole section
                         if (sh < 0) throw fail("Unterminated CDATA section", i);
                         i -= sh;
+                        scan = resume - sh;
                     }
                     appendCdata(i + 9, end);
                     i = end + 3;
@@ -1132,7 +1157,21 @@ abstract class ByteScanner {
 
     /** Scans to the end of a name; returning {@code n} means "ran out of window". */
     final int nameEnd(final int s) {
-        int j = s;
+        if (src == null) return scanName(s, s);
+        final long absolute = base + s;
+        int from = s;
+        if (scannedNameStart == absolute) {
+            from = (int) (scannedNameEnd - base);
+            if (scannedNameComplete) return from;
+        }
+        final int end = scanName(s, from);
+        scannedNameStart = absolute;
+        scannedNameEnd = base + end;
+        scannedNameComplete = end < n;
+        return end;
+    }
+
+    private int scanName(final int s, int j) {
         while (j < n) {
             final int c = b[j] & 0xff;
             if (c == '>' || c == '/' || c == '=' || c <= ' ') break;
@@ -1150,61 +1189,107 @@ abstract class ByteScanner {
      */
     final int tagEndOr(int j) {
         if (j < n && b[j] == '>') return j;
+        if (j + 1 < n && b[j] == '/' && b[j + 1] == '>') return j + 1;
+        final long absolute = base + j;
         int count = 0;
-        while (true) {
-            final int beforeSpace = j;
-            while (j < n && xmlSpace(b[j])) j++;
-            if (j >= n) return -1;
-            final int c = b[j] & 0xFF;
-            if (c == '>') return j;
-            if (c == '/') {
-                if (j + 1 >= n) return -1;
-                if (b[j + 1] != '>') throw fail("Malformed empty-element tag", j);
-                return j + 1;
+        int state = TAG_SPACE;
+        int as = 0, ae = 0, vs = 0, quote = 0;
+        boolean space = false;
+        if (tagStart == absolute) {
+            final int shift = (int) (base - tagBase);
+            j = tagScan - shift;
+            state = tagState;
+            count = tagCount;
+            as = tagAttrStart - shift;
+            ae = tagAttrEnd - shift;
+            vs = tagValueStart - shift;
+            quote = tagQuote;
+            space = tagSpace;
+            if (shift != 0) {
+                for (int k = 0; k < count; k++) attributeSpans[k] -= shift;
             }
-            if (j == beforeSpace) throw fail("Missing whitespace before attribute", j);
-            if (count == limits.maxAttributesPerElement * 2) {
-                throw fail("Element exceeds " + limits.maxAttributesPerElement + " attributes", j);
-            }
-            final int as = j;
-            final int ae = nameEnd(as);
-            if (ae >= n) return -1;
-            if (ae == as) throw fail("Malformed attribute", as);
-            j = ae;
-            while (j < n && xmlSpace(b[j])) j++;
-            if (j >= n) return -1;
-            if (b[j++] != '=') throw fail("Malformed attribute", as);
-            while (j < n && xmlSpace(b[j])) j++;
-            if (j >= n) return -1;
-            final int quote = b[j++] & 0xFF;
-            if (quote != '"' && quote != '\'') throw fail("Unquoted attribute value", j - 1);
-            final int end = Swar.memchr2(b, j, n, quote, '<');
-            if (end < 0) {
-                checkTextSize(n - j, j);
-                return -1;
-            }
-            if (b[end] == '<') throw fail("Less-than sign in attribute value", end);
-            checkTextSize(end - j, j);
-            if (attributeSpans == null) attributeSpans = new int[16];
-            if (count < 16) {
-                for (int k = 0; k < count; k += 2) {
-                    if (nameMatches(b, attributeSpans[k], attributeSpans[k + 1] - attributeSpans[k], as, ae)) {
-                        throw fail("Duplicate attribute", as);
-                    }
-                }
-            } else {
-                checkAttributeDuplicate(as, ae, count);
-            }
-            if (count == attributeSpans.length) attributeSpans = Arrays.copyOf(attributeSpans, count << 1);
-            attributeSpans[count++] = as;
-            attributeSpans[count++] = ae;
-            j = end + 1;
         }
+        scan: while (true) {
+            switch (state) {
+                case TAG_SPACE:
+                    while (j < n && xmlSpace(b[j])) { j++; space = true; }
+                    if (j >= n) break scan;
+                    final int c = b[j] & 0xFF;
+                    if (c == '>') { tagStart = -1; return j; }
+                    if (c == '/') {
+                        if (j + 1 >= n) break scan;
+                        if (b[j + 1] != '>') throw fail("Malformed empty-element tag", j);
+                        tagStart = -1;
+                        return j + 1;
+                    }
+                    if (!space) throw fail("Missing whitespace before attribute", j);
+                    if (count == limits.maxAttributesPerElement * 2) {
+                        throw fail("Element exceeds " + limits.maxAttributesPerElement + " attributes", j);
+                    }
+                    as = j;
+                    state = TAG_NAME;
+                    // Fall through: a complete attribute needs no saved scan state.
+                case TAG_NAME:
+                    j = scanName(as, j);
+                    if (j >= n) break scan;
+                    if (j == as) throw fail("Malformed attribute", as);
+                    ae = j;
+                    state = TAG_EQUALS;
+                case TAG_EQUALS:
+                    while (j < n && xmlSpace(b[j])) j++;
+                    if (j >= n) break scan;
+                    if (b[j++] != '=') throw fail("Malformed attribute", as);
+                    state = TAG_QUOTE;
+                case TAG_QUOTE:
+                    while (j < n && xmlSpace(b[j])) j++;
+                    if (j >= n) break scan;
+                    quote = b[j++] & 0xFF;
+                    if (quote != '"' && quote != '\'') throw fail("Unquoted attribute value", j - 1);
+                    vs = j;
+                    state = TAG_VALUE;
+                case TAG_VALUE:
+                    final int end = Swar.memchr2(b, j, n, quote, '<');
+                    if (end < 0) {
+                        checkTextSize(n - vs, vs);
+                        j = n;
+                        break scan;
+                    }
+                    if (b[end] == '<') throw fail("Less-than sign in attribute value", end);
+                    checkTextSize(end - vs, vs);
+                    if (attributeSpans == null) attributeSpans = new int[16];
+                    if (count < 16) {
+                        for (int k = 0; k < count; k += 2) {
+                            if (nameMatches(b, attributeSpans[k], attributeSpans[k + 1] - attributeSpans[k], as, ae)) {
+                                throw fail("Duplicate attribute", as);
+                            }
+                        }
+                    } else {
+                        checkAttributeDuplicate(as, ae, count);
+                    }
+                    if (count == attributeSpans.length) attributeSpans = Arrays.copyOf(attributeSpans, count << 1);
+                    attributeSpans[count++] = as;
+                    attributeSpans[count++] = ae;
+                    j = end + 1;
+                    space = false;
+                    state = TAG_SPACE;
+            }
+        }
+        tagStart = absolute;
+        tagBase = base;
+        tagScan = j;
+        tagState = state;
+        tagCount = count;
+        tagAttrStart = as;
+        tagAttrEnd = ae;
+        tagValueStart = vs;
+        tagQuote = quote;
+        tagSpace = space;
+        return -1;
     }
 
     /** Keep the small-tag path allocation-free after its first use. */
     private void checkAttributeDuplicate(final int start, final int end, final int count) {
-        // Restart at the ninth attribute, including after a refill or a failed parse.
+        // Restart at the ninth attribute of each tag, including after a failed parse.
         // Grow at half occupancy; count is the number of span ints, not attributes.
         if (count == 16 || count == attributeMask + 1) {
             attributeMask = (count << 1) - 1;
@@ -1249,10 +1334,23 @@ abstract class ByteScanner {
      * returning the next position, or {@code -1} at the window limit.
      */
     final int closeAngleOr(int j) {
+        final long absolute = base + j;
+        if (closingStart == absolute) j = (int) (closingScan - base);
         while (j < n && xmlSpace(b[j])) j++;
-        if (j >= n) return -1;
+        if (j >= n) {
+            closingStart = absolute;
+            closingScan = base + j;
+            return -1;
+        }
         if (b[j] != '>') throw fail("Malformed end tag", j);
+        closingStart = -1;
         return j + 1;
+    }
+
+    private void resetTokenScans() {
+        scannedNameStart = -1;
+        closingStart = -1;
+        tagStart = -1;
     }
 
     static int lstrip(final byte[] a, int s, final int e) {
