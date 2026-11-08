@@ -11,8 +11,8 @@ constructing a DOM tree. Use a cursor to compose extractors, or declare a reusab
 mapping of paths to callbacks. Both support attributes, repeated elements, typed
 values and configurable resource limits.
 
-This README is the project guide. It covers the current source tree; features
-marked **unreleased** are not in the published `1.3.0` artifact.
+This README is the project guide for the published `1.4.1` core and the optional
+source-built generator.
 
 ## Contents
 
@@ -40,7 +40,7 @@ marked **unreleased** are not in the published `1.3.0` artifact.
 
 ## Installation and version availability
 
-The published core version documented here is **1.3.0**.
+The published core version documented here is **1.4.1**.
 
 Maven:
 
@@ -48,14 +48,14 @@ Maven:
 <dependency>
     <groupId>io.github.robsonkades</groupId>
     <artifactId>fletch</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.1</version>
 </dependency>
 ```
 
 Gradle Kotlin DSL:
 
 ```kotlin
-implementation("io.github.robsonkades:fletch:1.3.0")
+implementation("io.github.robsonkades:fletch:1.4.1")
 ```
 
 The core needs Java 17 or later and only `java.base` at runtime. Its test and
@@ -63,15 +63,16 @@ benchmark dependencies are not application dependencies.
 
 | Availability | Features |
 |---|---|
-| Published 1.3.0 | Cursor, mapping DSL, `XmlLimits`, mapping sessions; `String`, `Integer`, `Long`, `Double`, `BigDecimal`, `Boolean`, `Instant` and enums |
-| Current source, unreleased | Additional [value types](#value-types-and-text-handling), primitive class aliases, custom converters, `exists()`, lazy fallbacks, `XmlValue.as(Class)` and `convert(Function)`, cursor `LocalDate` byte parsing |
+| Available in 1.3.0+ | Cursor, mapping DSL, `XmlLimits`, mapping sessions; `String`, `Integer`, `Long`, `Double`, `BigDecimal`, `Boolean`, `Instant` and enums |
+| Added in 1.4.0 | Additional [value types](#value-types-and-text-handling), primitive class aliases, custom converters, `exists()`, lazy fallbacks, `XmlValue.as(Class)` and `convert(Function)`, cursor `LocalDate` byte parsing |
+| Fixed in 1.4.1 | Incremental token scanning across short reads and constant-time removal of pending cursor spans |
 | Optional, built from source | Experimental mapping code generator and its example module; the release workflow publishes only the core |
 
-To try unreleased APIs, use a source build with a distinct local version, such as
-`1.4.0-SNAPSHOT`. From the repository root, run these commands in Bash or PowerShell:
+To try local changes, use a source build with a distinct local version, such as
+`1.4.2-SNAPSHOT`. From the repository root, run these commands in Bash or PowerShell:
 
 ```sh
-mvn -B -ntp -f codegen/pom.xml org.codehaus.mojo:versions-maven-plugin:2.22.0:set '-DprocessAllModules=true' '-DnewVersion=1.4.0-SNAPSHOT' '-DgenerateBackupPoms=false'
+mvn -B -ntp -f codegen/pom.xml org.codehaus.mojo:versions-maven-plugin:2.22.0:set '-DprocessAllModules=true' '-DnewVersion=1.4.2-SNAPSHOT' '-DgenerateBackupPoms=false'
 mvn -B -ntp -f codegen/pom.xml install '-Dgpg.skip=true'
 ```
 
@@ -129,19 +130,19 @@ the XML; the cursor remembers siblings it passes and serves them later.
 After building the core from this checkout, compile and run the example:
 
 ```sh
-javac --release 17 -cp target/fletch-1.3.0.jar CursorExample.java
+javac --release 17 -cp target/fletch-1.4.1.jar CursorExample.java
 ```
 
 Bash on Linux/macOS:
 
 ```sh
-java --limit-modules java.base -cp 'target/fletch-1.3.0.jar:.' CursorExample
+java --limit-modules java.base -cp 'target/fletch-1.4.1.jar:.' CursorExample
 ```
 
 PowerShell or Git Bash on Windows:
 
 ```sh
-java --limit-modules java.base -cp 'target/fletch-1.3.0.jar;.' CursorExample
+java --limit-modules java.base -cp 'target/fletch-1.4.1.jar;.' CursorExample
 ```
 
 If you changed the local version, substitute it in the jar name.
@@ -176,8 +177,8 @@ not an arbitrary descendant. Enter each container to reach deeper values.
 | `value(name, type)` | Consumes the next matching child and converts its text; `null` if absent, empty or blank |
 | `attribute(name, type)` | Reads an attribute of the current element; `null` if absent or empty; can be reread before or after child navigation |
 | `firstOf(type, names...)` | Consumes the first remaining matching alternative in document order; argument order does not set priority |
-| `exists(name)` — unreleased | Checks for a remaining matching child without consuming it; empty or blank elements count as present |
-| `valueWith`, `attributeWith`, `firstOfWith` — unreleased | Apply application conversion functions; see [custom conversions](#custom-conversions-presence-and-fallbacks) |
+| `exists(name)` — since 1.4.0 | Checks for a remaining matching child without consuming it; empty or blank elements count as present |
+| `valueWith`, `attributeWith`, `firstOfWith` — since 1.4.0 | Apply application conversion functions; see [custom conversions](#custom-conversions-presence-and-fallbacks) |
 | `skip()` | Discards remaining child content in the current scope; subsequent child reads report absence |
 
 Each child occurrence can be consumed once. Reading the same name twice reads
@@ -202,9 +203,9 @@ callback returns, or using it on another thread, violates its scope.
 
 ## Value types and text handling
 
-These targets work with cursor `value`, `attribute` and `firstOf`. In the current
-source, mapping `XmlValue.as(type)` accepts the same targets. An asterisk marks a
-type added after the published 1.3.0 release.
+These targets work with cursor `value`, `attribute` and `firstOf`. Mapping
+`XmlValue.as(type)` accepts the same targets. An asterisk marks a type added
+in 1.4.0.
 
 | Target | Accepted form or conversion rule |
 |---|---|
@@ -231,8 +232,8 @@ application time zone or guess a localized format. Use a custom converter for
 other formats or domain types. Unsupported target classes throw `XmlException`.
 
 Primitive class tokens (`byte.class`, `short.class`, `int.class`, `long.class`,
-`float.class`, `double.class`, `boolean.class`, `char.class`) are **unreleased**
-aliases for their wrappers. Cursor results remain nullable. Unboxing an absent
+`float.class`, `double.class`, `boolean.class`, `char.class`) are aliases for their
+wrappers, available since 1.4.0. Cursor results remain nullable. Unboxing an absent
 result throws `NullPointerException`; use a wrapper or an explicit default.
 
 | XML input | Text contract |
@@ -255,7 +256,7 @@ whitespace introduced by character references; it does not simply apply
 
 ## Custom conversions, presence and fallbacks
 
-**Unreleased APIs.** Supply a `Function<String, T>` when your application owns the
+**Available since 1.4.0.** Supply a `Function<String, T>` when your application owns the
 format or target type. No registry or global configuration is needed.
 
 | Call | Behavior |
@@ -266,7 +267,7 @@ format or target type. No registry or global configuration is needed.
 | `valueWith(name, converter, fallback)` | Calls the converter for nonempty text, otherwise calls a lazy `Supplier<T>` |
 | `attributeWith(name, converter, fallback)` | Calls fallback only for a missing or empty attribute; whitespace alone is a value |
 
-Save this as `ConversionExample.java` and compile against the current source build:
+Save this as `ConversionExample.java` and compile against Fletch 1.4.0 or later:
 
 ```java
 import io.github.robsonkades.fletch.Xml;
@@ -455,8 +456,8 @@ underlying parse buffer is reused.
 | `asBoolean()` | Primitive boolean |
 | `asInstant()` | `Instant` |
 | `asEnum(EnumType.class)` | Enum constant |
-| `as(Type.class)` — unreleased | Any [built-in value target](#value-types-and-text-handling), including primitive aliases |
-| `convert(function)` — unreleased | Application conversion of decoded text |
+| `as(Type.class)` — since 1.4.0 | Any [built-in value target](#value-types-and-text-handling), including primitive aliases |
+| `convert(function)` — since 1.4.0 | Application conversion of decoded text |
 
 Typed accessors avoid intermediate Strings where a byte parser exists. The
 canonical cache belongs to an engine and survives successive documents. It starts
@@ -468,7 +469,7 @@ strings by value; object identity is not an application contract. This is not
 Missing and empty values never reach a binding. Put eager defaults in the draft
 factory, or compute lazy defaults in the finisher. To distinguish absence from a
 converter intentionally returning `null`, retain a separate flag. This complete
-`MappingDefaultsExample.java` uses the **unreleased** `convert` accessor:
+`MappingDefaultsExample.java` uses the `convert` accessor available since 1.4.0:
 
 ```java
 import io.github.robsonkades.fletch.Xml;
@@ -872,7 +873,7 @@ on visited XML:
 - `strictSkip()` checks skipped end-tag names; it does not validate an entire
   document. Streams remain caller-owned and callback effects are not rolled back.
 
-### Current unreleased additions
+### From 1.3.0 to 1.4.0
 
 The additional cursor methods and `XmlValue` conversion accessors are default
 interface methods, preserving existing implementation compatibility. An external
@@ -886,9 +887,17 @@ do not replace nullable results with zero values. Mapping and cursor choice
 behavior remain distinct for blank alternatives. Regenerate optional codegen
 sources when changing core/generator versions.
 
+### From 1.4.0 to 1.4.1
+
+Version 1.4.1 preserves public APIs, configured limits and extraction semantics.
+Anchored token scans retain progress across short stream reads, and cursor replay
+unlinks pending siblings without repeatedly copying the remaining spans. These
+changes bound the extra work of the corrected paths while keeping document order,
+validation and session recovery intact.
+
 Release notes for published versions are available in
-[GitHub Releases](https://github.com/robsonkades/fletch/releases). This source guide
-is not a promise that unreleased APIs exist in an older Maven artifact.
+[GitHub Releases](https://github.com/robsonkades/fletch/releases). Check the release
+notes when targeting an older artifact.
 
 ## Troubleshooting
 
@@ -905,7 +914,7 @@ is not a promise that unreleased APIs exist in an older Maven artifact.
 | Large stream consumes substantial memory | Cursor and legacy-encoding streams buffer fully; result lists and selected values also allocate |
 | Session throws `IllegalStateException` | Check creating thread, active recursion, close state and callback attempts to close |
 | Generated mapping rejects its definition | Regenerate from the matching mapping layout and core/generator version |
-| `exists` or `valueWith` does not compile against Maven Central | Those methods are unreleased; use the matching source build or published release once available |
+| `exists` or `valueWith` does not compile against Maven Central | Those methods require 1.4.0+; check the resolved dependency version and remove older jars from the classpath |
 
 ## Contributing and releases
 

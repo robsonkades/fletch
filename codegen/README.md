@@ -40,7 +40,7 @@ io.github.robsonkades.fletch.XmlCodegen <public.Factory#method> <package.Generat
 After the reactor build, this PowerShell command reproduces the example's source:
 
 ```powershell
-java -cp 'target/fletch-1.3.0.jar;codegen/generator/target/fletch-codegen-1.3.0.jar;codegen/example/target/classes' `
+java -cp 'target/fletch-1.4.1.jar;codegen/generator/target/fletch-codegen-1.4.1.jar;codegen/example/target/classes' `
   io.github.robsonkades.fletch.XmlCodegen 'demo.Definitions#order' `
   demo.generated.OrderCode codegen/example/target/generated-sources/fletch
 ```
@@ -51,7 +51,7 @@ If the local POM version has changed, substitute it in jar names. The equivalent
 Bash command on Linux/macOS is:
 
 ```sh
-java -cp 'target/fletch-1.3.0.jar:codegen/generator/target/fletch-codegen-1.3.0.jar:codegen/example/target/classes' \
+java -cp 'target/fletch-1.4.1.jar:codegen/generator/target/fletch-codegen-1.4.1.jar:codegen/example/target/classes' \
   io.github.robsonkades.fletch.XmlCodegen 'demo.Definitions#order' \
   demo.generated.OrderCode codegen/example/target/generated-sources/fletch
 ```
@@ -97,7 +97,7 @@ Run the compiled example with only the core and consumer jars (PowerShell):
 
 ```powershell
 java --limit-modules java.base `
-  -cp 'target/fletch-1.3.0.jar;codegen/example/target/fletch-codegen-example-1.3.0.jar' demo.Main
+  -cp 'target/fletch-1.4.1.jar;codegen/example/target/fletch-codegen-example-1.4.1.jar' demo.Main
 ```
 
 Expected output: `Order[id=42, total=12.30]`. This command also verifies that the
